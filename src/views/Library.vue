@@ -16,6 +16,7 @@
     <input
       type="file"
       ref="fileInput"
+      multiple
       accept=".p8,.p8.png,.png"
       class="hidden"
       @change="handleFileImport"
@@ -187,9 +188,9 @@
           <div
             class="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin mb-4"
           ></div>
-          <span class="text-white/30 text-sm tracking-widest uppercase"
-            >Scanning</span
-          >
+          <span class="text-white/30 text-sm tracking-widest uppercase">
+            {{ importProgress || "Scanning" }}
+          </span>
         </div>
       </transition>
 
@@ -515,6 +516,7 @@ const showSettings = ref(false);
 const saves = ref([]);
 const loadingSaves = ref(false);
 const deleteMode = ref(false);
+const importProgress = ref("");
 
 const sortOptions = [
   { label: "Recently Played", value: "lastPlayed" },
@@ -541,12 +543,44 @@ function triggerImport() {
 }
 
 async function handleFileImport(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
 
-  const success = await addCartridge(file);
-  if (!success) {
-    alert("Import Failed");
+  // UI Feedback
+  loading.value = true;
+  const total = files.length;
+  console.log(`[Library] Batch importing ${total} files...`);
+
+  let successCount = 0;
+
+  // process sequentially to prevent memory spikes
+  for (let i = 0; i < total; i++) {
+    const file = files[i];
+    // Update progress text
+    importProgress.value = `Importing ${i + 1}/${total}`;
+
+    try {
+      const success = await addCartridge(file);
+      if (success) successCount++;
+    } catch (e) {
+      console.error(`Failed to import ${file.name}`, e);
+    }
+  }
+
+  // Cleanup
+  loading.value = false;
+  importProgress.value = "";
+  event.target.value = ""; // Reset input
+
+  // Final Feedback
+  if (successCount > 0) {
+    Haptics.notification({ type: "success" }).catch(() => {});
+    // Reload library to show new games
+    await loadLibrary();
+    alert(`Successfully imported ${successCount} cartridges!`);
+  } else {
+    Haptics.notification({ type: "error" }).catch(() => {});
+    alert("No valid cartridges found in selection.");
   }
 }
 
