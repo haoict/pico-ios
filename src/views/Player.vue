@@ -310,14 +310,14 @@ function handleMenuKeydown(e) {
   if (!isMenuOpen.value) return;
 
   if (e.key === "ArrowUp") {
-    // Phase 85: Correct Logic (Up visually moves selection UP/Prev)
-    focusIndex.value =
-      (focusIndex.value - 1 + menuButtons.length) % menuButtons.length;
+    // Phase 86: Swapped Logic (Up triggers Next/Down visual to fix inversion)
+    focusIndex.value = (focusIndex.value + 1) % menuButtons.length;
     document.getElementById(menuButtons[focusIndex.value])?.focus();
     e.preventDefault();
   } else if (e.key === "ArrowDown") {
-    // Phase 85: Correct Logic (Down visually moves selection DOWN/Next)
-    focusIndex.value = (focusIndex.value + 1) % menuButtons.length;
+    // Phase 86: Swapped Logic (Down triggers Prev/Up visual to fix inversion)
+    focusIndex.value =
+      (focusIndex.value - 1 + menuButtons.length) % menuButtons.length;
     document.getElementById(menuButtons[focusIndex.value])?.focus();
     e.preventDefault();
   } else if (

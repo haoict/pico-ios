@@ -185,7 +185,7 @@
       <div class="relative w-full h-full">
         <!-- O Button -->
         <button
-          class="absolute bottom-24 right-2 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(255,0,77,0.4)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#FF004D]/30"
+          class="absolute bottom-24 right-2 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(255,0,77,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#FF004D]/80"
           @touchstart.prevent="pressKey(90)"
           @touchend.prevent="releaseKey(90)"
           @mousedown.prevent="pressKey(90)"
@@ -199,7 +199,7 @@
 
         <!-- X Button -->
         <button
-          class="absolute bottom-4 right-14 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(41,173,255,0.4)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#29ADFF]/30"
+          class="absolute bottom-4 right-14 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(41,173,255,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#29ADFF]/80"
           @touchstart.prevent="pressKey(88)"
           @touchend.prevent="releaseKey(88)"
           @mousedown.prevent="pressKey(88)"
