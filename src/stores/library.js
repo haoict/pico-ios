@@ -3,33 +3,32 @@ import { ref, computed } from "vue";
 import { libraryManager } from "../services/LibraryManager";
 
 export const useLibraryStore = defineStore("library", () => {
-  // State
+  // # state
   const rawGames = ref([]);
   const loading = ref(false);
   const error = ref(null);
 
-  // UI State
+  // # ui state
   const searchQuery = ref("");
   const sortBy = ref("lastPlayed"); // 'lastPlayed', 'name', 'newest'
 
   const filteredGames = computed(() => {
     let result = [...rawGames.value];
 
-    // Filter
+    // # filter
     if (searchQuery.value.trim()) {
       const q = searchQuery.value.toLowerCase();
       result = result.filter((g) => g.name.toLowerCase().includes(q));
     }
 
-    // Sort
+    // # sort
     result.sort((a, b) => {
       if (sortBy.value === "name") {
         return a.name.localeCompare(b.name);
       } else if (sortBy.value === "lastPlayed") {
         return (b.lastPlayed || 0) - (a.lastPlayed || 0);
       } else if (sortBy.value === "newest") {
-        // Assuming we might have dateAdded, otherwise fallback to name or something
-        // Existing metadata doesn't track dateAdded, so let's skip for now or assume order
+        // # note: assuming dateadded fallback
         return 0;
       }
       return 0;
@@ -70,7 +69,7 @@ export const useLibraryStore = defineStore("library", () => {
   async function removeCartridge(filename) {
     const success = await libraryManager.deleteCartridge(filename);
     if (success) {
-      // Optimistic update or rescan
+      // # optimistic update
       rawGames.value = rawGames.value.filter((g) => g.name !== filename);
     }
     return success;

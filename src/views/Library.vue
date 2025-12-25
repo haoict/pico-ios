@@ -2,7 +2,7 @@
   <div
     class="min-h-screen bg-[var(--color-oled-black)] relative overflow-y-auto no-scrollbar"
   >
-    <!-- Mesh Gradient Background -->
+    <!-- mesh gradient background -->
     <div class="fixed inset-0 z-0 pointer-events-none">
       <div
         class="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-purple-900/40 rounded-full blur-[120px] mix-blend-screen animate-pulse-slow"
@@ -12,7 +12,7 @@
       ></div>
     </div>
 
-    <!-- Hidden File Input for Import -->
+    <!-- hidden file input -->
     <input
       type="file"
       ref="fileInput"
@@ -21,11 +21,11 @@
       @change="handleFileImport"
     />
 
-    <!-- Content -->
+    <!-- content -->
     <div class="relative z-10 p-6 pt-16 pb-32 max-w-7xl mx-auto w-full">
-      <!-- Header -->
+      <!-- header -->
       <div class="flex flex-col gap-6 mb-8 px-2">
-        <!-- Top Row: Title + Action Buttons -->
+        <!-- title & actions -->
         <div class="flex justify-between items-center">
           <div class="flex flex-col">
             <h1
@@ -41,7 +41,7 @@
           </div>
 
           <div class="flex gap-3">
-            <!-- Delete Mode Toggle -->
+            <!-- delete mode toggle -->
             <button
               @click="startDeleteMode"
               :class="[
@@ -67,7 +67,7 @@
               </svg>
             </button>
 
-            <!-- Import Button -->
+            <!-- import button -->
             <button
               @click="triggerImport"
               class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105"
@@ -88,7 +88,7 @@
               </svg>
             </button>
 
-            <!-- Settings Button -->
+            <!-- settings button -->
             <button
               @click="openSettings"
               class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105"
@@ -117,7 +117,7 @@
           </div>
         </div>
 
-        <!-- Search and Filter Bar -->
+        <!-- search & filter -->
         <div class="flex gap-3">
           <div class="relative flex-1 group">
             <div
@@ -178,7 +178,7 @@
         </div>
       </div>
 
-      <!-- Loading State -->
+      <!-- loading state -->
       <transition name="fade">
         <div
           v-if="loading"
@@ -193,7 +193,7 @@
         </div>
       </transition>
 
-      <!-- Empty State -->
+      <!-- empty state -->
       <transition name="fade">
         <div
           v-if="!loading && games.length === 0"
@@ -207,7 +207,7 @@
         </div>
       </transition>
 
-      <!-- Grid -->
+      <!-- grid -->
       <transition-group
         name="staggered-fade"
         tag="div"
@@ -226,7 +226,7 @@
           "
           :style="{ '--index': index }"
         >
-          <!-- Delete Overlay -->
+          <!-- delete overlay -->
           <div v-if="deleteMode" class="absolute -top-2 -right-2 z-20">
             <button
               @click="(e) => handleDelete(game, e)"
@@ -249,11 +249,11 @@
             </button>
           </div>
 
-          <!-- Card Container -->
+          <!-- card container -->
           <div
             class="absolute inset-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-lg z-0"
           >
-            <!-- Cover Art -->
+            <!-- cover art -->
             <img
               v-if="game.cover"
               :src="game.cover"
@@ -261,7 +261,7 @@
               class="w-full h-full object-cover opacity-90 transition-transform duration-500"
               :class="!deleteMode && 'group-hover:scale-110'"
             />
-            <!-- Fallback -->
+            <!-- fallback -->
             <div
               v-else
               class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-white/5 to-transparent"
@@ -269,7 +269,7 @@
               <span class="text-4xl opacity-20">👾</span>
             </div>
 
-            <!-- Title Band -->
+            <!-- title band -->
             <div
               class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-12 backdrop-blur-[2px]"
             >
@@ -287,25 +287,25 @@
       </transition-group>
     </div>
 
-    <!-- Settings Drawer (Bottom Sheet) -->
+    <!-- settings drawer -->
     <transition name="slide-up">
       <div v-if="showSettings" class="fixed inset-0 z-50 flex items-end">
-        <!-- Backdrop -->
+        <!-- backdrop -->
         <div
           @click="showSettings = false"
           class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
         ></div>
 
-        <!-- Sheet -->
+        <!-- sheet -->
         <div
           class="relative w-full bg-[var(--color-surface)] backdrop-blur-xl rounded-t-3xl border-t border-white/10 p-6 pb-12 shadow-2xl max-h-[80vh] overflow-y-auto"
         >
-          <!-- Handle -->
+          <!-- handle -->
           <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-6"></div>
 
           <h2 class="text-xl font-bold text-white mb-6">Settings</h2>
 
-          <!-- Manage Saves Section -->
+          <!-- manage saves -->
           <div class="mb-8">
             <h3
               class="text-sm font-medium text-white/50 uppercase tracking-wider mb-4"
@@ -370,8 +370,8 @@ import { Filesystem, Directory } from "@capacitor/filesystem";
 
 const router = useRouter();
 const libraryStore = useLibraryStore();
-const { games, loading, searchQuery, sortBy } = storeToRefs(libraryStore); // Access store state
-const { loadLibrary, addCartridge, removeCartridge } = libraryStore; // Access actions
+const { games, loading, searchQuery, sortBy } = storeToRefs(libraryStore); // access store state
+const { loadLibrary, addCartridge, removeCartridge } = libraryStore; // access actions
 
 const fileInput = ref(null);
 const showSettings = ref(false);
@@ -388,7 +388,7 @@ onMounted(async () => {
   console.log("[Library] Mounting...");
   try {
     const loadedGames = await loadLibrary();
-    // Phase 74: Silent Ship Protocol
+    // # silent ship protocol
     console.log(`[Library] Loaded ${loadedGames.length} cartridges.`);
     libraryGames.value = loadedGames;
   } catch (e) {
@@ -423,10 +423,10 @@ async function handleDelete(game, event) {
 
 async function openSettings() {
   showSettings.value = true;
-  saves.value = []; // Reset
+  saves.value = []; // reset
   try {
     const result = await Filesystem.readdir({
-      path: "Saves", // Updated to match architecture
+      path: "Saves", // updated to match architecture
       directory: Directory.Documents,
     });
     // ...
@@ -434,7 +434,7 @@ async function openSettings() {
       .filter((f) => !f.name.startsWith("."))
       .map((f) => f.name);
   } catch (e) {
-    // No saves folder likely
+    // no saves folder likely
   }
 }
 
@@ -448,22 +448,20 @@ function formatName(filename) {
 async function openGame(game) {
   if (deleteMode.value) return;
 
-  // MEMORY-STREAM HANDOFF (Tap-to-Stash)
-  // Read file -> Stash -> Navigate -> PicoBridge reads Stash
+  // # memory stream handoff
+  // read file -> stash -> navigate -> picobridge reads stash
   try {
     const fileData = await Filesystem.readFile({
-      path: `Carts/${game.name}`, // Standardized path
+      path: `Carts/${game.name}`, // standardized path
       directory: Directory.Documents,
     });
 
-    // Stash
+    // stash
     localStorage.setItem("pico_handoff_payload", fileData.data);
     localStorage.setItem("pico_handoff_name", game.name);
     console.log(`[Library] Stashed ${game.name} for handoff.`);
 
-    // Navigate (Direct Boot Handover)
-    // We go straight to 'boot' mode, since we stashed the data.
-    // This avoids the 'injectEngine(name) -> injectCartridge -> reload' double step.
+    // navigate
     window.location.href = `index.html?cart=boot&boot=1&t=${Date.now()}`;
   } catch (e) {
     console.error(`[Library] Pre-load read failed: ${e.message}`);
@@ -477,7 +475,7 @@ async function openGame(game) {
   display: block;
 }
 
-/* Transitions */
+/* transitions */
 .slide-up-enter-active,
 .slide-up-leave-active {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
@@ -489,7 +487,7 @@ async function openGame(game) {
   opacity: 0;
 }
 
-/* Staggered Fade Transition */
+/* staggered fade transition */
 .staggered-fade-enter-active {
   transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
   transition-delay: calc(var(--index) * 50ms);
@@ -504,8 +502,7 @@ async function openGame(game) {
   transform: translateY(20px);
 }
 
-/* Custom Scrollbar for Settings */
-/* Handled globally in style.css */
+/* custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }

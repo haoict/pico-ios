@@ -18,18 +18,17 @@ export class LibraryManager {
     if (this.initialized) return;
 
     try {
-      // Ensure Pocket8 directories exist
-      // Ensure Pocket8 directories exist (Try/Catch wrapper per dir for safety)
+      // # ensure pocket8 directories exist
+      // using try/catch wrapper for safety
       const ensureDir = async (path) => {
         try {
-          // Check existence first to avoid "OS-PLUG-FILE-0010" logs
+          // check existence first
           await Filesystem.stat({
             path,
             directory: Directory.Documents,
           });
-          // If stat succeeds, it exists. Do nothing.
         } catch (e) {
-          // If stat fails, it doesn't exist (or other error). Try to create.
+          // # try to create if missing
           try {
             await Filesystem.mkdir({
               path,
@@ -37,7 +36,7 @@ export class LibraryManager {
               recursive: true,
             });
           } catch (mkdirError) {
-            // Silently fail if creation fails (race condition or permission)
+            // silently fail
           }
         }
       };
@@ -46,7 +45,7 @@ export class LibraryManager {
       await ensureDir(IMAGES_DIR);
       await ensureDir(SAVES_DIR);
 
-      // Load Metadata
+      // # load metadata
       try {
         const result = await Filesystem.readFile({
           path: LIBRARY_FILE,
@@ -62,14 +61,12 @@ export class LibraryManager {
       await this.scan();
       this.initialized = true;
     } catch (e) {
-      // Silent failure
+      // silent failure
     }
   }
 
   async cleanupLegacy() {
-    // Legacy cleanup removed to prevent loops.
-    // The ROOT constant "Pocket8" ensures we are in the right place.
-    // If double-nesting existed, it's ignored now.
+    // # legacy cleanup logic removed
   }
 
   async scan() {
@@ -120,10 +117,10 @@ export class LibraryManager {
       games.push(...loadedGames);
       console.log(`📦 [Shelf] ${games.length} games ready.`);
     } catch (e) {
-      // Silent catch
+      // silent catch
     }
 
-    // Sort by Last Played Descending
+    // # sort by last played descending
     games.sort((a, b) => b.lastPlayed - a.lastPlayed);
 
     this.games = games;
@@ -132,7 +129,7 @@ export class LibraryManager {
 
   async importFile(blob, filename) {
     try {
-      // Convert Blob to Base64
+      // # convert blob to base64
       const reader = new FileReader();
       const base64Promise = new Promise((resolve, reject) => {
         reader.onload = () => {
@@ -145,18 +142,17 @@ export class LibraryManager {
 
       const base64Data = await base64Promise;
 
-      // Sanitize Path Logic - Flattened via constants, but keeping simple safety if needed
-      // (Legacy double-nesting check removed as we use constants now)
+      // # sanitize path logic
       let targetPath = `${CARTS_DIR}/${filename}`;
 
-      // 1. Save Cartridge to Pocket8/Carts/
+      // 1. save cartridge to pocket8/carts/
       await Filesystem.writeFile({
         path: targetPath,
         data: base64Data,
         directory: Directory.Documents,
       });
 
-      // 2. Extract/Copy Image to Pocket8/Images/
+      // 2. extract/copy image to pocket8/images/
       if (filename.endsWith(".p8.png") || filename.endsWith(".png")) {
         const baseName = filename
           .replace(/\.p8(\.png)?$/, "")
@@ -164,7 +160,6 @@ export class LibraryManager {
 
         try {
           let imagePath = `${IMAGES_DIR}/${baseName}.png`;
-          // (Legacy double-nesting check removed)
 
           await Filesystem.writeFile({
             path: imagePath,
@@ -174,8 +169,7 @@ export class LibraryManager {
         } catch (e) {}
       }
 
-      // memory-stream handoff (payload key update)
-      // stash immediate payload for zero-disk launching
+      // # memory handoff payload update
       localStorage.setItem("pico_handoff_payload", base64Data);
       localStorage.setItem("pico_handoff_name", filename);
 
@@ -194,7 +188,7 @@ export class LibraryManager {
         directory: Directory.Documents,
       });
 
-      // 2. delete cover image (best effort)
+      // 2. delete cover image
       const baseName = filename.replace(/\.p8(\.png)?$/, "");
       try {
         await Filesystem.deleteFile({
@@ -202,20 +196,19 @@ export class LibraryManager {
           directory: Directory.Documents,
         });
       } catch (e) {
-        // image might not exist or be used by something else (unlikely in this structure)
+        // image might not exist
       }
 
-      // 3. remove from metadata if exists
+      // 3. remove from metadata
       if (this.metadata[filename]) {
         delete this.metadata[filename];
         await this.saveMetadata();
       }
 
-      // rescan to update list
+      // # rescan to update list
       await this.scan();
       return true;
     } catch (e) {
-      // console.error("delete failed", e);
       return false;
     }
   }
@@ -229,7 +222,7 @@ export class LibraryManager {
         encoding: Encoding.UTF8,
       });
     } catch (e) {
-      // console.error("failed to save metadata", e);
+      // failed to save metadata
     }
   }
 }

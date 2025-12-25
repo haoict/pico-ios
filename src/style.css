@@ -4,14 +4,12 @@
 
 @layer base {
   :root {
-    /* Delta Standard Palette */
     --color-oled-black: #000000;
     --color-surface: rgba(28, 28, 30, 0.6);
     --color-primary: #8e2de2;
     --color-text-primary: #ffffff;
     --color-text-secondary: rgba(255, 255, 255, 0.6);
 
-    /* Physics-based Easing */
     --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
     --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
@@ -52,7 +50,7 @@
     padding-top: env(safe-area-inset-top);
   }
 
-  /* Smooth Transitions */
+  /* smooth transitions */
   .transition-fluid {
     transition-property: all;
     transition-timing-function: var(--ease-fluid);
@@ -60,7 +58,6 @@
   }
 }
 
-/* Custom Scrollbar Hiding */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -69,7 +66,7 @@
   scrollbar-width: none;
 }
 
-/* Animations */
+/* animations */
 @keyframes wiggle {
   0%,
   100% {

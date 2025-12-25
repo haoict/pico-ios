@@ -1,10 +1,11 @@
 <template>
   <div
-    class="relative w-full h-full flex justify-between items-center pointer-events-none select-none px-6 pb-6 landscape:items-end landscape:pb-16 landscape:px-12"
+    class="relative w-full h-full flex justify-between items-center pointer-events-none select-none px-6 pb-6 landscape:grid landscape:grid-cols-[240px_1fr_240px] landscape:p-0 landscape:items-stretch"
   >
-    <!-- d-pad container (left) -->
+    <!-- d-pad container left -->
+    <!-- # landscape: center left -->
     <div
-      class="relative w-40 h-40 small:w-36 small:h-36 ml-2 pointer-events-auto active:scale-95 transition-transform duration-100 ease-out landscape:ml-8"
+      class="relative w-40 h-40 small:w-36 small:h-36 ml-2 pointer-events-auto active:scale-95 transition-transform duration-100 ease-out landscape:ml-0 landscape:self-center landscape:justify-self-center touch-action-none landscape:col-start-1"
       @touchstart.prevent="handleDpadInput"
       @touchmove.prevent="handleDpadInput"
       @touchend.prevent="handleDpadEnd"
@@ -68,15 +69,9 @@
           />
         </g>
       </svg>
-
-      <!-- landscape select button has been moved to root level -->
     </div>
 
-    <!-- menu button (responsive) -->
-    <!-- portrait: centered bottom (in flow with center controls? no, let's keep it separate) -->
-    <!-- actually, better to duplicate or use strict absolute positioning relative to root -->
-
-    <!-- landscape home button (top left) -->
+    <!-- menu button -->
     <button
       class="hidden landscape:flex absolute top-6 left-8 w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)] active:bg-white/20 active:scale-95 transition-all duration-300 items-center justify-center z-50 pointer-events-auto"
       @click="openMenu"
@@ -99,7 +94,7 @@
       </svg>
     </button>
 
-    <!-- portrait home button (top center - miyoo style) -->
+    <!-- portrait home button -->
     <button
       class="landscape:hidden absolute top-2 left-1/2 transform -translate-x-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)] active:bg-white/20 active:scale-95 transition-all duration-300 flex items-center justify-center z-40 pointer-events-auto"
       @click="openMenu"
@@ -121,7 +116,7 @@
       </svg>
     </button>
 
-    <!-- center controls (start/select only now) -->
+    <!-- center controls -->
     <div
       class="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex items-center gap-8 pointer-events-auto landscape:hidden"
     >
@@ -140,7 +135,7 @@
         >
       </button>
 
-      <!-- portrait start (enter/13) -->
+      <!-- portrait start -->
       <button
         class="group flex flex-col items-center gap-2 active:scale-95 transition-transform duration-300 min-w-[44px] min-h-[44px] justify-center"
         @touchstart.prevent="pressKey(13)"
@@ -158,48 +153,50 @@
       </button>
     </div>
 
-    <!-- action buttons (right) -->
+    <!-- action buttons -->
     <div
-      class="relative w-36 h-48 landscape:w-48 landscape:h-56 small:w-36 small:h-48 pointer-events-auto mr-2 flex items-end justify-end landscape:mr-12"
+      class="relative w-36 h-48 landscape:w-full landscape:h-full small:w-36 small:h-48 pointer-events-auto mr-2 flex items-end justify-end landscape:mr-0 landscape:items-center landscape:justify-center landscape:col-start-3"
     >
-      <!-- button container for grouping -->
-      <div class="relative w-full h-full">
+      <!-- button container -->
+      <div
+        class="relative w-full h-full select-none touch-none pointer-events-none landscape:w-40 landscape:h-40"
+      >
         <!-- o button -->
         <button
-          class="absolute bottom-24 right-2 landscape:bottom-32 landscape:right-2 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(255,0,77,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#FF004D]/80"
+          class="absolute bottom-24 right-2 landscape:bottom-auto landscape:top-0 landscape:right-0 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(255,0,77,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#FF004D]/80"
           @touchstart.prevent="pressKey(90)"
           @touchend.prevent="releaseKey(90)"
           @mousedown.prevent="pressKey(90)"
           @mouseup.prevent="releaseKey(90)"
         >
           <span
-            class="text-white font-bold text-3xl font-pico opacity-90 group-active:opacity-100 flex items-center justify-center translate-x-[2px] -translate-y-[2px]"
+            class="text-white font-bold text-3xl font-pico opacity-90 group-active:opacity-100 flex items-center justify-center translate-x-[2px] -translate-y-[3px] pointer-events-none"
             >o</span
           >
         </button>
 
         <!-- x button -->
         <button
-          class="absolute bottom-4 right-14 landscape:bottom-9 landscape:right-20 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(41,173,255,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#29ADFF]/80"
+          class="absolute bottom-4 right-14 landscape:bottom-0 landscape:left-0 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(41,173,255,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#29ADFF]/80"
           @touchstart.prevent="pressKey(88)"
           @touchend.prevent="releaseKey(88)"
           @mousedown.prevent="pressKey(88)"
           @mouseup.prevent="releaseKey(88)"
         >
           <span
-            class="text-white font-bold text-3xl font-pico opacity-90 group-active:opacity-100 flex items-center justify-center translate-x-[2px] -translate-y-[2px]"
+            class="text-white font-bold text-3xl font-pico opacity-90 group-active:opacity-100 flex items-center justify-center translate-x-[2px] -translate-y-[3px] pointer-events-none"
             >x</span
           >
         </button>
       </div>
     </div>
 
-    <!-- landscape navigation (root level - the bezel hug) -->
+    <!-- landscape navigation -->
     <!-- positioned inward to be closer to game view corners and away from controls -->
 
-    <!-- landscape select (left side inward) -->
+    <!-- landscape select -->
     <button
-      class="hidden landscape:flex absolute bottom-8 left-48 w-16 h-16 pointer-events-auto items-center justify-center flex-col gap-1 active:scale-95 transition-transform duration-300"
+      class="hidden landscape:flex absolute bottom-4 left-6 w-16 h-16 pointer-events-auto items-center justify-center flex-col gap-1 active:scale-95 transition-transform duration-300 z-50 pointer-events-auto"
       @click="openMenu"
       @touchstart.prevent="openMenu"
     >
@@ -212,9 +209,9 @@
       >
     </button>
 
-    <!-- landscape start (right side inward) -->
+    <!-- landscape start -->
     <button
-      class="hidden landscape:flex absolute bottom-8 right-56 w-16 h-16 pointer-events-auto items-center justify-center flex-col gap-1 active:scale-95 transition-transform duration-300"
+      class="hidden landscape:flex absolute bottom-4 right-6 w-16 h-16 pointer-events-auto items-center justify-center flex-col gap-1 active:scale-95 transition-transform duration-300 z-50 pointer-events-auto"
       @touchstart.prevent="pressKey(13)"
       @touchend.prevent="releaseKey(13)"
       @mousedown.prevent="pressKey(13)"
@@ -247,7 +244,7 @@ const handleDpadInput = (e) => {
     clientX = e.touches[0].clientX;
     clientY = e.touches[0].clientY;
   } else {
-    // Mouse
+    // mouse
     if (e.type === "mousedown") isMouseDown = true;
     if (e.type === "mousemove" && !isMouseDown) return;
     clientX = e.clientX;
@@ -259,21 +256,21 @@ const handleDpadInput = (e) => {
   const centerX = rect.left + rect.width / 2;
   const centerY = rect.top + rect.height / 2;
 
-  // Calculate angle
+  // calculate angle
   const deltaX = clientX - centerX;
   const deltaY = clientY - centerY;
   const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
 
-  // Map to Direction (Cones)
+  // map to direction (cones)
   let newDirection = null;
 
-  // Right: -45 to 45
+  // right: -45 to 45
   if (angle > -45 && angle <= 45) newDirection = 39;
-  // Down: 45 to 135
+  // down: 45 to 135
   else if (angle > 45 && angle <= 135) newDirection = 40;
-  // Up: -135 to -45
+  // up: -135 to -45
   else if (angle > -135 && angle <= -45) newDirection = 38;
-  // Left: 135 to 180 OR -180 to -135
+  // left: 135 to 180 or -180 to -135
   else newDirection = 37;
 
   if (newDirection !== currentDirection.value) {
@@ -291,22 +288,22 @@ const handleDpadEnd = () => {
   }
 };
 
-// KeyCodes:
-// Left: 37, Right: 39, Up: 38, Down: 40
-// Z (O): 90, X (X): 88
-// Enter (Pause): 13
-// Escape (Select): 27
+// # keycodes:
+// left: 37, right: 39, up: 38, down: 40
+// z (o): 90, x (x): 88
+// enter (pause): 13
+// escape (select): 27
 
 let audioResumed = false;
 
 const pressKey = async (code) => {
-  // 1. Audio Resume (One-time trigger)
+  // # audio resume trigger
   if (!audioResumed) {
     picoBridge.resumeAudio();
     audioResumed = true;
   }
 
-  // Dispatch 'keydown' to window, document, and canvas
+  // dispatch 'keydown' to window, document, and canvas
   const event = new KeyboardEvent("keydown", {
     key: getKeyName(code),
     code: getCodeName(code),
@@ -318,9 +315,9 @@ const pressKey = async (code) => {
   });
 
   window.dispatchEvent(event);
-  document.dispatchEvent(event); // Fallback
+  document.dispatchEvent(event); // fallback
 
-  // Also try specific PICO-8 global input array if available (as backup)
+  // # legacy bitmask support
   updateBitmask(code, true);
 
   try {
@@ -347,7 +344,7 @@ const releaseKey = (code) => {
 
 const emit = defineEmits(["menu"]);
 
-// Helpers for robust event generation
+// # event helpers
 function getKeyName(code) {
   if (code === 37) return "ArrowLeft";
   if (code === 39) return "ArrowRight";
@@ -372,7 +369,7 @@ function getCodeName(code) {
   return "";
 }
 
-// Legacy global array support (just in case)
+// # legacy global array support
 function updateBitmask(code, isDown) {
   if (!window.pico8_buttons) return;
   let bit = 0;
@@ -390,7 +387,11 @@ function updateBitmask(code, isDown) {
   }
 }
 
-const openMenu = () => {
+const openMenu = (e) => {
+  if (e) {
+    e.preventDefault();
+    if (e.stopPropagation) e.stopPropagation();
+  }
   emit("menu");
   try {
     Haptics.impact({ style: ImpactStyle.Medium });

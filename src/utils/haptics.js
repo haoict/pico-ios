@@ -5,7 +5,7 @@ export const haptics = {
     try {
       await Haptics.impact({ style });
     } catch (e) {
-      // Fail silently on non-supported devices
+      // # fail silently on non-supported devices
     }
   },
 

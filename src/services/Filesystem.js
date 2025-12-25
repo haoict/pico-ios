@@ -4,11 +4,7 @@ import { Capacitor } from "@capacitor/core";
 const IS_NATIVE = Capacitor.isNativePlatform();
 
 export async function scanLibrary() {
-  // Remove mock data trap. trusted to work via Capacitor Filesystem (IndexedDB on web)
-  // if (!IS_NATIVE) { ... } logic removed to enable actual storage usage.
-
   try {
-    // Read from Documents directory by default
     const result = await Filesystem.readdir({
       path: "",
       directory: Directory.Documents,
@@ -18,7 +14,7 @@ export async function scanLibrary() {
 
     for (const file of result.files) {
       if (file.name.endsWith(".p8") || file.name.endsWith(".p8")) {
-        // Check for cover image
+        // # check for cover image
         const baseName = file.name.replace(/\.p8(\.png)?$/, "");
         const coverPath = `Imgs/${baseName}`;
 
@@ -30,14 +26,14 @@ export async function scanLibrary() {
           });
           hasCover = !!coverStat;
         } catch (e) {
-          // Cover not found
+          // # cover not found
         }
 
         games.push({
           name: file.name,
-          path: file.uri, // Use full URI for native player
+          path: file.uri,
           cover: hasCover ? coverPath : null,
-          directory: Directory.Documents, // Keep track of source
+          directory: Directory.Documents,
         });
       }
     }
