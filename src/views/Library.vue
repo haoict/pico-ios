@@ -304,7 +304,7 @@
     <!-- versions footer -->
     <div class="mt-12 mb-6 text-center opacity-30">
       <p class="text-[10px] font-mono uppercase tracking-widest">
-        Pocket8 v1.2
+        Pocket8 v1.3
       </p>
     </div>
 
@@ -325,6 +325,30 @@
           <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-6"></div>
 
           <h2 class="text-xl font-bold text-white mb-6">Settings</h2>
+
+          <!-- controls -->
+          <div class="mb-8">
+            <h3
+              class="text-sm font-medium text-white/50 uppercase tracking-wider mb-4"
+            >
+              Controls
+            </h3>
+            <div
+              @click="toggleSwapButtons"
+              class="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 active:bg-white/10 transition-colors cursor-pointer"
+            >
+              <span class="text-white font-medium">Swap X / O Buttons</span>
+              <div
+                class="w-12 h-7 rounded-full transition-colors relative"
+                :class="swapButtons ? 'bg-green-500' : 'bg-white/10'"
+              >
+                <div
+                  class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm"
+                  :class="swapButtons ? 'translate-x-5' : 'translate-x-0'"
+                ></div>
+              </div>
+            </div>
+          </div>
 
           <!-- manage saves -->
           <div class="mb-8 flex-1">
@@ -490,8 +514,10 @@ import { libraryManager } from "../services/LibraryManager"; // # added import
 
 const router = useRouter();
 const libraryStore = useLibraryStore();
-const { games, loading, searchQuery, sortBy } = storeToRefs(libraryStore); // access store state
-const { loadLibrary, addCartridge, removeCartridge } = libraryStore; // access actions
+const { games, loading, searchQuery, sortBy, swapButtons } =
+  storeToRefs(libraryStore);
+const { loadLibrary, addCartridge, removeCartridge, toggleSwapButtons } =
+  libraryStore;
 
 const fileInput = ref(null);
 const showSettings = ref(false);

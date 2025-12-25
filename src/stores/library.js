@@ -11,6 +11,12 @@ export const useLibraryStore = defineStore("library", () => {
   // # ui state
   const searchQuery = ref("");
   const sortBy = ref("lastPlayed"); // 'lastPlayed', 'name', 'newest'
+  const swapButtons = ref(localStorage.getItem("pico_swap_buttons") === "true");
+
+  function toggleSwapButtons() {
+    swapButtons.value = !swapButtons.value;
+    localStorage.setItem("pico_swap_buttons", swapButtons.value);
+  }
 
   const filteredGames = computed(() => {
     let result = [...rawGames.value];
@@ -82,6 +88,8 @@ export const useLibraryStore = defineStore("library", () => {
     error,
     searchQuery,
     sortBy,
+    swapButtons,
+    toggleSwapButtons,
     loadLibrary,
     addCartridge,
     removeCartridge,

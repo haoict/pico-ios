@@ -177,33 +177,43 @@
       <div
         class="relative w-full h-full select-none touch-none pointer-events-none landscape:w-40 landscape:h-40"
       >
-        <!-- o button -->
+        <!-- button 1 (right) -->
         <button
-          class="absolute bottom-24 right-2 landscape:bottom-auto landscape:top-0 landscape:right-0 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(255,0,77,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#FF004D]/80 pointer-events-auto"
+          class="absolute bottom-24 right-2 landscape:bottom-auto landscape:top-0 landscape:right-0 w-20 h-20 small:w-16 small:h-16 rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border pointer-events-auto"
+          :class="
+            btn1.label === 'o'
+              ? 'bg-[rgba(255,0,77,0.15)] border-[#FF004D]/80'
+              : 'bg-[rgba(41,173,255,0.15)] border-[#29ADFF]/80'
+          "
           style="-webkit-tap-highlight-color: transparent"
-          @touchstart.stop.prevent="pressKey(90)"
-          @touchend.stop.prevent="releaseKey(90)"
-          @mousedown.stop.prevent="pressKey(90)"
-          @mouseup.stop.prevent="releaseKey(90)"
+          @touchstart.stop.prevent="pressKey(btn1.code)"
+          @touchend.stop.prevent="releaseKey(btn1.code)"
+          @mousedown.stop.prevent="pressKey(btn1.code)"
+          @mouseup.stop.prevent="releaseKey(btn1.code)"
         >
           <span
             class="text-white font-bold text-3xl font-pico opacity-90 group-active:opacity-100 flex items-center justify-center translate-x-[2px] -translate-y-[3px] pointer-events-none"
-            >o</span
+            >{{ btn1.label }}</span
           >
         </button>
 
-        <!-- x button -->
+        <!-- button 2 (left) -->
         <button
-          class="absolute bottom-4 right-14 landscape:bottom-0 landscape:left-0 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(41,173,255,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#29ADFF]/80 pointer-events-auto"
+          class="absolute bottom-4 right-14 landscape:bottom-0 landscape:left-0 w-20 h-20 small:w-16 small:h-16 rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border pointer-events-auto"
+          :class="
+            btn2.label === 'o'
+              ? 'bg-[rgba(255,0,77,0.15)] border-[#FF004D]/80'
+              : 'bg-[rgba(41,173,255,0.15)] border-[#29ADFF]/80'
+          "
           style="-webkit-tap-highlight-color: transparent"
-          @touchstart.stop.prevent="pressKey(88)"
-          @touchend.stop.prevent="releaseKey(88)"
-          @mousedown.stop.prevent="pressKey(88)"
-          @mouseup.stop.prevent="releaseKey(88)"
+          @touchstart.stop.prevent="pressKey(btn2.code)"
+          @touchend.stop.prevent="releaseKey(btn2.code)"
+          @mousedown.stop.prevent="pressKey(btn2.code)"
+          @mouseup.stop.prevent="releaseKey(btn2.code)"
         >
           <span
             class="text-white font-bold text-3xl font-pico opacity-90 group-active:opacity-100 flex items-center justify-center translate-x-[2px] -translate-y-[3px] pointer-events-none"
-            >x</span
+            >{{ btn2.label }}</span
           >
         </button>
       </div>
@@ -249,10 +259,31 @@
 <script setup>
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { picoBridge } from "../services/PicoBridge";
-import { ref, reactive } from "vue";
+import { ref, reactive, computed } from "vue";
+import { useLibraryStore } from "../stores/library";
+import { storeToRefs } from "pinia";
+
+// # store access
+const libraryStore = useLibraryStore();
+const { swapButtons } = storeToRefs(libraryStore);
 
 // # active keys tracking
 const activeKeys = reactive(new Set());
+
+// # button mapping (btn1 = right/top, btn2 = left/bottom)
+const btn1 = computed(
+  () =>
+    swapButtons.value
+      ? { label: "x", code: 88, color: "#29ADFF" } // swapped: right is X
+      : { label: "o", code: 90, color: "#FF004D" } // default: right is O
+);
+
+const btn2 = computed(
+  () =>
+    swapButtons.value
+      ? { label: "o", code: 90, color: "#FF004D" } // swapped: left is O
+      : { label: "x", code: 88, color: "#29ADFF" } // default: left is X
+);
 
 // # optimization: touch tracking & layout caching
 const dpadRef = ref(null);
