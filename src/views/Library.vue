@@ -72,6 +72,7 @@
 
             <!-- bbs button -->
             <button
+              v-if="!isAppStoreBuild"
               @click="router.push('/bbs')"
               class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105"
             >
@@ -573,6 +574,25 @@ import { Share } from "@capacitor/share";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { libraryManager } from "../services/LibraryManager";
 
+const isAppStoreBuild = ref(false);
+
+onMounted(() => {
+  // 1. Check immediately in case it's already there
+  if (window.isAppStoreBuild === true) isAppStoreBuild.value = true;
+
+  // 2. Poll every 50ms for 1 second.
+  // This catches the Swift injection if it happens slightly after the Vue app mounts.
+  const checkInterval = setInterval(() => {
+    if (window.isAppStoreBuild === true) {
+      console.log("📱 App Store Mode Detected via Polling");
+      isAppStoreBuild.value = true;
+      clearInterval(checkInterval);
+    }
+  }, 50);
+
+  // Stop checking after 1 second to save resources
+  setTimeout(() => clearInterval(checkInterval), 1000);
+});
 const router = useRouter();
 const libraryStore = useLibraryStore();
 // # fix: initialize games as safe computed/ref to prevent crash if store is empty
