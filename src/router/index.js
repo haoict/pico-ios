@@ -10,11 +10,7 @@ const router = createRouter({
       name: "library",
       component: Library,
     },
-    {
-      path: "/bbs",
-      name: "bbs",
-      component: () => import("../views/BBSExplorer.vue"),
-    },
+
     {
       path: "/play",
       name: "player",

@@ -17,8 +17,6 @@
     @mouseleave.prevent="handleTouchEnd"
   >
     <!-- d-pad container left -->
-    <!-- # landscape: center left -->
-    <!-- d-pad container left -->
     <!-- landscape: center left -->
     <template v-if="!useJoystick">
       <div
@@ -451,13 +449,13 @@ const handleTouch = (e) => {
         dpadState.lastTouchY = t.clientY;
         dpadState.lastInputTime = now;
 
-        // JOYSTICK MODE
+        // joystick mode
         if (useJoystick.value) {
           processJoystickCoordinates(t.clientX, t.clientY);
           return;
         }
 
-        // DPAD MODE
+        // dpad mode
         // hybrid logic: absolute vs relative start
         const distFromVisualSq = getDistSq(
           t.clientX,
@@ -610,7 +608,7 @@ const processJoystickCoordinates = (clientX, clientY) => {
     clampY = dy * ratio;
   }
 
-  // update visual state (direct DOM for 120hz smoothness)
+  // update visual state
   if (joystickStickRef.value) {
     joystickStickRef.value.style.transform = `translate3d(${clampX}px, ${clampY}px, 0)`;
   }

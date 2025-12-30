@@ -18,7 +18,7 @@
       type="file"
       ref="fileInput"
       multiple
-      accept=".p8,.p8.png,.png"
+      accept=".p8,.p8.png,.png,.lua,.txt"
       class="hidden"
       @change="handleFileImport"
     />
@@ -72,8 +72,7 @@
 
             <!-- bbs button -->
             <button
-              v-if="!isAppStoreBuild"
-              @click="router.push('/bbs')"
+              @click="openOfficialBBS"
               class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105"
             >
               <svg
@@ -219,21 +218,180 @@
           </svg>
           <p class="text-white/60 font-medium">No cartridges found</p>
           <p class="text-white/30 text-sm mt-1">
-            Import a .p8 or .p8.png to get started
+            Import a .p8.png cartridge to get started
           </p>
         </div>
       </transition>
 
-      <!-- grid -->
+      <!-- favorites section -->
       <transition-group
-        name="staggered-fade"
+        name="list"
+        tag="div"
+        class="mb-8"
+        v-if="favorites.length > 0"
+      >
+        <div key="fav-header" class="flex flex-col items-center mb-6">
+          <div class="flex items-center gap-2 mb-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 text-pink-500"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span
+              class="text-xs font-bold tracking-[0.2em] text-pink-500 uppercase"
+              >favorites</span
+            >
+          </div>
+        </div>
+
+        <div
+          key="fav-grid"
+          class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 justify-center"
+        >
+          <div
+            v-for="(game, index) in favorites"
+            :key="game.filename"
+            @click="openGame(game)"
+            @touchstart="startLongPress(game)"
+            @touchend="cancelLongPress"
+            @touchmove="cancelLongPress"
+            @mousedown="handleMouseDown(game, $event)"
+            @mouseup="cancelLongPress"
+            @mouseleave="cancelLongPress"
+            @contextmenu.prevent
+            class="group relative aspect-[4/5] rounded-2xl cursor-pointer transition-all duration-500"
+            :class="
+              deleteMode
+                ? 'animate-wiggle'
+                : 'hover:scale-[1.03] hover:shadow-2xl hover:shadow-pink-500/20'
+            "
+          >
+            <!-- heart icon (always visible for favorites) -->
+            <div
+              class="absolute -top-2 -right-2 z-20 transition-transform duration-300 hover:scale-110"
+            >
+              <button
+                @click.stop="handleFavorite(game, $event)"
+                class="rounded-full p-1.5 shadow-lg bg-pink-500 text-white hover:bg-pink-600 transition-colors"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-3 w-3"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <!-- edit controls overlay -->
+            <template v-if="deleteMode">
+              <div class="absolute -top-2 -left-2 z-20">
+                <button
+                  @click.stop="openRenameModal(game)"
+                  class="bg-blue-500 text-white rounded-full p-1 shadow-lg hover:bg-blue-600 transition-colors transform hover:scale-110"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </template>
+
+            <!-- card content -->
+            <div
+              class="absolute inset-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-lg z-0"
+            >
+              <img
+                v-if="game.cover"
+                :src="game.cover"
+                alt="Cover"
+                class="w-full h-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-110"
+              />
+              <div
+                v-else
+                class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-transparent"
+              >
+                <!-- placeholder svg -->
+                <svg
+                  class="w-12 h-12 opacity-20 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+
+              <!-- title band -->
+              <div
+                class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-12"
+              >
+                <h3
+                  class="text-white font-medium text-sm truncate drop-shadow-md transform transition-transform translate-y-1 group-hover:translate-y-0"
+                >
+                  {{ formatName(game.name) }}
+                </h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition-group>
+
+      <!-- formatting divider -->
+      <div v-if="favorites.length > 0" class="relative py-8 flex items-center">
+        <div class="flex-grow border-t border-white/5"></div>
+        <span
+          class="flex-shrink-0 mx-4 text-white/20 text-[10px] uppercase tracking-widest"
+          >all games</span
+        >
+        <div class="flex-grow border-t border-white/5"></div>
+      </div>
+      <!-- end divider -->
+
+      <!-- main library grid -->
+      <transition-group
+        name="list"
         tag="div"
         class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6"
-        :style="{ '--total': games.length }"
       >
         <div
-          v-for="(game, index) in games"
-          :key="game.path"
+          v-for="(game, index) in nonFavorites"
+          :key="game.filename"
           @click="openGame(game)"
           @touchstart="startLongPress(game)"
           @touchend="cancelLongPress"
@@ -242,56 +400,101 @@
           @mouseup="cancelLongPress"
           @mouseleave="cancelLongPress"
           @contextmenu.prevent
-          class="group relative aspect-[4/5] rounded-2xl cursor-pointer transition-all duration-300"
+          class="group relative aspect-[4/5] rounded-2xl cursor-pointer transition-all duration-500"
           :class="
             deleteMode
               ? 'animate-wiggle'
               : 'hover:scale-[1.03] hover:shadow-2xl hover:shadow-purple-500/20'
           "
-          :style="{ '--index': index }"
         >
-          <!-- delete overlay -->
-          <div v-if="deleteMode" class="absolute -top-2 -right-2 z-20">
-            <button
-              @click="(e) => handleDelete(game, e)"
-              class="bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+          <!-- controls overlay (delete mode) -->
+          <template v-if="deleteMode">
+            <!-- favorite toggle (gray) -->
+            <div class="absolute -top-2 -right-2 z-20">
+              <button
+                @click.stop="handleFavorite(game, $event)"
+                class="rounded-full p-1.5 shadow-lg bg-gray-500/80 text-white/50 hover:bg-pink-500 hover:text-white transition-all transform hover:scale-110"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-3 w-3"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
 
-          <!-- card container -->
+            <!-- rename -->
+            <div class="absolute -top-2 -left-2 z-20">
+              <button
+                @click.stop="openRenameModal(game)"
+                class="bg-blue-500 text-white rounded-full p-1 shadow-lg hover:bg-blue-600 transition-colors transform hover:scale-110"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <!-- delete -->
+            <div
+              class="absolute -bottom-2 -right-2 z-20"
+              v-if="nonFavorites.length > 0"
+            >
+              <button
+                @click.stop="handleDelete(game, $event)"
+                class="bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors transform hover:scale-110"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </template>
+
+          <!-- card content -->
           <div
             class="absolute inset-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-lg z-0"
           >
-            <!-- cover art -->
             <img
               v-if="game.cover"
               :src="game.cover"
               alt="Cover"
-              class="w-full h-full object-cover opacity-90 transition-transform duration-500"
-              :class="!deleteMode && 'group-hover:scale-110'"
+              class="w-full h-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-110"
             />
-            <!-- fallback -->
             <div
               v-else
-              class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-white/5 to-transparent"
+              class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-transparent"
             >
               <svg
-                xmlns="http://www.w3.org/2000/svg"
                 class="w-12 h-12 opacity-20 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -314,13 +517,10 @@
 
             <!-- title band -->
             <div
-              class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-12 backdrop-blur-[2px]"
+              class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-12"
             >
               <h3
-                class="text-white font-medium text-sm truncate drop-shadow-md transform transition-transform"
-                :class="
-                  !deleteMode && 'translate-y-1 group-hover:translate-y-0'
-                "
+                class="text-white font-medium text-sm truncate drop-shadow-md transform transition-transform translate-y-1 group-hover:translate-y-0"
               >
                 {{ formatName(game.name) }}
               </h3>
@@ -329,6 +529,45 @@
         </div>
       </transition-group>
     </div>
+
+    <!-- rename modal -->
+    <transition name="fade">
+      <div
+        v-if="showRenameModal"
+        class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        @click.self="closeRenameModal"
+      >
+        <div
+          class="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl transform transition-all"
+        >
+          <h3 class="text-lg font-bold text-white mb-2">Rename Cartridge</h3>
+          <p class="text-white/50 text-sm mb-4">
+            Enter a new name for this game.
+          </p>
+          <input
+            v-model="renameInput"
+            ref="renameInputRef"
+            type="text"
+            class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all mb-6"
+            @keyup.enter="confirmRename"
+          />
+          <div class="flex justify-end gap-3">
+            <button
+              @click="closeRenameModal"
+              class="px-4 py-2 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-colors font-medium text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              @click="confirmRename"
+              class="px-4 py-2 rounded-lg bg-white text-black hover:scale-105 active:scale-95 transition-all font-bold text-sm shadow-lg shadow-white/10"
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
 
     <!-- versions footer -->
     <div class="mt-12 mb-6 text-center opacity-30">
@@ -439,14 +678,14 @@
                 :key="group.title"
                 class="animate-fade-in"
               >
-                <!-- Group Header -->
+                <!-- group header -->
                 <h4
                   class="sticky top-0 z-10 bg-[var(--color-surface)]/95 backdrop-blur-md py-2 px-1 text-white/40 text-xs font-bold uppercase tracking-widest mb-2 border-b border-white/5"
                 >
                   {{ group.title }}
                 </h4>
 
-                <!-- Group Items -->
+                <!-- group items -->
                 <div class="space-y-2">
                   <div
                     v-for="save in group.files"
@@ -457,7 +696,7 @@
                       <div
                         class="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0 border border-white/5"
                       >
-                        <span class="text-lg">💾</span>
+                        <span class="text-lg"></span>
                       </div>
                       <div class="flex flex-col min-w-0">
                         <span
@@ -565,7 +804,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed, reactive } from "vue";
+import { onMounted, ref, computed, reactive, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useLibraryStore } from "../stores/library";
 import { storeToRefs } from "pinia";
@@ -574,28 +813,9 @@ import { Share } from "@capacitor/share";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { libraryManager } from "../services/LibraryManager";
 
-const isAppStoreBuild = ref(false);
-
-onMounted(() => {
-  // 1. Check immediately in case it's already there
-  if (window.isAppStoreBuild === true) isAppStoreBuild.value = true;
-
-  // 2. Poll every 50ms for 1 second.
-  // This catches the Swift injection if it happens slightly after the Vue app mounts.
-  const checkInterval = setInterval(() => {
-    if (window.isAppStoreBuild === true) {
-      console.log("📱 App Store Mode Detected via Polling");
-      isAppStoreBuild.value = true;
-      clearInterval(checkInterval);
-    }
-  }, 50);
-
-  // Stop checking after 1 second to save resources
-  setTimeout(() => clearInterval(checkInterval), 1000);
-});
 const router = useRouter();
 const libraryStore = useLibraryStore();
-// # fix: initialize games as safe computed/ref to prevent crash if store is empty
+// fix: initialize games as safe computed/ref to prevent crash if store is empty
 const { loading, searchQuery, sortBy, swapButtons, useJoystick } =
   storeToRefs(libraryStore);
 const games = computed(() => libraryStore.games || []);
@@ -603,15 +823,30 @@ const games = computed(() => libraryStore.games || []);
 const {
   loadLibrary,
   addCartridge,
+  addBundle,
   removeCartridge,
+  toggleFavorite,
+  renameCartridge,
   toggleSwapButtons,
   toggleJoystick,
 } = libraryStore;
 
+// split lists
+const favorites = computed(() => games.value.filter((g) => g.isFavorite));
+const nonFavorites = computed(() => games.value.filter((g) => !g.isFavorite));
+
+const hasFavorites = computed(() => favorites.value.length > 0);
+
 const fileInput = ref(null);
 const showSettings = ref(false);
 
-// # swipeable settings logic
+// rename modal state
+const showRenameModal = ref(false);
+const renameInput = ref("");
+const renameInputRef = ref(null);
+const currentRenamingGame = ref(null);
+
+// swipeable settings logic
 const settingsDrag = reactive({
   startY: 0,
   currentY: 0,
@@ -651,19 +886,20 @@ const saves = ref([]);
 const loadingSaves = ref(false);
 const deleteMode = ref(false);
 const importProgress = ref("");
-let longPressTimer = null; // # timer ref
+let longPressTimer = null;
 
 const sortOptions = [
   { label: "Recently Played", value: "lastPlayed" },
   { label: "Name (A-Z)", value: "name" },
   { label: "Newest", value: "newest" },
   { label: "Oldest", value: "oldest" },
+  { label: "Play Count", value: "playCount" },
 ];
 
 const groupedSaves = computed(() => {
   const groups = {};
   saves.value.forEach((save) => {
-    // robust extraction: everything before the last _auto or _manual
+    // extract everything before the last _auto or _manual
     const simpleName = save.cartName;
     if (!groups[simpleName]) groups[simpleName] = [];
     groups[simpleName].push(save);
@@ -679,13 +915,13 @@ const groupedSaves = computed(() => {
 });
 
 onMounted(async () => {
-  console.log("[Library] Mounting...");
+  console.log("[library] mounting...");
   try {
     const loadedGames = await loadLibrary();
-    // # silent ship protocol
-    console.log(`[Library] Loaded ${loadedGames.length} cartridges.`);
+    // silent ship protocol
+    console.log(`[library] loaded ${loadedGames.length} cartridges.`);
   } catch (e) {
-    console.error("[Library] Load failed:", e);
+    console.error("[library] load failed:", e);
   }
 });
 
@@ -694,46 +930,44 @@ function triggerImport() {
   fileInput.value.click();
 }
 
+function openOfficialBBS() {
+  Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+  // the magic url provided by zep to set the cookie
+  const url =
+    "https://www.lexaloffle.com/bbs/?cat=7#sub=2&mode=carts&orderby=featured&ios_player=pocket8";
+
+  // open in system browser to ensure cookies are set globally for safari
+  window.open(url, "_system");
+}
+
 async function handleFileImport(event) {
   const files = event.target.files;
   if (!files || files.length === 0) return;
 
-  // UI Feedback
+  // ui feedback
   loading.value = true;
   const total = files.length;
-  console.log(`[Library] Batch importing ${total} files...`);
+  console.log(`[library] batch importing ${total} files...`);
 
-  let successCount = 0;
-
-  // process sequentially to prevent memory spikes
-  for (let i = 0; i < total; i++) {
-    const file = files[i];
-    // Update progress text
-    importProgress.value = `Importing ${i + 1}/${total}`;
-
-    try {
-      const success = await addCartridge(file);
-      if (success) successCount++;
-    } catch (e) {
-      console.error(`Failed to import ${file.name}`, e);
+  // use new session bundler
+  // checks if multiple files are selected, or just passes the list
+  try {
+    const success = await addBundle(files);
+    if (success) {
+      Haptics.notification({ type: "success" }).catch(() => {});
+      alert(`Success! ${total} cartridges loaded.`);
+    } else {
     }
+  } catch (e) {
+    console.error(e);
+    Haptics.notification({ type: "error" }).catch(() => {});
+    alert(e.message); // show specific error
   }
 
-  // Cleanup
+  // cleanup
   loading.value = false;
   importProgress.value = "";
-  event.target.value = ""; // Reset input
-
-  // Final Feedback
-  if (successCount > 0) {
-    Haptics.notification({ type: "success" }).catch(() => {});
-    // Reload library to show new games
-    await loadLibrary();
-    alert(`Successfully imported ${successCount} cartridges!`);
-  } else {
-    Haptics.notification({ type: "error" }).catch(() => {});
-    alert("No valid cartridges found in selection.");
-  }
+  event.target.value = ""; // reset input
 }
 
 // long press logic
@@ -749,7 +983,7 @@ function startLongPress(game) {
   longPressTimer = setTimeout(() => {
     Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
     deleteMode.value = true;
-  }, 500); // 500ms threshold
+  }, 500);
 }
 
 function cancelLongPress() {
@@ -770,13 +1004,59 @@ async function startDeleteMode() {
   deleteMode.value = !deleteMode.value;
 }
 
+async function handleFavorite(game, event) {
+  event?.stopPropagation(); // optional chaining in case validation triggers locally
+  Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+  await toggleFavorite(game);
+}
+
+function openRenameModal(game) {
+  currentRenamingGame.value = game;
+  const currentName =
+    game.displayName || game.name.replace(/(\.p8\.png|\.p8|\.png)$/i, "");
+  renameInput.value = currentName;
+  showRenameModal.value = true;
+
+  // focus input
+  nextTick(() => {
+    if (renameInputRef.value) {
+      renameInputRef.value.focus();
+      renameInputRef.value.select();
+    }
+  });
+}
+
+function closeRenameModal() {
+  showRenameModal.value = false;
+  currentRenamingGame.value = null;
+  renameInput.value = "";
+}
+
+async function confirmRename() {
+  if (!renameInput.value.trim() || !currentRenamingGame.value) {
+    closeRenameModal();
+    return;
+  }
+
+  const newName = renameInput.value.trim();
+  const game = currentRenamingGame.value;
+
+  closeRenameModal(); // close first for responsiveness
+
+  const success = await renameCartridge(game, newName);
+  if (success) {
+    Haptics.notification({ type: "success" }).catch(() => {});
+    console.log(`[library] renamed via modal -> ${newName}`);
+  }
+}
+
 async function handleDelete(game, event) {
   event.stopPropagation();
 
   // ask first
   if (confirm(`Delete ${game.name}? This cannot be undone.`)) {
     // action
-    await removeCartridge(game.name);
+    await removeCartridge(game.filename);
     // feedback
     Haptics.notification({ type: "success" }).catch(() => {});
   }
@@ -828,7 +1108,7 @@ async function openSettings() {
     // sort newest first
     saves.value = parsedFiles.sort((a, b) => b.mtime - a.mtime);
   } catch (e) {
-    console.error("[Library] Failed to list saves:", e);
+    console.error("[library] failed to list saves:", e);
   } finally {
     loadingSaves.value = false;
   }
@@ -836,9 +1116,9 @@ async function openSettings() {
 
 async function loadState(save) {
   Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
-  console.log("[Library] Booting from state:", save.name);
+  console.log("[library] booting from state:", save.name);
 
-  // # find cart matching save
+  // find cart matching save
   const matchingGame = games.value.find((g) => g.name.includes(save.cartName));
 
   let targetCart = matchingGame ? matchingGame.name : save.cartName + ".p8.png";
@@ -854,7 +1134,7 @@ async function loadState(save) {
     localStorage.setItem("pico_handoff_name", targetCart);
   } catch (e) {
     console.warn(
-      "Could not find/stash cart for deep link, hoping Player finds it or fails gracefully"
+      "could not find/stash cart for deep link, hoping player finds it or fails gracefully"
     );
   }
 
@@ -878,7 +1158,7 @@ async function shareState(save) {
       files: [save.uri],
     });
   } catch (e) {
-    console.error("Share failed", e);
+    console.error("share failed", e);
     // ignore dismissals
   }
 }
@@ -897,8 +1177,8 @@ async function deleteState(save) {
     saves.value = saves.value.filter((s) => s.name !== save.name);
     Haptics.notification({ type: "success" }).catch(() => {});
   } catch (e) {
-    console.error("Delete failed", e);
-    alert("Could not delete file.");
+    console.error("delete failed", e);
+    alert("could not delete file.");
   }
 }
 
@@ -915,41 +1195,40 @@ async function openGame(game) {
   if (deleteMode.value) return;
   Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
 
-  // # update last played
+  // update last played
   await libraryManager.updateLastPlayed(game.name);
 
-  // # memory stream handoff
-  // read file -> stash -> navigate -> picobridge reads stash
+  // memory stream handoff
   try {
     const fileData = await Filesystem.readFile({
-      path: `Carts/${game.name}`, // standardized path
+      path: `Carts/${game.filename}`, // standardized path using filename not display name
       directory: Directory.Documents,
     });
 
     // stash
     if (fileData.data) {
       localStorage.setItem("pico_handoff_payload", fileData.data);
-      localStorage.setItem("pico_handoff_name", game.name);
+      localStorage.setItem("pico_handoff_name", game.filename);
       console.log(
-        `[Library] Stashed ${
-          game.name
-        } for handoff. Payload Type: ${typeof fileData.data}, Length: ${
+        `[library] stashed ${
+          game.filename
+        } for handoff. payload type: ${typeof fileData.data}, length: ${
           fileData.data.length
         }`
       );
     } else {
       console.error(
-        `[Library] CRITICAL: Read file but data is null/undefined! Path: Carts/${game.name}`
+        `[library] critical: read file but data is null/undefined! path: carts/${game.filename}`
       );
-      alert("Error: Could not read cartridge data.");
+      alert("error: could not read cartridge data.");
       return;
     }
 
     // navigate
     window.location.href = `index.html?cart=boot&boot=1&t=${Date.now()}`;
   } catch (e) {
-    console.error(`[Library] Pre-load read failed: ${e.message}`);
-    alert(`Failed to load ${game.name}: ${e.message}`);
+    console.error(`[library] pre-load read failed: ${e.message}`);
+    alert(`failed to load ${game.name}: ${e.message}`);
   }
 }
 </script>

@@ -14,9 +14,12 @@
     "CapacitorCookies": {
       "enabled": true
     },
+    "CapacitorHttp": {
+      "enabled": true
+    },
     "Console": {
       "visibility": "visible"
     }
   },
-  "loggingBehavior": "none"
+  "loggingBehavior": "debug"
 }

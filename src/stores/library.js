@@ -3,12 +3,12 @@ import { ref, computed } from "vue";
 import { libraryManager } from "../services/LibraryManager";
 
 export const useLibraryStore = defineStore("library", () => {
-  // # state
+  // state
   const rawGames = ref([]);
   const loading = ref(false);
   const error = ref(null);
 
-  // # ui state
+  // ui state
   const searchQuery = ref("");
   const sortBy = ref("lastPlayed"); // 'lastPlayed', 'name', 'newest'
   const swapButtons = ref(localStorage.getItem("pico_swap_buttons") === "true");
@@ -27,21 +27,27 @@ export const useLibraryStore = defineStore("library", () => {
   const filteredGames = computed(() => {
     let result = [...rawGames.value];
 
-    // # filter
+    // filter
     if (searchQuery.value.trim()) {
       const q = searchQuery.value.toLowerCase();
       result = result.filter((g) => g.name.toLowerCase().includes(q));
     }
 
-    // # sort
+    // sort
     result.sort((a, b) => {
+      // favorites first
+      if (a.isFavorite && !b.isFavorite) return -1;
+      if (!a.isFavorite && b.isFavorite) return 1;
+
+      // selected sort strategy
       if (sortBy.value === "name") {
         return a.name.localeCompare(b.name);
       } else if (sortBy.value === "lastPlayed") {
         return (b.lastPlayed || 0) - (a.lastPlayed || 0);
       } else if (sortBy.value === "newest") {
-        // # note: assuming dateadded fallback
-        return 0;
+        return (b.mtime || 0) - (a.mtime || 0);
+      } else if (sortBy.value === "oldest") {
+        return (a.mtime || 0) - (b.mtime || 0);
       }
       return 0;
     });
@@ -80,11 +86,64 @@ export const useLibraryStore = defineStore("library", () => {
     }
   }
 
+  async function addBundle(files) {
+    loading.value = true;
+    try {
+      const success = await libraryManager.importBundle(files);
+      if (success) {
+        rawGames.value = await libraryManager.scan();
+      }
+      return success;
+    } catch (e) {
+      error.value = e.message;
+      return false;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   async function removeCartridge(filename) {
+    // backend uses filename
     const success = await libraryManager.deleteCartridge(filename);
     if (success) {
-      // # optimistic update
-      rawGames.value = rawGames.value.filter((g) => g.name !== filename);
+      // optimistic update
+      rawGames.value = rawGames.value.filter((g) => g.filename !== filename);
+    }
+    return success;
+  }
+
+  async function toggleFavorite(game) {
+    // optimistic update (immediate)
+    // Use unique filename to find index
+    const idx = rawGames.value.findIndex((g) => g.filename === game.filename);
+    if (idx !== -1) {
+      rawGames.value[idx].isFavorite = !rawGames.value[idx].isFavorite;
+    }
+
+    // perform actual
+    // use filename for metadata lookup
+    const isFav = await libraryManager.toggleFavorite(game.filename);
+
+    // reconcile if mismatch
+    if (idx !== -1 && rawGames.value[idx].isFavorite !== isFav) {
+      rawGames.value[idx].isFavorite = isFav;
+    }
+    return isFav;
+  }
+
+  async function renameCartridge(game, newName) {
+    // use filename for metadata lookup
+    const success = await libraryManager.renameCartridge(
+      game.filename,
+      newName
+    );
+    if (success) {
+      const idx = rawGames.value.findIndex((g) => g.filename === game.filename);
+      if (idx !== -1) {
+        rawGames.value[idx].name = newName; // optimistic update of display name
+        // refresh for full sync
+        rawGames.value = await libraryManager.scan();
+      }
     }
     return success;
   }
@@ -101,7 +160,11 @@ export const useLibraryStore = defineStore("library", () => {
     toggleSwapButtons,
     toggleJoystick,
     loadLibrary,
+    loadLibrary,
     addCartridge,
+    addBundle,
     removeCartridge,
+    toggleFavorite,
+    renameCartridge,
   };
 });

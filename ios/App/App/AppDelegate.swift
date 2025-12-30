@@ -26,20 +26,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        #if APPSTORE
-        // appstore build: kill bbs explorer functionality
-        if let bridgeVC = self.window?.rootViewController as? CAPBridgeViewController {
-            let js = "window.isAppStoreBuild = true;"
-            
-            bridgeVC.webView?.evaluateJavaScript(js, completionHandler: nil)
-    
-            let script = WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: true)
-            bridgeVC.webView?.configuration.userContentController.addUserScript(script)
-            
-        } else {
-            print("POCKET8: Could not find BridgeViewController")
-        }
-        #endif
+       // Called when the app becomes active. 
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
@@ -58,7 +45,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // tracking app url opens, make sure to keep this call
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
-    
     
 
 }

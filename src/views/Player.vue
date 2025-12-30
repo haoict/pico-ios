@@ -98,7 +98,7 @@
       <VirtualController @menu="toggleMenu" />
     </div>
 
-    <!-- global toast usage (removed local) -->
+    <!-- global toast usage -->
     <!-- saves drawer -->
     <SavesDrawer
       :isOpen="isSavesDrawerOpen"
@@ -108,7 +108,7 @@
         (filename) => {
           if (filename) {
             picoBridge.loadRAMState('Saves/' + filename);
-            showToast('STATE LOADED ⚡️');
+            showToast('STATE LOADED');
           }
           isMenuOpen = false;
         }
@@ -142,126 +142,219 @@ const canvasRef = ref(null);
 const filePicker = ref(null);
 const focusIndex = ref(0);
 const isSavesDrawerOpen = ref(false);
+import { libraryManager } from "../services/LibraryManager";
 import { useToast } from "../composables/useToast";
+import { useLibraryStore } from "../stores/library";
+
 const { showToast } = useToast();
+const store = useLibraryStore(); // keep for settings if needed, but not for direct IO
+// libraryManager is now the direct service instance
 
 const activeCartName = ref(
   props.cartId === "boot" ? "boot" : props.cartId.replace(".p8.png", "")
 );
 
 onMounted(async () => {
-  // # hard reload strategy
+  // helper: verify binary injection
+  const base64ToUint8Array = (base64) => {
+    try {
+      const binaryString = window.atob(base64);
+      const len = binaryString.length;
+      console.log(
+        `[player] atob decoded len: ${len}. first byte charcode: ${binaryString.charCodeAt(
+          0
+        )}`
+      );
+
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      console.log(
+        `[player] converted uint8array [0]: ${bytes[0]}, [1]: ${bytes[1]}`
+      );
+      return bytes;
+    } catch (e) {
+      console.error("[player] base64toUint8array crash", e);
+      throw e;
+    }
+  };
+
+  // hard reload strategy
   // if query param is missing, reload.
   const targetQuery = route.query.cart;
 
   if (!props.cartId || !targetQuery) {
-    console.warn("[Player] Missing cart ID, returning to library");
+    console.warn("[player] missing cart id, returning to library");
     router.push("/");
     return;
   }
 
   if (window.Module && window.Module.ccall && window.p8_is_running) {
-    console.log("[Player] Engine running, forcing reload for new cart");
+    console.log("[player] engine running, forcing reload for new cart");
     window.location.reload();
     return;
   }
 
   try {
-    // ## fetch data (player responsibility)
+    // ensure library service is ready
+    await libraryManager.init();
 
+    // fetch data (player responsibility)
     let cartData = null;
+    let payload = {};
     let effectiveCartName = props.cartId;
-
-    // # check memory handoff (fast path)
-    const stashedName = localStorage.getItem("pico_handoff_name");
+    let stashedName = localStorage.getItem("pico_handoff_name");
     const stashedData = localStorage.getItem("pico_handoff_payload");
 
-    // # logic:
-    // if cartId is 'boot', we must use stashed data.
     console.log(
-      `[Player] Handoff Check - ID: ${
+      `[player] handoff check - id: ${
         props.cartId
-      }, StashedName: ${stashedName}, StashedDataLen: ${
-        stashedData ? stashedData.length : "NULL"
+      }, stashedname: ${stashedName}, stasheddatalen: ${
+        stashedData ? stashedData.length : "N/A"
       }`
     );
 
+    if (stashedData) {
+      console.log(
+        `[player] raw stashed data (first 50): ${stashedData.substring(0, 50)}`
+      );
+    }
+
+    // resolve main cart data & name
+    // case a: bbs cart (memory)
     if (props.cartId === "bbs_cart" && window._bbs_cartdat) {
-      console.log("⚡️ [Player] BBS Stash Found!");
+      console.log("[player] bbs stash found!");
       cartData = window._bbs_cartdat;
       effectiveCartName = "bbs_cart.p8.png";
-    } else if (
+    }
+    // case b: stashed fast-load (memory)
+    else if (
       (props.cartId === "boot" || stashedName === props.cartId) &&
       stashedData
     ) {
-      console.log(`⚡️ [Player] Memory Handoff Found for ${stashedName}`);
+      console.log(`[player] memory handoff found for ${stashedName}`);
       effectiveCartName = stashedName;
       activeCartName.value = stashedName.replace(".p8.png", "");
 
-      // # convert base64 -> uint8array
-      const binaryString = window.atob(stashedData);
-      const len = binaryString.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      cartData = bytes;
-    } else {
-      // # disk load
-      console.log(`[Player] Disk Fetching ${props.cartId}...`);
-
-      const res = await Filesystem.readFile({
-        path: `Carts/${props.cartId}`,
-        directory: Directory.Documents,
-      });
-      // capacitor returns base64
-      const binaryString = window.atob(res.data);
-      const len = binaryString.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      cartData = bytes;
+      // raw pipe
+      // just convert base64 -> uint8array directly
+      console.log(`[player] handoff load: ${stashedName}`);
+      cartData = base64ToUint8Array(stashedData);
     }
+    // case c: disk load (filesystem)
+    else {
+      // case d: check if this looks like a bbs cart id
+      // bbs carts have format: [a-z]+-\d+ (e.g., abc-0, xyz-123)
+      const cartNameWithoutExt = props.cartId.replace(".p8.png", "");
+      const isBBSCartId = /^[a-z]+-\d+$/i.test(cartNameWithoutExt);
 
-    // ## boot engine
-    if (cartData) {
-      // no init() needed, bridge is singleton
-      console.log("⚡️ Booting via slot insertion (cart.p8.png)...");
-
-      // stagger boot
-      setTimeout(async () => {
-        await picoBridge.boot(effectiveCartName, cartData);
-
-        // # hook into pico-8 internal exit
-        hookPicoQuit();
-
-        setTimeout(() => {
-          loading.value = false;
-
-          // # deep link auto-load
-          if (route.query.state) {
+      if (isBBSCartId) {
+        console.log(
+          `[player] detected BBS cart id: ${cartNameWithoutExt}, fetching from lexaloffle...`
+        );
+        try {
+          const result = await libraryManager.handleDeepLink(
+            cartNameWithoutExt
+          );
+          effectiveCartName = result.filename;
+          activeCartName.value = result.filename.replace(".p8.png", "");
+          // re-read from disk after download
+          const rawData = await libraryManager.loadCartData(result.filename);
+          if (rawData) {
             console.log(
-              "⚡️ [Player] Deep Link: Auto-loading state:",
-              route.query.state
+              `[player] bbs cart downloaded and loaded: ${result.filename}`
             );
-            setTimeout(async () => {
-              await picoBridge.loadRAMState("Saves/" + route.query.state);
-              showToast("AUTO-LOADED");
-            }, 500); // grace period
+            cartData = base64ToUint8Array(rawData);
           }
-        }, 1500);
-      }, 50);
-    } else {
-      throw new Error("No data found for cart");
+        } catch (err) {
+          console.error(`[player] failed to fetch BBS cart: ${err.message}`);
+          throw new Error(`Failed to download BBS cartridge: ${err.message}`);
+        }
+      } else {
+        console.log(`[player] disk fetching ${props.cartId}...`);
+        let rawData = await libraryManager.loadCartData(props.cartId);
+        if (rawData) {
+          console.log(`[player] disk load: ${props.cartId}`);
+          cartData = base64ToUint8Array(rawData);
+        }
+      }
     }
+
+    if (!cartData) {
+      throw new Error("No cart data found.");
+    }
+
+    // initialize payload
+    payload[effectiveCartName] = cartData;
+
+    // universal metadata check (run this for stashed carts too!)
+    // if props.cartid is 'boot', we rely on stashedname for metadata lookup
+    const metaKey = props.cartId === "boot" ? stashedName : props.cartId;
+    console.log(
+      `[player] inspecting metadata for: ${metaKey} (universal check)`
+    );
+
+    const meta = libraryManager.metadata[metaKey];
+
+    if (meta && meta.subCarts && meta.subCarts.length > 0) {
+      console.log(
+        `[player] bundle detected for ${metaKey}! loading ${meta.subCarts.length} sub-carts...`
+      );
+
+      for (const subFile of meta.subCarts) {
+        console.log(`   -> loading sub-cart: ${subFile}`);
+        const subBase64 = await libraryManager.loadCartData(subFile);
+
+        if (subBase64) {
+          payload[subFile] = base64ToUint8Array(subBase64);
+        } else {
+          console.warn(`   [warning] failed to load data for ${subFile}`);
+        }
+      }
+    } else {
+      console.log(
+        `[player] no sub-carts found for ${metaKey}. single cart boot.`
+      );
+    }
+
+    // boot engine
+    console.log(
+      `[player] sending payload with ${Object.keys(payload).length} files.`
+    );
+
+    console.log("[player] booting via slot insertion...");
+
+    // stagger boot
+    setTimeout(async () => {
+      const finalPayload = payload;
+
+      console.log("[player] booting via universal bundle mode.");
+
+      await picoBridge.boot(effectiveCartName, finalPayload);
+
+      hookPicoQuit();
+
+      setTimeout(() => {
+        loading.value = false;
+        if (route.query.state) {
+          console.log(
+            "[player] deep link: auto-loading state:",
+            route.query.state
+          );
+          setTimeout(async () => {
+            await picoBridge.loadRAMState("Saves/" + route.query.state);
+            showToast("AUTO-LOADED");
+          }, 500); // grace period
+        }
+      }, 1500);
+    }, 50);
   } catch (e) {
     console.error("Failed to load cart:", e);
     alert("Failed to load cartridge: " + e.message);
     router.push("/");
   }
 
-  // # start auto-save timer
   startAutoSaveTimer();
 });
 
@@ -271,7 +364,6 @@ onUnmounted(() => {
   picoBridge.shutdown();
 });
 
-// ## menu structure
 const isMuted = ref(false);
 
 const menuButtons = computed(() => [
@@ -284,7 +376,6 @@ const menuButtons = computed(() => [
 
 let menuDebounce = false;
 const toggleMenu = async () => {
-  // # debounce to prevent sticky touches
   if (menuDebounce) return;
   menuDebounce = true;
   setTimeout(() => {
@@ -300,7 +391,7 @@ const toggleMenu = async () => {
 };
 
 const triggerMenuAction = (action) => {
-  console.log("⚡️ [Player] Menu Action Triggered:", action);
+  console.log("[player] menu action triggered:", action);
   Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
   if (action === "resume") toggleMenu();
   if (action === "manualsave") triggerManualSave();
@@ -309,17 +400,15 @@ const triggerMenuAction = (action) => {
   if (action === "exit") exitGame();
 };
 
-// # auto-save logic
 let autoSaveInterval = null;
 
 const startAutoSaveTimer = () => {
-  // 10 minutes = 600,000 ms
   autoSaveInterval = setInterval(() => {
     if (!isMenuOpen.value) {
       triggerAutoSave();
     }
   }, 600000);
-  console.log("[Player] Auto-save timer started (10m)");
+  console.log("[player] auto-save timer started (10m)");
 };
 
 const stopAutoSaveTimer = () => {
@@ -333,7 +422,7 @@ const triggerAutoSave = async (silent = false) => {
   if (!window.picoBridge || !window.pico8_engine_ready) return;
 
   const autoName = `Saves/${activeCartName.value}_auto.state`;
-  console.log(`[Player] Triggering Auto-Save to: ${autoName}`);
+  console.log(`[player] triggering auto-save to: ${autoName}`);
 
   const success = await window.picoBridge.captureFullRAMState(autoName);
   if (success && !silent) {
@@ -406,7 +495,7 @@ const handleFileImport = async (event) => {
 
     if (fileName.endsWith(".state")) {
       // # ram injection path
-      console.log("⚡️ [Player] Detect .state file, triggering RAM Injection");
+      console.log("[player] detect .state file, triggering ram injection");
       window.picoBridge.injectFullRAMState(uint8Array);
       showToast("State Loaded");
       // close menu to return to game
@@ -421,31 +510,31 @@ const handleFileImport = async (event) => {
 };
 
 function resetGame() {
-  console.log("[Player] Hard Resetting...");
+  console.log("[player] hard resetting...");
   window.location.reload();
 }
 
 async function exitGame() {
-  // 0. Auto-Save RAM State
+  // auto-save ram state
   if (window.picoBridge && window.pico8_engine_ready) {
     await triggerAutoSave(true); // silent
   }
 
-  // 1. Save data (Async wait)
+  // save data (async wait)
   if (window.picoSave) {
-    console.log("💾 [Player] Auto-saving before exit...");
+    console.log("[player] auto-saving before exit...");
     const savePromise = window.picoSave();
     const timeout = new Promise((resolve) => setTimeout(resolve, 1000));
     await Promise.race([savePromise, timeout]);
   }
   await picoBridge.syncToNative();
 
-  // 2. Kill Switch
+  // kill switch
   window.Pico8Kill = true;
   isExiting.value = true;
   picoBridge.shutdown();
 
-  // 3. HARD Navigation to Root (Clears WASM Memory)
+  // hard navigation to root (clears wasm memory)
   setTimeout(() => {
     // force a reload by stripping all query params and hash
     const baseUrl = window.location.origin + window.location.pathname;
@@ -458,7 +547,7 @@ function hookPicoQuit() {
   if (window.Module) {
     const originalQuit = window.Module.quit;
     window.Module.quit = (status, toThrow) => {
-      console.log("⚡️ [Player] PICO-8 Quit Detected (Internal)");
+      console.log("[player] pico-8 quit detected (internal)");
       try {
         if (originalQuit) originalQuit(status, toThrow);
       } catch (e) {}
@@ -472,10 +561,10 @@ function hookPicoQuit() {
   }
 }
 
-// # keyboard navigation
+// keyboard navigation
 function handleGlobalKeydown(e) {
   if (e.key === "Escape") {
-    console.log("[Player] Input: Escape");
+    console.log("[player] input: escape");
     toggleMenu();
     return;
   }
@@ -483,13 +572,14 @@ function handleGlobalKeydown(e) {
   if (!isMenuOpen.value) return;
   if (isSavesDrawerOpen.value) return;
 
-  console.log("[Player] Menu Input:", e.key);
+  console.log("[player] menu input:", e.key);
 
   if (e.key === "ArrowUp") {
     focusIndex.value =
-      (focusIndex.value - 1 + menuButtons.length) % menuButtons.length;
+      (focusIndex.value - 1 + menuButtons.value.length) %
+      menuButtons.value.length;
   } else if (e.key === "ArrowDown") {
-    focusIndex.value = (focusIndex.value + 1) % menuButtons.length;
+    focusIndex.value = (focusIndex.value + 1) % menuButtons.value.length;
   } else if (
     e.key === "Enter" ||
     e.key === " " ||
@@ -498,8 +588,8 @@ function handleGlobalKeydown(e) {
     e.key === "Z" ||
     e.key === "X"
   ) {
-    console.log("[Player] Triggering Action from Key:", e.key);
-    triggerMenuAction(menuButtons[focusIndex.value].action);
+    console.log("[player] triggering action from key:", e.key);
+    triggerMenuAction(menuButtons.value[focusIndex.value].action);
   }
 }
 
