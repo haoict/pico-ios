@@ -10,6 +10,7 @@ export function useGamepadGrid({
   onSettings,
   onUpOut,
   onDownOut,
+  onMenuToggle,
   enabled = true,
 }) {
   const focusedIndex = ref(-1);
@@ -169,6 +170,17 @@ export function useGamepadGrid({
         }
       } else {
         lastButtonState[id + "-settings"] = false;
+      }
+
+      // menu toggle (x / square) -> button 2
+      const menu = gp.buttons[2]?.pressed;
+      if (menu) {
+        if (!lastButtonState[id + "-menu"]) {
+          if (onMenuToggle) onMenuToggle();
+          lastButtonState[id + "-menu"] = true;
+        }
+      } else {
+        lastButtonState[id + "-menu"] = false;
       }
     }
   };

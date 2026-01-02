@@ -1,5 +1,5 @@
-import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
-import { Capacitor, CapacitorHttp } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Capacitor } from "@capacitor/core";
 import { ScopedStorage } from "@daniele-rolli/capacitor-scoped-storage";
 
 const ROOT = "";

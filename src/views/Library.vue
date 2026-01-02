@@ -788,7 +788,14 @@ const { focusedIndex, setItemRef } = useGamepadGrid({
     () => headerFocusIndex.value === -1 && !cardMenuGameId.value
   ),
   onMenuToggle: () => {
-    // 'x' / 'y' button handler from gamepad can go here?
+    if (
+      focusedIndex.value !== -1 &&
+      !cardMenuGameId.value &&
+      headerFocusIndex.value === -1
+    ) {
+      const game = displayGames.value[focusedIndex.value];
+      if (game) openCardMenu(game);
+    }
   },
 });
 // watch for 'x' key on grid to open menu
