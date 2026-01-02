@@ -66,6 +66,23 @@
               ></div>
             </div>
           </div>
+
+          <!-- haptics -->
+          <div
+            @click="toggleHaptics"
+            class="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 active:bg-white/10 transition-colors cursor-pointer"
+          >
+            <span class="text-white font-medium">Haptics</span>
+            <div
+              class="w-12 h-7 rounded-full transition-colors relative"
+              :class="hapticsEnabled ? 'bg-purple-500' : 'bg-white/10'"
+            >
+              <div
+                class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm"
+                :class="hapticsEnabled ? 'translate-x-5' : 'translate-x-0'"
+              ></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -159,11 +176,18 @@
 import { ref, computed, watch, onMounted } from "vue";
 import { useLibraryStore } from "../stores/library";
 import { storeToRefs } from "pinia";
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { haptics } from "../utils/haptics";
+import { ImpactStyle } from "@capacitor/haptics";
 
 const libraryStore = useLibraryStore();
-const { swapButtons, useJoystick, rootDir } = storeToRefs(libraryStore);
-const { toggleSwapButtons, toggleJoystick, updateRootDirectory } = libraryStore;
+const { swapButtons, useJoystick, hapticsEnabled, rootDir } =
+  storeToRefs(libraryStore);
+const {
+  toggleSwapButtons,
+  toggleJoystick,
+  toggleHaptics,
+  updateRootDirectory,
+} = libraryStore;
 
 const tempRootDir = ref("");
 const currentRootDir = computed(() => rootDir.value || "");
@@ -179,11 +203,11 @@ watch(rootDir, (val) => {
 
 async function saveRootDir() {
   if (tempRootDir.value === currentRootDir.value) return;
-  Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
+  haptics.impact(ImpactStyle.Medium).catch(() => {});
 
   const success = await updateRootDirectory(tempRootDir.value);
   if (success) {
-    Haptics.notification({ type: "success" }).catch(() => {});
+    haptics.success().catch(() => {});
   } else {
     alert("Failed to update directory setting.");
   }

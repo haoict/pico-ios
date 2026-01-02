@@ -584,7 +584,14 @@ import { useLibraryStore } from "../stores/library";
 import { storeToRefs } from "pinia";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { haptics } from "../utils/haptics";
+import { ImpactStyle } from "@capacitor/haptics"; // Keep ImpactStyle if needed for pattern constants, or just use strings if possible.
+// Actually haptics util uses ImpactStyle.Light default.
+// Let's check usages.
+// Library uses ImpactStyle.Medium and Light.
+// The util supports passing style. So we need ImpactStyle or just pass strings if I changed util to accept strings?
+// The util takes `style`.
+// I will keep ImpactStyle import but remove Haptics import.
 import { libraryManager } from "../services/LibraryManager";
 
 const router = useRouter();
@@ -643,12 +650,12 @@ onMounted(async () => {
 });
 
 function triggerImport() {
-  Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+  haptics.impact(ImpactStyle.Light).catch(() => {});
   fileInput.value.click();
 }
 
 function openOfficialBBS() {
-  Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+  haptics.impact(ImpactStyle.Light).catch(() => {});
   // the magic url provided by zep to set the cookie
   const url =
     "https://www.lexaloffle.com/bbs/?cat=7#sub=2&mode=carts&orderby=featured&ios_player=pocket8";
@@ -671,7 +678,7 @@ async function handleFileImport(event) {
   try {
     const success = await addBundle(files);
     if (success) {
-      Haptics.notification({ type: "success" }).catch(() => {});
+      haptics.success().catch(() => {});
       alert(`Success! ${total} cartridges loaded.`);
     } else {
     }
@@ -698,7 +705,7 @@ function handleMouseDown(game, event) {
 function startLongPress(game) {
   if (deleteMode.value) return;
   longPressTimer = setTimeout(() => {
-    Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
+    haptics.impact(ImpactStyle.Heavy).catch(() => {});
     deleteMode.value = true;
   }, 500);
 }
@@ -717,13 +724,13 @@ function handleBackgroundClick(e) {
 }
 
 async function startDeleteMode() {
-  Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
+  haptics.impact(ImpactStyle.Medium).catch(() => {});
   deleteMode.value = !deleteMode.value;
 }
 
 async function handleFavorite(game, event) {
   event?.stopPropagation(); // optional chaining in case validation triggers locally
-  Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+  haptics.impact(ImpactStyle.Light).catch(() => {});
   await toggleFavorite(game);
 }
 
@@ -762,7 +769,7 @@ async function confirmRename() {
 
   const success = await renameCartridge(game, newName);
   if (success) {
-    Haptics.notification({ type: "success" }).catch(() => {});
+    haptics.success().catch(() => {});
     console.log(`[library] renamed via modal -> ${newName}`);
   }
 }
@@ -775,7 +782,7 @@ async function handleDelete(game, event) {
     // action
     await removeCartridge(game.filename);
     // feedback
-    Haptics.notification({ type: "success" }).catch(() => {});
+    haptics.success().catch(() => {});
   }
 }
 
@@ -790,7 +797,7 @@ const formatDate = (ms) => new Date(ms).toLocaleDateString();
 
 async function openGame(game) {
   if (deleteMode.value) return;
-  Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+  haptics.impact(ImpactStyle.Light).catch(() => {});
 
   // update last played
   await libraryManager.updateLastPlayed(game.name);

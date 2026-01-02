@@ -10,21 +10,30 @@ export const useLibraryStore = defineStore("library", () => {
 
   // ui state
   const searchQuery = ref("");
-  const sortBy = ref("lastPlayed"); // 'lastPlayed', 'name', 'newest'
+  const sortBy = ref("lastPlayed"); // 'lastPlayed', 'name'
   const swapButtons = ref(localStorage.getItem("pico_swap_buttons") === "true");
-  const useJoystick = ref(localStorage.getItem("pico_use_joystick") === "true");
-  // root dir state (populated after loadLibrary)
-  const rootDir = ref("");
+  const useJoystick = ref(
+    localStorage.getItem("pico_use_joystick") !== "false"
+  ); // default true
+  const hapticsEnabled = ref(
+    localStorage.getItem("pico_haptics_enabled") !== "false"
+  ); // default true
+  const rootDir = ref(localStorage.getItem("pico_root_dir") || "");
 
-  function toggleSwapButtons() {
+  const toggleSwapButtons = () => {
     swapButtons.value = !swapButtons.value;
     localStorage.setItem("pico_swap_buttons", swapButtons.value);
-  }
+  };
 
-  function toggleJoystick() {
+  const toggleJoystick = () => {
     useJoystick.value = !useJoystick.value;
     localStorage.setItem("pico_use_joystick", useJoystick.value);
-  }
+  };
+
+  const toggleHaptics = () => {
+    hapticsEnabled.value = !hapticsEnabled.value;
+    localStorage.setItem("pico_haptics_enabled", hapticsEnabled.value);
+  };
 
   const filteredGames = computed(() => {
     let result = [...rawGames.value];
@@ -177,9 +186,11 @@ export const useLibraryStore = defineStore("library", () => {
     sortBy,
     swapButtons,
     useJoystick,
+    hapticsEnabled,
     rootDir,
     toggleSwapButtons,
     toggleJoystick,
+    toggleHaptics,
     updateRootDirectory,
     loadLibrary,
     loadLibrary,

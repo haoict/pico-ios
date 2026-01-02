@@ -1,19 +1,19 @@
 <template>
   <!-- main layout: flex column for portrait, overlay for landscape -->
   <div
-    class="relative h-screen w-screen overflow-hidden bg-black select-none flex flex-col landscape:flex-row landscape:items-stretch pt-[env(safe-area-inset-top)] pt-4"
+    class="relative h-screen w-screen overflow-hidden bg-black select-none flex flex-col landscape:flex-row landscape:items-stretch"
   >
     <!-- game zone -->
     <div
-      class="game-zone flex-1 relative flex items-center justify-center overflow-hidden w-full landscape:h-full landscape:w-full landscape:px-60 landscape:py-4 pointer-events-none"
+      class="game-zone flex-1 relative flex items-center justify-center overflow-hidden w-full landscape:h-full landscape:w-full landscape:px-[max(env(safe-area-inset-left),30px)] landscape:pr-[max(env(safe-area-inset-right),30px)] landscape:py-4 pointer-events-none"
     >
       <div
         id="canvas-container"
         ref="canvasContainer"
-        class="relative flex items-center justify-center p-1 w-full h-full pointer-events-auto"
+        class="relative flex items-center justify-center p-1 portrait:pb-8 w-full h-full pointer-events-auto"
       >
         <canvas
-          class="aspect-square w-full h-full object-contain image-pixelated rounded-sm transition-shadow duration-300"
+          class="aspect-square w-full h-full object-contain portrait:object-bottom landscape:object-center image-pixelated rounded-sm transition-shadow duration-300"
           :class="{ 'shadow-2xl shadow-black/50': isMenuOpen }"
           id="canvas"
           oncontextmenu="event.preventDefault()"
@@ -93,7 +93,7 @@
     <!-- portrait: fixed height block at bottom -->
     <!-- landscape: absolute overlay -->
     <div
-      class="controller-zone relative shrink-0 z-50 portrait:h-[350px] portrait:w-full portrait:bg-black/80 portrait:backdrop-blur-xl portrait:border-t portrait:border-white/5 landscape:absolute landscape:inset-0 landscape:pointer-events-none"
+      class="controller-zone relative shrink-0 z-50 portrait:h-[410px] portrait:w-full portrait:bg-black/80 portrait:backdrop-blur-xl portrait:p-1 landscape:absolute landscape:inset-0 landscape:pointer-events-none"
     >
       <VirtualController @menu="toggleMenu" />
     </div>
@@ -119,7 +119,8 @@
 
 <script setup>
 import { onMounted, onUnmounted, ref, watch, computed } from "vue";
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { haptics } from "../utils/haptics";
+import { ImpactStyle } from "@capacitor/haptics";
 import { useRouter, useRoute } from "vue-router";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { picoBridge } from "../services/PicoBridge";
@@ -146,15 +147,26 @@ import { libraryManager } from "../services/LibraryManager";
 import { useToast } from "../composables/useToast";
 import { useLibraryStore } from "../stores/library";
 
-const { showToast } = useToast();
-const store = useLibraryStore(); // keep for settings if needed, but not for direct IO
-// libraryManager is now the direct service instance
+import { Fullscreen } from "@boengli/capacitor-fullscreen";
 
 const activeCartName = ref(
   props.cartId === "boot" ? "boot" : props.cartId.replace(".p8.png", "")
 );
 
+const ensureImmersiveMode = async () => {
+  if (Capacitor.getPlatform() === "android") {
+    try {
+      await Fullscreen.activateImmersiveMode();
+    } catch (e) {
+      console.warn("[player] failed to activate immersive mode", e);
+    }
+  }
+};
+
 onMounted(async () => {
+  // immersive mode
+  await ensureImmersiveMode();
+
   // helper: verify binary injection
   const base64ToUint8Array = (base64) => {
     try {
@@ -358,10 +370,18 @@ onMounted(async () => {
   startAutoSaveTimer();
 });
 
-onUnmounted(() => {
+onUnmounted(async () => {
   window.removeEventListener("keydown", handleGlobalKeydown);
   stopAutoSaveTimer();
   picoBridge.shutdown();
+
+  if (Capacitor.getPlatform() === "android") {
+    try {
+      await Fullscreen.showSystemBars();
+    } catch (e) {
+      console.warn("[player] failed to restore system bars", e);
+    }
+  }
 });
 
 const isMuted = ref(false);
@@ -392,7 +412,7 @@ const toggleMenu = async () => {
 
 const triggerMenuAction = (action) => {
   console.log("[player] menu action triggered:", action);
-  Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+  haptics.impact(ImpactStyle.Light).catch(() => {});
   if (action === "resume") toggleMenu();
   if (action === "manualsave") triggerManualSave();
   if (action === "managesaves") isSavesDrawerOpen.value = true;

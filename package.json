@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@boengli/capacitor-fullscreen": "^0.0.19",
     "@capacitor/action-sheet": "^8.0.0",
     "@capacitor/android": "^8.0.0",
     "@capacitor/app": "^8.0.0",

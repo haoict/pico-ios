@@ -1,11 +1,13 @@
 <template>
   <div
-    class="relative w-full h-full flex justify-between items-center px-6 pb-6 landscape:grid landscape:grid-cols-[240px_1fr_240px] landscape:p-0 landscape:items-stretch pointer-events-auto select-none"
+    class="relative w-full h-full flex justify-between items-center px-6 pb-[calc(env(safe-area-inset-bottom)+20px)] landscape:grid landscape:grid-cols-[240px_1fr_240px] landscape:p-0 landscape:pb-[env(safe-area-inset-bottom)] landscape:items-stretch pointer-events-auto select-none"
     style="
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
       touch-action: none;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
     "
     @touchstart.prevent="handleTouch"
     @touchmove.prevent="handleTouch"
@@ -21,7 +23,7 @@
     <template v-if="!useJoystick">
       <div
         ref="dpadRef"
-        class="relative w-40 h-40 small:w-36 small:h-36 ml-2 active:scale-95 transition-transform duration-100 ease-out landscape:ml-0 landscape:self-center landscape:justify-self-center touch-action-none landscape:col-start-1"
+        class="relative w-36 h-36 small:w-32 small:h-32 ml-6 mb-4 landscape:ml-0 landscape:mb-0 landscape:self-center landscape:justify-self-center touch-action-none landscape:col-start-1"
         style="
           -webkit-tap-highlight-color: transparent;
           touch-action: none;
@@ -95,7 +97,7 @@
     <template v-else>
       <div
         ref="dpadRef"
-        class="relative w-40 h-40 small:w-36 small:h-36 ml-2 landscape:ml-0 landscape:self-center landscape:justify-self-center touch-action-none landscape:col-start-1 flex items-center justify-center"
+        class="relative w-36 h-36 small:w-32 small:h-32 ml-6 mb-4 landscape:ml-0 landscape:mb-0 landscape:self-center landscape:justify-self-center touch-action-none landscape:col-start-1 flex items-center justify-center"
         style="
           -webkit-tap-highlight-color: transparent;
           touch-action: none;
@@ -110,18 +112,13 @@
 
         <!-- joystick base -->
         <div
-          class="w-full h-full rounded-full border border-white/20 bg-white/5 backdrop-blur-md shadow-2xl relative"
+          class="w-full h-full rounded-full border-2 border-white/10 bg-white/5 backdrop-blur-sm shadow-inner relative flex items-center justify-center"
         >
           <!-- inner stick -->
           <div
             ref="joystickStickRef"
-            class="absolute top-1/2 left-1/2 w-14 h-14 -ml-7 -mt-7 rounded-full bg-white shadow-[0_4px_15px_rgba(0,0,0,0.3)] will-change-transform"
-          >
-            <!-- stick highlight -->
-            <div
-              class="absolute top-0 left-0 w-full h-full rounded-full bg-gradient-to-br from-white to-gray-300"
-            ></div>
-          </div>
+            class="absolute w-16 h-16 -ml-8 -mt-8 top-1/2 left-1/2 rounded-full bg-white/20 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.3)] border border-white/10 will-change-transform z-10"
+          ></div>
         </div>
       </div>
     </template>
@@ -173,7 +170,7 @@
 
     <!-- center controls -->
     <div
-      class="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex items-center gap-8 pointer-events-auto landscape:hidden"
+      class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-8 pointer-events-auto landscape:hidden"
     >
       <!-- portrait select -->
       <button
@@ -224,7 +221,7 @@
         <!-- button 1 (right) -->
         <button
           ref="btn1Ref"
-          class="absolute bottom-24 right-1 landscape:bottom-auto landscape:top-0 landscape:right-0 w-20 h-20 small:w-16 small:h-16 rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md transition-transform duration-75 flex items-center justify-center border pointer-events-none overflow-hidden will-change-transform"
+          class="absolute bottom-20 right-3 landscape:bottom-auto landscape:top-0 landscape:right-0 w-20 h-20 small:w-16 small:h-16 rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md transition-transform duration-75 flex items-center justify-center border pointer-events-none overflow-hidden will-change-transform"
           :class="[
             btn1.label === 'o'
               ? 'bg-[rgba(255,0,77,0.15)] border-[#FF004D]/80'
@@ -248,7 +245,7 @@
         <!-- button 2 (left) -->
         <button
           ref="btn2Ref"
-          class="absolute bottom-4 right-16 landscape:bottom-0 landscape:left-0 w-20 h-20 small:w-16 small:h-16 rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md transition-transform duration-75 flex items-center justify-center border pointer-events-none overflow-hidden will-change-transform"
+          class="absolute bottom-4 right-[6rem] landscape:bottom-0 landscape:left-0 w-20 h-20 small:w-16 small:h-16 rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md transition-transform duration-75 flex items-center justify-center border pointer-events-none overflow-hidden will-change-transform"
           :class="[
             btn2.label === 'o'
               ? 'bg-[rgba(255,0,77,0.15)] border-[#FF004D]/80'
@@ -309,7 +306,8 @@
 </template>
 
 <script setup>
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { haptics } from "../utils/haptics";
+import { ImpactStyle } from "@capacitor/haptics";
 import { picoBridge } from "../services/PicoBridge";
 import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
 import { useLibraryStore } from "../stores/library";
@@ -632,7 +630,7 @@ const processJoystickCoordinates = (clientX, clientY) => {
 
   if (newDirection !== currentDirection) {
     currentDirection = newDirection;
-    Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+    haptics.impact(ImpactStyle.Light).catch(() => {});
     triggerKeys(getKeysForDirection(newDirection));
   }
 };
@@ -674,7 +672,7 @@ const processDpadCoordinates = (clientX, clientY) => {
 
   if (newDirection !== currentDirection) {
     currentDirection = newDirection;
-    Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+    haptics.impact(ImpactStyle.Light).catch(() => {});
     triggerKeys(getKeysForDirection(newDirection));
   }
 };

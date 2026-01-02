@@ -181,7 +181,8 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { haptics } from "../utils/haptics";
+import { ImpactStyle } from "@capacitor/haptics";
 import { libraryManager } from "../services/LibraryManager";
 import { useLibraryStore } from "../stores/library";
 
@@ -252,7 +253,7 @@ onMounted(async () => {
 });
 
 async function loadState(save) {
-  Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
+  haptics.impact(ImpactStyle.Medium).catch(() => {});
 
   const matchingGame = libraryStore.games.find((g) =>
     g.name.includes(save.cartName)
@@ -282,7 +283,7 @@ async function loadState(save) {
 }
 
 async function shareState(save) {
-  Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+  haptics.impact(ImpactStyle.Light).catch(() => {});
   try {
     await Share.share({
       title: "PICO-8 Save State",
@@ -304,7 +305,7 @@ async function deleteState(save) {
     });
 
     saves.value = saves.value.filter((s) => s.name !== save.name);
-    Haptics.notification({ type: "success" }).catch(() => {});
+    haptics.success().catch(() => {});
   } catch (e) {
     alert("Could not delete file: " + e.message);
   }
