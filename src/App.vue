@@ -1,6 +1,6 @@
 <template>
   <div
-    class="antialiased min-h-screen bg-gradient-to-b from-gray-900 to-black text-white selection:bg-purple-500 selection:text-white"
+    class="antialiased min-h-screen bg-gradient-to-b from-gray-900 to-black text-white selection:bg-purple-500 selection:text-white app-root"
   >
     <!-- global background effects -->
     <div v-if="isCheckingEngine" class="fixed inset-0 bg-black z-50"></div>
@@ -171,5 +171,12 @@ onMounted(async () => {
 .slide-down-leave-to {
   opacity: 0;
   transform: translate(-50%, -150%);
+}
+
+.app-root {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 </style>
