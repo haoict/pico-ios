@@ -1,4 +1,4 @@
-import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { Capacitor } from "@capacitor/core";
 import { ScopedStorage } from "@daniele-rolli/capacitor-scoped-storage";
 
@@ -7,6 +7,16 @@ const CARTS_DIR = "Carts";
 const CACHE_DIR = "Cache";
 const SAVES_DIR = "Saves";
 const LIBRARY_FILE = "library.json";
+const INDEX_FILE = "library_index.json";
+
+// skip during recursive scan
+const SKIP_FOLDERS = new Set([
+  "Cache",
+  "Saves",
+  ".Trash",
+  ".DS_Store",
+  "__MACOSX",
+]);
 
 // internal appdata path for android
 const ANDROID_APPDATA = "Pocket8";
@@ -124,32 +134,49 @@ export class LibraryManager {
 
       await this.cleanupLegacy();
 
-      // cache attempt
-      const cached = localStorage.getItem("pico_cached_games");
-      if (cached) {
-        try {
-          this.games = JSON.parse(cached);
+      // fast boot: try persistent index first
+      let loadedFromIndex = false;
 
-          // fix expired blobs
-          this.games.forEach((g) => {
-            if (g.cover && g.cover.startsWith("blob:")) {
-              g.cover = null;
-            }
-          });
+      // try persistent
+      const indexedGames = await this._loadIndex();
+      if (indexedGames && indexedGames.length > 0) {
+        this.games = indexedGames;
+        // clear invalid blobs
+        this.games.forEach((g) => {
+          if (g.cover && g.cover.startsWith("blob:")) g.cover = null;
+        });
+        loadedFromIndex = true;
+        console.log(
+          `[LibraryManager] Fast boot: ${this.games.length} games from index.`
+        );
+      }
 
-          console.log(
-            `[LibraryManager] Loaded ${this.games.length} games from cache.`
-          );
-        } catch (e) {
-          console.warn("Invalid cache", e);
+      // fallback: localStorage
+      if (!loadedFromIndex) {
+        const cached = localStorage.getItem("pico_cached_games");
+        if (cached) {
+          try {
+            this.games = JSON.parse(cached);
+            this.games.forEach((g) => {
+              if (g.cover && g.cover.startsWith("blob:")) g.cover = null;
+            });
+            console.log(
+              `[LibraryManager] Loaded ${this.games.length} games from session cache.`
+            );
+          } catch (e) {
+            console.warn("Invalid cache", e);
+          }
         }
       }
 
-      // if no cache, scan
+      // last resort: full scan
       if (this.games.length === 0) {
+        console.log(
+          "[LibraryManager] No cache or index, performing initial scan..."
+        );
         await this.scan();
       } else {
-        console.log("[LibraryManager] Skipping initial scan (cache hit)");
+        console.log("[LibraryManager] Skipping initial scan (cache/index hit)");
       }
 
       this.initialized = true;
@@ -218,9 +245,9 @@ export class LibraryManager {
   // updates state only on success
   async scan() {
     const isWeb = Capacitor.getPlatform() === "web";
-    console.log("[LibraryManager] starting explicit scan...");
+    console.log("[LibraryManager] Starting full recursive scan...");
 
-    // Build hidden carts
+    // build hidden carts (multicart sub-files)
     const hiddenCarts = new Set();
     Object.values(this.metadata).forEach((meta) => {
       if (meta.subCarts && Array.isArray(meta.subCarts))
@@ -228,90 +255,182 @@ export class LibraryManager {
     });
 
     let newGames = [];
-    let source = "legacy";
 
-    // list files
+    // perform recursive scan based on platform
     if (this.isScoped && this.scopedFolder) {
-      source = "scoped";
-      try {
-        console.log(`[LibraryManager] Scoped scan: ${this.scopedFolder.name}`);
-        const result = await ScopedStorage.readdir({
-          folder: this.scopedFolder,
-        });
-        if (result && result.entries) {
-          newGames = result.entries
-            .filter(
-              (f) =>
-                !f.isDir &&
-                (f.name.endsWith(".p8.png") || f.name.endsWith(".p8"))
-            )
-            .filter((f) => !hiddenCarts.has(f.name))
-            .map((file) => {
-              const id = file.name;
-              const meta = this.metadata[id] || { playCount: 0, lastPlayed: 0 };
-              return {
-                name: meta.displayName || this.getStemName(file.name),
-                filename: file.name,
-                id: id,
-                path: `${this.scopedFolder.id}/${encodeURIComponent(
-                  file.name
-                )}`,
-                lastPlayed: meta.lastPlayed,
-                playCount: meta.playCount,
-                cover: null, // Lazy
-                mtime: file.mtime || 0,
-                isFavorite: !!meta.isFavorite,
-              };
-            });
-        }
-      } catch (e) {
-        console.error("Scoped scan list fail", e);
-      }
+      console.log(
+        `[LibraryManager] Scoped recursive scan: ${this.scopedFolder.name}`
+      );
+      newGames = await this._scanScopedRecursive(
+        this.scopedFolder,
+        this.scopedFolder
+      );
     } else {
-      // legacy
-      try {
-        const scanPath = this.resolvePath(CARTS_DIR);
-        const result = await Filesystem.readdir({
-          path: scanPath,
-          directory: getAppDataDir(),
-        });
-        newGames = result.files
-          .filter((f) => f.name.endsWith(".p8.png") || f.name.endsWith(".p8"))
-          .filter((f) => !hiddenCarts.has(f.name))
-          .map((file) => {
-            const id = file.name;
-            const meta = this.metadata[id] || { playCount: 0, lastPlayed: 0 };
-            let path = file.uri;
-            if (path && path.startsWith("file://"))
-              path = path.replace("file://", "");
-            return {
-              name: meta.displayName || this.getStemName(file.name),
-              filename: file.name,
-              id: id,
-              path: path || file.name,
-              lastPlayed: meta.lastPlayed,
-              playCount: meta.playCount,
-              cover: null, // Lazy
-              mtime: parseInt(file.mtime) || 0,
-              isFavorite: !!meta.isFavorite,
-              fileUri: file.uri,
-            };
-          });
-      } catch (e) {
-        console.warn("Legacy scan list fail", e);
-      }
+      console.log("[LibraryManager] Legacy recursive scan...");
+      const scanPath = this.resolvePath(CARTS_DIR);
+      newGames = await this._scanLegacyRecursive(scanPath, CARTS_DIR);
     }
 
-    console.log(
-      `[LibraryManager] List complete: ${newGames.length} games. Committing to state.`
-    );
+    // filter hidden carts
+    newGames = newGames.filter((g) => !hiddenCarts.has(g.filename));
+
+    // merge with existing metadata
+    newGames = newGames.map((game) => {
+      const meta = this.metadata[game.filename] || {};
+      return {
+        ...game,
+        name: meta.displayName || game.name,
+        lastPlayed: meta.lastPlayed || 0,
+        playCount: meta.playCount || 0,
+        isFavorite: !!meta.isFavorite,
+      };
+    });
+
+    // sort by last played
     newGames.sort((a, b) => (b.lastPlayed || 0) - (a.lastPlayed || 0));
 
-    // atomic commit
+    console.log(
+      `[LibraryManager] Scan complete: ${newGames.length} games found.`
+    );
+
+    // commit to state
     this.games = newGames;
+
+    // save to persistent index and localStorage cache
+    await this._saveIndex(newGames);
     localStorage.setItem("pico_cached_games", JSON.stringify(this.games));
 
     return this.games;
+  }
+
+  async _loadIndex() {
+    try {
+      const indexPath = this.resolvePath(INDEX_FILE);
+      const result = await Filesystem.readFile({
+        path: indexPath,
+        directory: getAppDataDir(),
+        encoding: Encoding.UTF8,
+      });
+      const games = JSON.parse(result.data);
+      console.log(`[LibraryManager] Loaded ${games.length} games from index.`);
+      return games;
+    } catch (e) {
+      console.log("[LibraryManager] No index found, will scan.");
+      return null;
+    }
+  }
+
+  async _saveIndex(games) {
+    try {
+      const indexPath = this.resolvePath(INDEX_FILE);
+      // strip non serializable fields
+      const serializable = games.map((g) => ({
+        id: g.id,
+        filename: g.filename,
+        name: g.name,
+        path: g.path,
+        folder: g.folder || "",
+        folderPath: g.folderPath || "",
+        mtime: g.mtime || 0,
+        lastPlayed: g.lastPlayed || 0,
+        playCount: g.playCount || 0,
+        isFavorite: g.isFavorite || false,
+        fileUri: g.fileUri || null,
+      }));
+      await Filesystem.writeFile({
+        path: indexPath,
+        data: JSON.stringify(serializable),
+        directory: getAppDataDir(),
+        encoding: Encoding.UTF8,
+      });
+      console.log(`[LibraryManager] Saved index with ${games.length} games.`);
+    } catch (e) {
+      console.warn("[LibraryManager] Failed to save index:", e);
+    }
+  }
+
+  async _scanLegacyRecursive(basePath, relativePath, accumulated = []) {
+    try {
+      const result = await Filesystem.readdir({
+        path: basePath,
+        directory: getAppDataDir(),
+      });
+
+      for (const file of result.files) {
+        // skip hidden folders
+        if (file.name.startsWith(".") || SKIP_FOLDERS.has(file.name)) continue;
+
+        if (file.type === "directory") {
+          // recurse into subdir
+          const subPath = `${basePath}/${file.name}`;
+          const subRelative = `${relativePath}/${file.name}`;
+          await this._scanLegacyRecursive(subPath, subRelative, accumulated);
+        } else if (file.name.endsWith(".p8.png") || file.name.endsWith(".p8")) {
+          // found a cart
+          let filePath = file.uri;
+          if (filePath && filePath.startsWith("file://")) {
+            filePath = filePath.replace("file://", "");
+          }
+
+          accumulated.push({
+            id: file.uri || `${relativePath}/${file.name}`, // Unique ID
+            filename: file.name,
+            name: this.getStemName(file.name),
+            path: filePath || file.name,
+            folder: relativePath.split("/").pop() || "",
+            folderPath: relativePath,
+            mtime: parseInt(file.mtime) || 0,
+            cover: null,
+            fileUri: file.uri,
+          });
+        }
+      }
+    } catch (e) {
+      console.warn(
+        `[LibraryManager] Legacy scan error at ${basePath}:`,
+        e.message
+      );
+    }
+    return accumulated;
+  }
+
+  async _scanScopedRecursive(folderObj, rootFolder, accumulated = []) {
+    if (!folderObj) return accumulated;
+
+    try {
+      const result = await ScopedStorage.readdir({ folder: folderObj });
+      if (!result || !result.entries) return accumulated;
+
+      for (const entry of result.entries) {
+        // skip hidden folders
+        if (entry.name.startsWith(".") || SKIP_FOLDERS.has(entry.name))
+          continue;
+
+        if (entry.isDir) {
+          // recurse into subdir
+          await this._scanScopedRecursive(entry, rootFolder, accumulated);
+        } else if (
+          entry.name.endsWith(".p8.png") ||
+          entry.name.endsWith(".p8")
+        ) {
+          // found a cart
+          accumulated.push({
+            id: entry.uri || entry.name, // unique id
+            filename: entry.name,
+            name: this.getStemName(entry.name),
+            path: entry.uri || entry.name,
+            folder: folderObj.name || "",
+            folderPath: folderObj.id || "",
+            mtime: entry.mtime || 0,
+            cover: null,
+            scopeParent: folderObj, // CRITICAL: Store parent folder for reading
+          });
+        }
+      }
+    } catch (e) {
+      console.warn(`[LibraryManager] Scoped scan error:`, e.message);
+    }
+    return accumulated;
   }
 
   async loadCovers(games) {
@@ -344,21 +463,25 @@ export class LibraryManager {
                 }
               };
               coverUri = await loadCache();
-              if (!coverUri && this.scopedFolder) {
-                try {
-                  const { data } = await ScopedStorage.readFile({
-                    folder: this.scopedFolder,
-                    path: game.filename,
-                    encoding: "base64",
-                  });
-                  await Filesystem.writeFile({
-                    path: this.resolvePath(cachePath),
-                    data: data,
-                    directory: getAppDataDir(),
-                    recursive: true,
-                  });
-                  coverUri = `data:image/png;base64,${data}`;
-                } catch (e) {}
+              if (!coverUri) {
+                // use scopeParent for nested folders, fallback to root
+                const folderToUse = game.scopeParent || this.scopedFolder;
+                if (folderToUse) {
+                  try {
+                    const { data } = await ScopedStorage.readFile({
+                      folder: folderToUse,
+                      path: game.filename,
+                      encoding: "base64",
+                    });
+                    await Filesystem.writeFile({
+                      path: this.resolvePath(cachePath),
+                      data: data,
+                      directory: getAppDataDir(),
+                      recursive: true,
+                    });
+                    coverUri = `data:image/png;base64,${data}`;
+                  } catch (e) {}
+                }
               }
             } else {
               if (isWeb) {
@@ -659,10 +782,15 @@ export class LibraryManager {
 
   async loadCartData(relativePath) {
     if (this.isScoped && this.scopedFolder) {
-      // android scoped storage: read from external uri
+      // scoped storage: read from external uri
+      // look up game to get its scopeParent
+      const game = this.games.find((g) => g.filename === relativePath);
+      const folderToUse =
+        game && game.scopeParent ? game.scopeParent : this.scopedFolder;
+
       try {
         const { data } = await ScopedStorage.readFile({
-          folder: this.scopedFolder,
+          folder: folderToUse,
           path: relativePath,
           encoding: "base64",
         });

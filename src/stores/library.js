@@ -184,13 +184,13 @@ export const useLibraryStore = defineStore("library", () => {
       newName
     );
     if (success) {
+      // update local state
       const idx = rawGames.value.findIndex((g) => g.filename === game.filename);
       if (idx !== -1) {
-        rawGames.value[idx].name = newName; // optimistic update of display name
-        // refresh for full sync
-        rawGames.value = await libraryManager.scan();
-        libraryManager.loadCovers(rawGames.value);
+        rawGames.value[idx].name = newName;
       }
+      // persist in localStorage
+      localStorage.setItem("pico_cached_games", JSON.stringify(rawGames.value));
     }
     return success;
   }
