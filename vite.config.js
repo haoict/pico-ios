@@ -5,4 +5,7 @@ import vue from "@vitejs/plugin-vue";
 export default defineConfig({
   base: "./",
   plugins: [vue()],
+  build: {
+    target: "es2015", // android 10
+  },
 });

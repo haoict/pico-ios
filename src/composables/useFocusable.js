@@ -25,30 +25,7 @@ export function useFocusable({
   const scrollToFocused = () => {
     const el = itemRefs.value[focusedIndex.value];
     if (el) {
-      const rect = el.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-
-      const topThreshold = viewportHeight * 0.2;
-      const bottomThreshold = viewportHeight * 0.8;
-
-      let targetY = window.scrollY;
-      let shouldScroll = false;
-
-      if (rect.top < topThreshold) {
-        // Element is entering top danger zone - scroll up
-        const diff = topThreshold - rect.top;
-        targetY = window.scrollY - diff;
-        shouldScroll = true;
-      } else if (rect.bottom > bottomThreshold) {
-        // Element is entering bottom danger zone - scroll down
-        const diff = rect.bottom - bottomThreshold;
-        targetY = window.scrollY + diff;
-        shouldScroll = true;
-      }
-
-      if (shouldScroll) {
-        window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
-      }
+      el.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
   };
 

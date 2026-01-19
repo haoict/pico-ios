@@ -100,7 +100,7 @@
           <!-- button 1 (top right) -->
           <div
             ref="btn1Ref"
-            class="absolute top-[2%] right-[2%] w-[48%] h-[48%] rounded-full shadow-lg border transition-transform active:scale-90"
+            class="absolute top-[2%] right-[2%] w-[48%] h-[48%] rounded-full shadow-lg border"
             :class="[
               btn1.label === 'o'
                 ? 'bg-red-500/20 border-red-500/50'
@@ -116,7 +116,7 @@
           <!-- button 2 (bottom left) -->
           <div
             ref="btn2Ref"
-            class="absolute bottom-[2%] left-[2%] w-[48%] h-[48%] rounded-full shadow-lg border transition-transform active:scale-90"
+            class="absolute bottom-[2%] left-[2%] w-[48%] h-[48%] rounded-full shadow-lg border"
             :class="[
               btn2.label === 'o'
                 ? 'bg-red-500/20 border-red-500/50'
@@ -137,7 +137,7 @@
         class="w-full flex justify-center pb-4 mt-12 pointer-events-auto gap-8 min-[850px]:mt-20 transition-[margin] duration-300"
       >
         <button
-          class="flex flex-col items-center gap-1 active:scale-95 transition-transform"
+          class="flex flex-col items-center gap-1"
           @click="openMenu"
           @touchstart.stop.prevent="openMenu"
         >
@@ -149,9 +149,9 @@
           >
         </button>
         <button
-          class="flex flex-col items-center gap-1 active:scale-95 transition-transform"
-          @touchstart.stop.prevent="pressKey(13)"
-          @touchend.stop.prevent="releaseKey(13)"
+          class="flex flex-col items-center gap-1"
+          @touchstart.stop.prevent="inputManager.dispatchKey(80, 'keydown')"
+          @touchend.stop.prevent="inputManager.dispatchKey(80, 'keyup')"
         >
           <div
             class="w-12 h-4 rounded-full bg-white/20 border border-white/10 shadow-sm -rotate-12"
@@ -232,7 +232,7 @@
         </div>
 
         <button
-          class="flex flex-col items-center gap-1 active:scale-95 transition-transform"
+          class="flex flex-col items-center gap-1"
           @click="openMenu"
           @touchstart.stop.prevent="openMenu"
         >
@@ -259,7 +259,7 @@
           <!-- button 1 (top right) -->
           <div
             ref="btn1RefLS"
-            class="absolute top-[2%] right-[2%] w-[48%] h-[48%] rounded-full shadow-lg border transition-transform active:scale-90 flex items-center justify-center"
+            class="absolute top-[2%] right-[2%] w-[48%] h-[48%] rounded-full shadow-lg border flex items-center justify-center"
             :class="[
               btn1.label === 'o'
                 ? 'bg-red-500/20 border-red-500/50'
@@ -275,7 +275,7 @@
           <!-- button 2 (bottom left) -->
           <div
             ref="btn2RefLS"
-            class="absolute bottom-[2%] left-[2%] w-[48%] h-[48%] rounded-full shadow-lg border transition-transform active:scale-90 flex items-center justify-center"
+            class="absolute bottom-[2%] left-[2%] w-[48%] h-[48%] rounded-full shadow-lg border flex items-center justify-center"
             :class="[
               btn2.label === 'o'
                 ? 'bg-red-500/20 border-red-500/50'
@@ -291,9 +291,9 @@
         </div>
 
         <button
-          class="flex flex-col items-center gap-1 active:scale-95 transition-transform"
-          @touchstart.stop.prevent="pressKey(13)"
-          @touchend.stop.prevent="releaseKey(13)"
+          class="flex flex-col items-center gap-1"
+          @touchstart.stop.prevent="inputManager.dispatchKey(80, 'keydown')"
+          @touchend.stop.prevent="inputManager.dispatchKey(80, 'keyup')"
         >
           <div
             class="w-12 h-4 rounded-full bg-white/20 border border-white/10 shadow-sm -rotate-12"
@@ -856,5 +856,12 @@ onUnmounted(() => {
   .landscape-layout {
     display: flex !important;
   }
+}
+
+/* GPU layer promotion for buttery smooth controls */
+.control-group {
+  will-change: transform;
+  contain: layout paint;
+  transform: translateZ(0);
 }
 </style>

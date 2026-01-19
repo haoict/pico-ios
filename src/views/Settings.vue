@@ -1,5 +1,7 @@
 <template>
-  <div class="min-h-screen w-full bg-oled-dark text-white p-6 pt-16">
+  <div
+    class="min-h-screen w-full bg-oled-dark text-white p-6 pt-16 overflow-y-auto no-scrollbar"
+  >
     <!-- header -->
     <div class="flex items-center gap-4 mb-8">
       <button
@@ -209,15 +211,21 @@ async function pickAndroidDirectory() {
     const result = await FilePicker.pickDirectory();
     if (result.files && result.files.length > 0) {
       const picked = result.files[0];
-      const newPath = picked.name || "Pocket8";
+      const folderName = picked.name || "Selected Folder";
 
-      if (confirm(`Set library directory to '${newPath}'?`)) {
-        await libraryStore.updateRootDirectory(newPath);
+      if (confirm(`Set library directory to '${folderName}'?`)) {
+        const folderObj = {
+          id: picked.path || picked.uri,
+          name: picked.name,
+          uri: picked.path || picked.uri,
+        };
+        await libraryStore.updateRootDirectory(folderObj);
         haptics.success().catch(() => {});
+        showToast("Library location updated");
       }
     }
   } catch (e) {
-    if (e.message !== "User cancelled") {
+    if (e.message !== "User cancelled" && e.message !== "canceled") {
       alert("Failed to pick directory: " + e.message);
     }
   }

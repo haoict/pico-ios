@@ -1106,15 +1106,21 @@ async function pickAndroidDirectory() {
     const result = await FilePicker.pickDirectory();
     if (result.files && result.files.length > 0) {
       const picked = result.files[0];
-      const newPath = picked.name || "Pocket8";
+      const folderName = picked.name || "Selected Folder";
 
-      if (confirm(`Set library directory to '${newPath}'?`)) {
-        await libraryStore.updateRootDirectory(newPath);
+      if (confirm(`Set library directory to '${folderName}'?`)) {
+        // pass full folder object with path for scoped storage
+        const folderObj = {
+          id: picked.path || picked.uri,
+          name: picked.name,
+          uri: picked.path || picked.uri,
+        };
+        await libraryStore.updateRootDirectory(folderObj);
         haptics.success().catch(() => {});
       }
     }
   } catch (e) {
-    if (e.message !== "User cancelled") {
+    if (e.message !== "User cancelled" && e.message !== "canceled") {
       alert("Failed to pick directory: " + e.message);
     }
   }
@@ -1442,6 +1448,16 @@ const handleGamepadInput = (action) => {
 
   if (headerFocusIndex.value !== -1) {
     handleHeaderAction(action);
+    return;
+  }
+
+  // trigger folder picker - empty state
+  if (
+    action === "confirm" &&
+    needsDirectorySetup.value &&
+    displayGames.value.length === 0
+  ) {
+    pickAndroidDirectory();
     return;
   }
 };

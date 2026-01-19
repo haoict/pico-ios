@@ -224,8 +224,20 @@ export class LibraryManager {
   }
 
   async setRootDirectory(newPath) {
-    this.rootDir = newPath;
-    localStorage.setItem("pico_root_dir", this.rootDir);
+    if (typeof newPath === "object" && newPath.id) {
+      // android scoped storage folder object
+      this.scopedFolder = newPath;
+      this.rootDir = newPath.id;
+      this.isScoped = true;
+      localStorage.setItem("pico_root_dir", JSON.stringify(newPath));
+      console.log("[LibraryManager] Set scoped folder:", newPath);
+    } else {
+      // string path (legacy/ios)
+      this.rootDir = newPath;
+      this.scopedFolder = null;
+      this.isScoped = false;
+      localStorage.setItem("pico_root_dir", this.rootDir);
+    }
 
     // clear cache when changing root
     localStorage.removeItem("pico_cached_games");
