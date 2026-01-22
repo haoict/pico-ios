@@ -14,10 +14,10 @@ export const useLibraryStore = defineStore("library", () => {
   const sortBy = ref("lastPlayed"); // 'lastPlayed', 'name'
   const swapButtons = ref(localStorage.getItem("pico_swap_buttons") === "true");
   const useJoystick = ref(
-    localStorage.getItem("pico_use_joystick") !== "false"
+    localStorage.getItem("pico_use_joystick") !== "false",
   ); // default true
   const hapticsEnabled = ref(
-    localStorage.getItem("pico_haptics_enabled") !== "false"
+    localStorage.getItem("pico_haptics_enabled") !== "false",
   ); // default true
   const rootDir = ref(localStorage.getItem("pico_root_dir") || "");
 
@@ -74,7 +74,7 @@ export const useLibraryStore = defineStore("library", () => {
     return result;
   });
 
-  async function loadLibrary() {
+  async function loadLibrary(forceRefresh = false) {
     loading.value = true;
     error.value = null;
     scanProgress.value = { current: 0, total: 0, show: false };
@@ -89,15 +89,17 @@ export const useLibraryStore = defineStore("library", () => {
       rootDir.value = libraryManager.rootDir; // sync state
 
       // cache first
-      if (libraryManager.games.length > 0) {
+      if (libraryManager.games.length > 0 && !forceRefresh) {
         console.log(
-          `[useLibraryStore] Using ${libraryManager.games.length} cached games. Skipping scan.`
+          `[useLibraryStore] Using ${libraryManager.games.length} cached games. Skipping scan.`,
         );
         rawGames.value = libraryManager.games;
         // trigger background image load
         libraryManager.loadCovers(rawGames.value);
       } else {
-        console.log("[useLibraryStore] Cache empty. Performing initial scan.");
+        console.log(
+          "[useLibraryStore] Cache empty or force refresh. Scanning...",
+        );
         rawGames.value = await libraryManager.scan();
         libraryManager.loadCovers(rawGames.value);
       }
@@ -148,9 +150,12 @@ export const useLibraryStore = defineStore("library", () => {
     }
   }
 
-  async function removeCartridge(filename) {
+  async function removeCartridge(filename, deleteExternalFile = false) {
     // backend uses filename
-    const success = await libraryManager.deleteCartridge(filename);
+    const success = await libraryManager.deleteCartridge(
+      filename,
+      deleteExternalFile,
+    );
     if (success) {
       // optimistic update
       rawGames.value = rawGames.value.filter((g) => g.filename !== filename);
@@ -181,7 +186,7 @@ export const useLibraryStore = defineStore("library", () => {
     // use filename for metadata lookup
     const success = await libraryManager.renameCartridge(
       game.filename,
-      newName
+      newName,
     );
     if (success) {
       // update local state
@@ -195,12 +200,29 @@ export const useLibraryStore = defineStore("library", () => {
     return success;
   }
 
-  async function updateRootDirectory(newPath) {
+  async function addExternalSource(folderObj) {
     loading.value = true;
+    scanProgress.value = {
+      current: 0,
+      total: 0,
+      show: true,
+      label: "Syncing...",
+    };
+
     try {
-      const success = await libraryManager.setRootDirectory(newPath);
+      // sync progress callback
+      const onProgress = (sourceName, current, total) => {
+        scanProgress.value = {
+          current,
+          total,
+          show: true,
+          label: `Indexing ${sourceName} (${current}/${total})`,
+        };
+      };
+
+      const success = await libraryManager.addSyncSource(folderObj, onProgress);
       if (success) {
-        rootDir.value = libraryManager.rootDir;
+        // re-scan
         rawGames.value = await libraryManager.scan();
         libraryManager.loadCovers(rawGames.value);
       }
@@ -210,6 +232,9 @@ export const useLibraryStore = defineStore("library", () => {
       return false;
     } finally {
       loading.value = false;
+      setTimeout(() => {
+        scanProgress.value.show = false;
+      }, 1000);
     }
   }
 
@@ -253,7 +278,7 @@ export const useLibraryStore = defineStore("library", () => {
     toggleSwapButtons,
     toggleJoystick,
     toggleHaptics,
-    updateRootDirectory,
+    addExternalSource,
     loadLibrary,
     rescanLibrary,
     addCartridge,
@@ -263,5 +288,10 @@ export const useLibraryStore = defineStore("library", () => {
     renameCartridge,
     toggleFullscreen,
     fullscreen: computed(() => fullscreen.value),
+    resetLibrary: async (fullWipe) => {
+      const res = await libraryManager.resetLibrary(fullWipe);
+      rawGames.value = libraryManager.games;
+      return res;
+    },
   };
 });

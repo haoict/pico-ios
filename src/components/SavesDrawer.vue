@@ -100,6 +100,7 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from "vue";
 import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Capacitor } from "@capacitor/core";
 import { haptics } from "../utils/haptics";
 import { ImpactStyle } from "@capacitor/haptics";
 
@@ -120,22 +121,29 @@ const refreshSaves = async () => {
 
   try {
     console.log("📂 [Drawer] Scanning 'Saves' folder...");
+
+    // get platform
+    const platform = Capacitor.getPlatform();
+    let path = "Saves";
+    if (platform === "android") path = "Pocket8/Saves";
+
     const ret = await Filesystem.readdir({
-      path: "Saves",
+      path: path,
       directory: Directory.Documents,
     });
 
-    // # normalize name for filtering
+    // normalize name for filtering
     const targetName = (props.cartName || "")
       .toLowerCase()
       .replace(".p8.png", "")
       .replace(".p8", "");
 
-    // # filter relevant saves
+    // filter relevant saves
     saves.value = ret.files
       .filter(
         (f) =>
-          f.name.endsWith(".state") && f.name.toLowerCase().includes(targetName)
+          f.name.endsWith(".state") &&
+          f.name.toLowerCase().includes(targetName),
       )
       .sort((a, b) => (b.mtime || 0) - (a.mtime || 0)); // newest first
   } catch (e) {
@@ -225,7 +233,7 @@ watch(
     } else {
       removeInputListener();
     }
-  }
+  },
 );
 
 const formatSize = (bytes) => {

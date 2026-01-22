@@ -87,6 +87,44 @@
         </div>
       </section>
 
+      <!-- Danger Zone -->
+      <section>
+        <h2
+          class="text-xs font-bold text-red-500 uppercase tracking-widest mb-3 ml-1"
+        >
+          Danger Zone
+        </h2>
+        <div class="space-y-3">
+          <div
+            v-for="(item, index) in dangerItems"
+            :key="item.id"
+            @click="item.action"
+            class="flex items-center justify-between p-4 bg-red-500/10 rounded-xl border border-red-500/20 active:bg-red-500/20 transition-all cursor-pointer select-none"
+          >
+            <div class="flex flex-col">
+              <span class="text-red-400 font-medium">{{ item.label }}</span>
+              <span v-if="item.subtext" class="text-xs text-red-300/50 mt-1">{{
+                item.subtext
+              }}</span>
+            </div>
+            <div class="flex items-center text-red-500/50">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- app info -->
       <section class="pt-8 flex flex-col items-center opacity-30">
         <p class="text-[10px] font-mono uppercase tracking-widest">
@@ -104,7 +142,7 @@ import { useLibraryStore } from "../stores/library";
 import { storeToRefs } from "pinia";
 import { haptics } from "../utils/haptics";
 import { ImpactStyle } from "@capacitor/haptics";
-import { FilePicker } from "@capawesome/capacitor-file-picker";
+// import { FilePicker } from "@capawesome/capacitor-file-picker";
 import { ScopedStorage } from "@daniele-rolli/capacitor-scoped-storage";
 import { Capacitor } from "@capacitor/core";
 import { useFocusable } from "../composables/useFocusable";
@@ -179,8 +217,8 @@ const settingsItems = computed(() => {
     items.push({
       id: "root-dir",
       type: "link",
-      label: "Library Location",
-      subtext: rootDir.value || "Select folder...",
+      label: "Sync from Folder",
+      subtext: "Index games from an external folder",
       action: pickAndroidDirectory,
     });
   }
@@ -191,6 +229,47 @@ const settingsItems = computed(() => {
     subtext: "Refresh game list and cache",
     type: "link",
     action: handleRescan,
+  });
+
+  return items;
+});
+
+const dangerItems = computed(() => {
+  const items = [];
+
+  if (isAndroid.value) {
+    items.push({
+      id: "reset-external",
+      label: "Reset External Links",
+      subtext: "Remove all synced folders and external games",
+      action: async () => {
+        if (confirm("Cleanup external links? Internal games will remain.")) {
+          await libraryStore.resetLibrary(false);
+          showToast("External Links Cleared");
+          haptics.success();
+        }
+      },
+    });
+  }
+
+  items.push({
+    id: "factory-reset",
+    label: "Factory Reset Library",
+    subtext: "Delete ALL internal games, metadata, and clears external links",
+    action: async () => {
+      if (
+        confirm(
+          "DANGER: This will delete ALL internal cartridges and reset everything. Are you sure?",
+        )
+      ) {
+        if (confirm("Really sure? This cannot be undone.")) {
+          await libraryStore.resetLibrary(true);
+          showToast("Library Reset Complete");
+          haptics.success();
+          router.push("/");
+        }
+      }
+    },
   });
 
   return items;
@@ -207,26 +286,37 @@ const handleRescan = async () => {
 
 async function pickAndroidDirectory() {
   haptics.impact(ImpactStyle.Light).catch(() => {});
-  try {
-    const result = await FilePicker.pickDirectory();
-    if (result.files && result.files.length > 0) {
-      const picked = result.files[0];
-      const folderName = picked.name || "Selected Folder";
 
-      if (confirm(`Set library directory to '${folderName}'?`)) {
-        const folderObj = {
-          id: picked.path || picked.uri,
-          name: picked.name,
-          uri: picked.path || picked.uri,
-        };
-        await libraryStore.updateRootDirectory(folderObj);
-        haptics.success().catch(() => {});
-        showToast("Library location updated");
+  // guardrail hint
+  alert(
+    "Note: Android ensures privacy by restricting access to 'Downloads' and 'Android' folders.\n\nPlease select a dedicated folder (e.g., 'Downloads/Roms').",
+  );
+
+  try {
+    const { folder } = await ScopedStorage.pickFolder();
+
+    if (folder) {
+      if (
+        confirm(
+          `Index games from '${folder.name}'? This will add references without copying files.`,
+        )
+      ) {
+        const success = await libraryStore.addExternalSource(folder);
+        if (success) {
+          haptics.success();
+          showToast("Indexing Started - Check Library");
+          // router.back() to show progress in lib
+          router.back();
+        } else {
+          showToast("Sync Failed. Try Again.");
+        }
       }
     }
   } catch (e) {
-    if (e.message !== "User cancelled" && e.message !== "canceled") {
-      alert("Failed to pick directory: " + e.message);
+    console.warn("Pick folder failed", e);
+    // silent catch for user cancel, but show for others
+    if (!e.message.includes("canceled") && !e.message.includes("cancelled")) {
+      showToast("Access prevented: Try a different folder.");
     }
   }
 }

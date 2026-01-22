@@ -16,7 +16,58 @@
     <div
       class="relative z-10 p-6 pt-16 pb-32 max-w-7xl mx-auto w-full min-h-[calc(100vh+1px)]"
       @click="handleBackgroundClick"
+      @touchstart="handleTouchStart"
+      @touchmove="handleTouchMove"
+      @touchend="handleTouchEnd"
     >
+      <!-- pull refresh indicator -->
+      <div
+        class="fixed top-20 left-1/2 -translate-x-1/2 z-[200] transition-all duration-300 pointer-events-none flex items-center gap-2 bg-black/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10"
+        :style="{
+          opacity: pullProgress > 0 ? 1 : 0,
+          transform: `translate(-50%, ${pullProgress * 50}px) scale(${
+            0.8 + pullProgress * 0.2
+          })`,
+        }"
+      >
+        <svg
+          class="w-4 h-4 text-white animate-spin"
+          v-if="isRefreshing"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        <svg
+          v-else
+          class="w-4 h-4 text-white rotate-180"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 14l-7 7m0 0l-7-7m7 7V3"
+          ></path>
+        </svg>
+        <span class="text-xs font-bold text-white uppercase tracking-widest">{{
+          isRefreshing ? "Refreshing..." : "Pull to Scan"
+        }}</span>
+      </div>
       <!-- header -->
       <!-- fix: aggressive z-index to beat global toast -->
       <div
@@ -258,37 +309,41 @@
 
           <!-- android setup -->
           <div
-            v-if="needsDirectorySetup"
-            class="flex flex-col items-center gap-4"
+            v-if="games.length === 0"
+            class="flex flex-col items-center gap-4 px-6"
           >
             <p class="text-white/60 font-medium">Library Setup</p>
-            <p class="text-white/30 text-sm max-w-xs leading-relaxed">
-              Select a folder to store your cartridges.
+            <p
+              v-if="isAndroid"
+              class="text-white/30 text-sm max-w-xs leading-relaxed"
+            >
+              Import a game above or sync with an external folder.
             </p>
+            <p v-else class="text-white/30 text-sm max-w-xs leading-relaxed">
+              Import a game above to get started.
+            </p>
+
             <button
-              @click="pickAndroidDirectory"
-              class="mt-2 px-6 py-3 bg-white/10 rounded-full font-bold text-sm tracking-wide active:bg-white/20 transition-all flex items-center gap-2"
+              v-if="isAndroid"
+              @click="pickExternalFolder"
+              class="mt-2 px-6 py-3 bg-white/10 rounded-full font-bold text-sm tracking-wide active:bg-white/20 transition-all flex items-center gap-2 border border-white/5"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
+                class="h-5 w-5 opacity-70"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
                 <path
-                  d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
                 />
               </svg>
-              Select Directory
+              Sync External Folder
             </button>
-          </div>
-
-          <!-- empty state -->
-          <div v-else>
-            <p class="text-white/60 font-pico-crisp">No cartridges found</p>
-            <p class="text-white/30 text-sm mt-1">
-              Import a .p8.png cartridge to get started
-            </p>
           </div>
         </div>
       </transition>
@@ -773,6 +828,7 @@ import { Capacitor } from "@capacitor/core";
 import { useFocusable } from "../composables/useFocusable";
 import { FilePicker } from "@capawesome/capacitor-file-picker";
 import { inputManager } from "../services/InputManager";
+import { ScopedStorage } from "@daniele-rolli/capacitor-scoped-storage";
 
 const router = useRouter();
 const route = useRoute();
@@ -804,6 +860,50 @@ const {
   rootDir,
   scanProgress,
 } = storeToRefs(libraryStore);
+
+// pull to refresh
+const startY = ref(0);
+const pullProgress = ref(0);
+const isRefreshing = ref(false);
+
+const handleTouchStart = (e) => {
+  if (window.scrollY <= 10 && !isRefreshing.value) {
+    startY.value = e.touches[0].clientY;
+  }
+};
+
+const handleTouchMove = (e) => {
+  if (startY.value && window.scrollY <= 10 && !isRefreshing.value) {
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - startY.value;
+    if (diff > 0) {
+      // resistance
+      pullProgress.value = Math.min(diff / 200, 1.5);
+    }
+  }
+};
+
+const handleTouchEnd = async () => {
+  if (pullProgress.value > 0.8 && !isRefreshing.value) {
+    isRefreshing.value = true;
+    haptics.impact(ImpactStyle.Medium).catch(() => {});
+
+    // trigger full refresh
+    await libraryStore.loadLibrary(true);
+
+    // reset
+    setTimeout(() => {
+      isRefreshing.value = false;
+      pullProgress.value = 0;
+      startY.value = 0;
+      haptics.success();
+    }, 500);
+  } else {
+    // bounce back
+    pullProgress.value = 0;
+    startY.value = 0;
+  }
+};
 
 const {
   loadLibrary,
@@ -842,7 +942,7 @@ const gridInputEnabled = computed(
     !cardMenuGameId.value &&
     !sortDropdownOpen.value &&
     !showRenameModal.value &&
-    !deleteMode.value
+    !deleteMode.value,
 );
 
 // Use the new composable
@@ -872,7 +972,7 @@ const { focusedIndex, setItemRef } = useFocusable({
       headerFocusIndex.value === -1 &&
       !cardMenuGameId.value &&
       !sortDropdownOpen.value &&
-      !isTransitioning.value
+      !isTransitioning.value,
   ),
 });
 
@@ -1096,27 +1196,30 @@ const closeCardMenu = () => {
 };
 
 const isAndroid = computed(() => Capacitor.getPlatform() === "android");
-const needsDirectorySetup = computed(
-  () => isAndroid.value && (!rootDir.value || rootDir.value === "")
-);
 
-async function pickAndroidDirectory() {
+async function pickExternalFolder() {
   haptics.impact(ImpactStyle.Light).catch(() => {});
-  try {
-    const result = await FilePicker.pickDirectory();
-    if (result.files && result.files.length > 0) {
-      const picked = result.files[0];
-      const folderName = picked.name || "Selected Folder";
 
-      if (confirm(`Set library directory to '${folderName}'?`)) {
-        // pass full folder object with path for scoped storage
-        const folderObj = {
-          id: picked.path || picked.uri,
-          name: picked.name,
-          uri: picked.path || picked.uri,
-        };
-        await libraryStore.updateRootDirectory(folderObj);
-        haptics.success().catch(() => {});
+  // guardrail
+  alert(
+    "Note: Android ensures privacy by restricting access to 'Downloads' and 'Android' folders.\n\nPlease select a dedicated folder (e.g., 'Roms' or 'Games').",
+  );
+
+  try {
+    const { folder } = await ScopedStorage.pickFolder();
+
+    if (folder) {
+      if (
+        confirm(
+          `Index games from '${folder.name}'? This will add references without copying files.`,
+        )
+      ) {
+        const success = await libraryStore.addExternalSource(folder);
+        if (success) {
+          haptics.success();
+        } else {
+          alert("Sync Failed. Please try again.");
+        }
       }
     }
   } catch (e) {
@@ -1247,7 +1350,7 @@ async function handleFavorite(game, event) {
     closeCardMenu();
     // find new index
     const idx = displayGames.value.findIndex(
-      (g) => g.filename === game.filename
+      (g) => g.filename === game.filename,
     );
     if (idx !== -1) focusedIndex.value = idx;
   }
@@ -1293,7 +1396,7 @@ async function confirmRename() {
     console.log(`[library] renamed via modal -> ${newName}`);
     // find new index
     const reFound = displayGames.value.find(
-      (g) => g.name === newName || g.filename === game.filename
+      (g) => g.name === newName || g.filename === game.filename,
     );
     if (reFound) {
       const idx = displayGames.value.indexOf(reFound);
@@ -1340,11 +1443,11 @@ async function openGame(game) {
       localStorage.setItem("pico_handoff_payload", data);
       localStorage.setItem("pico_handoff_name", game.filename);
       console.log(
-        `[library] stashed ${game.filename} for handoff. payload length: ${data.length}`
+        `[library] stashed ${game.filename} for handoff. payload length: ${data.length}`,
       );
     } else {
       console.error(
-        `[library] critical: read file but data is null/undefined! path: carts/${game.filename}`
+        `[library] critical: read file but data is null/undefined! path: carts/${game.filename}`,
       );
       alert("error: could not read cartridge data.");
       return;
@@ -1384,7 +1487,7 @@ watch(
       headerFocusIndex.value = -1;
       sortDropdownOpen.value = false;
     }
-  }
+  },
 );
 
 const handleGamepadInput = (action) => {

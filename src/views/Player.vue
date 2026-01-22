@@ -134,7 +134,7 @@ const { showToast } = useToast();
 const { fullscreen } = storeToRefs(useLibraryStore());
 
 const activeCartName = ref(
-  props.cartId === "boot" ? "boot" : props.cartId.replace(".p8.png", "")
+  props.cartId === "boot" ? "boot" : props.cartId.replace(".p8.png", ""),
 );
 
 onMounted(async () => {
@@ -145,8 +145,8 @@ onMounted(async () => {
       const len = binaryString.length;
       console.log(
         `[player] atob decoded len: ${len}. first byte charcode: ${binaryString.charCodeAt(
-          0
-        )}`
+          0,
+        )}`,
       );
 
       const bytes = new Uint8Array(len);
@@ -154,7 +154,7 @@ onMounted(async () => {
         bytes[i] = binaryString.charCodeAt(i);
       }
       console.log(
-        `[player] converted uint8array [0]: ${bytes[0]}, [1]: ${bytes[1]}`
+        `[player] converted uint8array [0]: ${bytes[0]}, [1]: ${bytes[1]}`,
       );
       return bytes;
     } catch (e) {
@@ -195,12 +195,12 @@ onMounted(async () => {
         props.cartId
       }, stashedname: ${stashedName}, stasheddatalen: ${
         stashedData ? stashedData.length : "N/A"
-      }`
+      }`,
     );
 
     if (stashedData) {
       console.log(
-        `[player] raw stashed data (first 50): ${stashedData.substring(0, 50)}`
+        `[player] raw stashed data (first 50): ${stashedData.substring(0, 50)}`,
       );
     }
 
@@ -225,7 +225,8 @@ onMounted(async () => {
       console.log(`[player] handoff load: ${stashedName}`);
       cartData = base64ToUint8Array(stashedData);
     }
-    // case c: disk load (filesystem)
+
+    // case c: disk load (filesystem / hybrid)
     else {
       // case d: check if this looks like a bbs cart id
       // bbs carts have format: [a-z]+-\d+ (e.g., abc-0, xyz-123)
@@ -234,11 +235,11 @@ onMounted(async () => {
 
       if (isBBSCartId) {
         console.log(
-          `[player] detected BBS cart id: ${cartNameWithoutExt}, fetching from lexaloffle...`
+          `[player] detected BBS cart id: ${cartNameWithoutExt}, fetching from lexaloffle...`,
         );
         try {
           const result = await libraryManager.handleDeepLink(
-            cartNameWithoutExt
+            cartNameWithoutExt,
           );
           effectiveCartName = result.filename;
           activeCartName.value = result.filename.replace(".p8.png", "");
@@ -246,7 +247,7 @@ onMounted(async () => {
           const rawData = await libraryManager.loadCartData(result.filename);
           if (rawData) {
             console.log(
-              `[player] bbs cart downloaded and loaded: ${result.filename}`
+              `[player] bbs cart downloaded and loaded: ${result.filename}`,
             );
             cartData = base64ToUint8Array(rawData);
           }
@@ -255,10 +256,33 @@ onMounted(async () => {
           throw new Error(`Failed to download BBS cartridge: ${err.message}`);
         }
       } else {
-        console.log(`[player] disk fetching ${props.cartId}...`);
-        let rawData = await libraryManager.loadCartData(props.cartId);
+        console.log(`[player] hybrid fetching ${props.cartId}...`);
+
+        // look up metadata to get source info
+        // if exists, reconstruct GameEntry obj
+        const meta = libraryManager.getMetadata(props.cartId);
+        let gameObj = props.cartId;
+
+        if (meta) {
+          // reconstruct enough for loadCartData to work
+          gameObj = {
+            filename: props.cartId,
+            sourceType: meta.sourceType || "internal",
+            sourceId: meta.sourceId,
+            relativePath: meta.relativePath,
+          };
+          // if missing in metadata (legacy), fallback is internal
+        } else {
+          // redundant check
+          const found = libraryManager.games.find(
+            (g) => g.filename === props.cartId,
+          );
+          if (found) gameObj = found;
+        }
+
+        let rawData = await libraryManager.loadCartData(gameObj);
         if (rawData) {
-          console.log(`[player] disk load: ${props.cartId}`);
+          console.log(`[player] hybrid load success: ${props.cartId}`);
           cartData = base64ToUint8Array(rawData);
         }
       }
@@ -275,14 +299,14 @@ onMounted(async () => {
     // if props.cartid is 'boot', we rely on stashedname for metadata lookup
     const metaKey = props.cartId === "boot" ? stashedName : props.cartId;
     console.log(
-      `[player] inspecting metadata for: ${metaKey} (universal check)`
+      `[player] inspecting metadata for: ${metaKey} (universal check)`,
     );
 
     const meta = libraryManager.metadata[metaKey];
 
     if (meta && meta.subCarts && meta.subCarts.length > 0) {
       console.log(
-        `[player] bundle detected for ${metaKey}! loading ${meta.subCarts.length} sub-carts...`
+        `[player] bundle detected for ${metaKey}! loading ${meta.subCarts.length} sub-carts...`,
       );
 
       for (const subFile of meta.subCarts) {
@@ -297,13 +321,13 @@ onMounted(async () => {
       }
     } else {
       console.log(
-        `[player] no sub-carts found for ${metaKey}. single cart boot.`
+        `[player] no sub-carts found for ${metaKey}. single cart boot.`,
       );
     }
 
     // boot engine
     console.log(
-      `[player] sending payload with ${Object.keys(payload).length} files.`
+      `[player] sending payload with ${Object.keys(payload).length} files.`,
     );
 
     console.log("[player] booting via slot insertion...");
@@ -323,7 +347,7 @@ onMounted(async () => {
         if (route.query.state) {
           console.log(
             "[player] deep link: auto-loading state:",
-            route.query.state
+            route.query.state,
           );
           setTimeout(async () => {
             await picoBridge.loadRAMState("Saves/" + route.query.state);

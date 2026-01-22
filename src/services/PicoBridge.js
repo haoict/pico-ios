@@ -13,12 +13,12 @@ import { haptics } from "../utils/haptics";
 window.picoBridge = {
   syncFromNative: async () => {
     console.log(
-      "[pico_bridge] bridge warming up... (sync_from_native called early)"
+      "[pico_bridge] bridge warming up... (sync_from_native called early)",
     );
   },
   syncToNative: async () => {
     console.warn(
-      "[pico_bridge] bridge warming up... (sync_to_native called early)"
+      "[pico_bridge] bridge warming up... (sync_to_native called early)",
     );
   },
 };
@@ -86,18 +86,23 @@ class Pico8Bridge {
       preRun: [
         function () {
           console.log("[pico_bridge] prerun: starting...");
-          // debugging: global scope check
-          const self = window.picoBridge;
+
+          // determine directory based on platform
+          const platform = Capacitor.getPlatform();
 
           try {
+            // ensure saves dir exists
+            const dir = Directory.Documents;
+            let path = "Saves";
+            if (platform === "android") path = "Pocket8/Saves";
+
             Filesystem.mkdir({
-              path: "Saves",
-              directory: Directory.Documents,
+              path: path,
+              directory: dir,
               recursive: true,
             }).catch(() => {});
           } catch (e) {}
 
-          // pulse-start & anti-stall
           console.log("[pico_bridge] pulse-starting engine...");
           window.pico8_buttons = [0];
           window.pico8_gpio = new Array(128);
@@ -156,7 +161,7 @@ class Pico8Bridge {
                 cartExists = true;
                 if (pollCount % 100 === 0)
                   console.log(
-                    "[pico_boot] poller confirmed /cart.png exists on vfs."
+                    "[pico_boot] poller confirmed /cart.png exists on vfs.",
                   );
               }
             } catch (e) {}
@@ -166,7 +171,7 @@ class Pico8Bridge {
             // debug heartbeat every 1s
             if (pollCount % 100 === 0) {
               console.log(
-                `[pico_boot] poll #${pollCount}: fs=${!!fs}, canvas=${!!canvasEl}, callmain=${hasCallMain}, cart=${hasCart}`
+                `[pico_boot] poll #${pollCount}: fs=${!!fs}, canvas=${!!canvasEl}, callmain=${hasCallMain}, cart=${hasCart}`,
               );
             }
 
@@ -213,7 +218,7 @@ class Pico8Bridge {
 
                   if (isSingle) {
                     console.log(
-                      "[pico_boot] single cart. writing to /cart.png (fixes timeout)"
+                      "[pico_boot] single cart. writing to /cart.png (fixes timeout)",
                     );
                     bootTarget = "/cart.png"; // <--- critical fix
                     const writeData =
@@ -221,7 +226,7 @@ class Pico8Bridge {
                     fs.writeFile(bootTarget, writeData);
                   } else {
                     console.log(
-                      "[pico_boot] bundle detected. writing files..."
+                      "[pico_boot] bundle detected. writing files...",
                     );
                     // write all files with original names
                     for (const [fname, content] of Object.entries(data)) {
@@ -257,7 +262,7 @@ class Pico8Bridge {
                       if (!bootTarget) {
                         bootTarget = path;
                         console.log(
-                          `[pico_boot] initial candidate: ${bootTarget}`
+                          `[pico_boot] initial candidate: ${bootTarget}`,
                         );
                       }
                       // if we find a 'title' cart, it automatically wins
@@ -267,7 +272,7 @@ class Pico8Bridge {
                       ) {
                         bootTarget = path;
                         console.log(
-                          `[pico_boot] title priority! updating candidate to: ${bootTarget}`
+                          `[pico_boot] title priority! updating candidate to: ${bootTarget}`,
                         );
                       }
                       // if neither has 'title', picking the shorter name is safest bet
@@ -278,7 +283,7 @@ class Pico8Bridge {
                       ) {
                         bootTarget = path;
                         console.log(
-                          `[pico_boot] shorter name found. updating candidate to: ${bootTarget}`
+                          `[pico_boot] shorter name found. updating candidate to: ${bootTarget}`,
                         );
                       }
                     }
@@ -297,7 +302,7 @@ class Pico8Bridge {
                   }
 
                   console.log(
-                    `[pico_boot] manually calling main with: ${bootTarget}`
+                    `[pico_boot] manually calling main with: ${bootTarget}`,
                   );
 
                   // kill poller
@@ -460,10 +465,17 @@ class Pico8Bridge {
                     ? btoa(data)
                     : btoa(String.fromCharCode.apply(null, data));
 
+                // resolve platform path for sync
+                const platform = Capacitor.getPlatform();
+                const dir = Directory.Documents;
+                let targetPath = `Saves/${file}`;
+                if (platform === "android")
+                  targetPath = `Pocket8/Saves/${file}`;
+
                 await Filesystem.writeFile({
-                  path: `Saves/${file}`,
+                  path: targetPath,
                   data: base64,
-                  directory: Directory.Documents,
+                  directory: dir,
                   encoding: "base64",
                   recursive: true,
                 });
@@ -535,7 +547,7 @@ class Pico8Bridge {
             const base = i - 0x5f00;
             if (base >= 0) {
               console.log(
-                `[memory_hunter] found ram base at 0x${base.toString(16)}`
+                `[memory_hunter] found ram base at 0x${base.toString(16)}`,
               );
               return base;
             }
@@ -603,18 +615,28 @@ class Pico8Bridge {
       // use provided path or generate default
       const filename =
         pathOverride || this.getCleanStatePath(this.currentCartName);
+
+      // resolve platform path
+      const platform = Capacitor.getPlatform();
+      const dir = Directory.Documents;
+
+      let finalPath = filename;
+      if (platform === "android" && !filename.startsWith("Pocket8/")) {
+        finalPath = `Pocket8/${filename}`;
+      }
+
       console.log(
         `[pico_bridge] saving compressed state (${(
           b64.length /
           1024 /
           1024
-        ).toFixed(2)} mb) to: ${filename}`
+        ).toFixed(2)} mb) to: ${finalPath} (${platform})`,
       );
 
       await Filesystem.writeFile({
-        path: filename,
+        path: finalPath,
         data: b64,
-        directory: Directory.Documents,
+        directory: dir,
         recursive: true,
       });
 
@@ -633,13 +655,22 @@ class Pico8Bridge {
       if (!window.Module || !window.Module.HEAPU8)
         throw new Error("Emscripten not ready");
 
-      const filename =
+      const rawFilename =
         pathOverride || this.getCleanStatePath(this.currentCartName);
-      console.log(`[pico_bridge] loading state: ${filename}`);
+
+      // resolve platform path
+      const platform = Capacitor.getPlatform();
+      const dir = Directory.Documents;
+      let finalPath = rawFilename;
+      if (platform === "android" && !rawFilename.startsWith("Pocket8/")) {
+        finalPath = `Pocket8/${rawFilename}`;
+      }
+
+      console.log(`[pico_bridge] loading state: ${finalPath} (${platform})`);
 
       const result = await Filesystem.readFile({
-        path: filename,
-        directory: Directory.Documents,
+        path: finalPath,
+        directory: dir,
       });
 
       // robust decompression (manual stream)
@@ -693,7 +724,7 @@ class Pico8Bridge {
 
       if (loadedHeap.length !== window.Module.HEAPU8.length) {
         console.warn(
-          `[pico_bridge] heap size mismatch! current: ${window.Module.HEAPU8.length}, saved: ${loadedHeap.length}`
+          `[pico_bridge] heap size mismatch! current: ${window.Module.HEAPU8.length}, saved: ${loadedHeap.length}`,
         );
       }
 
@@ -705,7 +736,7 @@ class Pico8Bridge {
         target.set(loadedHeap);
       } else {
         console.warn(
-          "[pico_bridge] clamping saved heap to fit current allocator."
+          "[pico_bridge] clamping saved heap to fit current allocator.",
         );
         target.set(loadedHeap.subarray(0, target.length));
       }
@@ -737,7 +768,7 @@ class Pico8Bridge {
 
       if (ramData.length !== 0x8000) {
         console.warn(
-          `[pico_bridge] ram size mismatch! got ${ramData.length}, expected 32768`
+          `[pico_bridge] ram size mismatch! got ${ramData.length}, expected 32768`,
         );
       }
       this.pause();
