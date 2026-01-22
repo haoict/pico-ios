@@ -1174,6 +1174,54 @@ export class LibraryManager {
         blob = await fetchBlob(proxyUrl);
       }
 
+      // WRITE TO DISK
+      // blob to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise((resolve, reject) => {
+        reader.onloadend = () => {
+          if (typeof reader.result === "string") {
+            const b64 = reader.result.split(",")[1];
+            resolve(b64);
+          } else {
+            reject(new Error("Failed to convert blob to base64"));
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      const base64Data = await base64Promise;
+      try {
+        await Filesystem.stat({ path: CARTS_DIR, directory: getAppDataDir() });
+      } catch {
+        await Filesystem.mkdir({
+          path: CARTS_DIR,
+          directory: getAppDataDir(),
+          recursive: true,
+        });
+      }
+
+      // write the cart to disk
+      const savePath = this.resolvePath(`${CARTS_DIR}/${targetFilename}`);
+
+      await Filesystem.writeFile({
+        path: savePath,
+        data: base64Data,
+        directory: getAppDataDir(),
+      });
+
+      console.log(`[library_manager] Saved deep cart to ${savePath}`);
+
+      // update metadata to boost to top (fix sorting)
+      if (!this.metadata[targetFilename]) {
+        this.metadata[targetFilename] = { playCount: 0, lastPlayed: 0 };
+      }
+      this.metadata[targetFilename].lastPlayed = Date.now();
+      await this.saveMetadata();
+
+      // trigger visual refresh
+      await this.scan();
+
       return { exists: false, downloaded: true, filename: targetFilename };
     } catch (err) {
       console.error(`[library_manager] deep link download failed:`, err);

@@ -40,6 +40,7 @@ import BiosImporter from "./components/BiosImporter.vue";
 import { EngineLoader } from "./utils/EngineLoader";
 import { libraryManager } from "./services/LibraryManager";
 import { inputManager } from "./services/InputManager";
+import { useLibraryStore } from "./stores/library";
 
 const toast = useToast();
 const router = useRouter();
@@ -67,7 +68,7 @@ onMounted(async () => {
     showImporter.value = true;
   } else {
     console.log(
-      "[App.vue] Engine ready (cached). Waiting for Player to inject."
+      "[App.vue] Engine ready (cached). Waiting for Player to inject.",
     );
     isEngineReady.value = true;
   }
@@ -84,7 +85,9 @@ onMounted(async () => {
         const cartId = url.searchParams.get("id");
         if (cartId) {
           try {
-            toast.showToast("Loading Cartridge...", "info");
+            if (Capacitor.getPlatform() !== "android") {
+              toast.showToast("Loading Cartridge...", "info");
+            }
 
             // create the Carts/Images/Saves directories if they don't exist
             await libraryManager.init();
@@ -93,16 +96,30 @@ onMounted(async () => {
             const result = await libraryManager.handleDeepLink(cartId);
 
             if (result.exists) {
-              console.log("[App] Cart exists locally, booting...");
+              console.log("[App] Cart exists locally.");
             } else if (result.downloaded) {
+              console.log("[App] Downloaded successfully.");
+            }
+
+            // android kickback
+            if (Capacitor.getPlatform() === "android") {
+              // refresh ui
+              const libraryStore = useLibraryStore();
+              await libraryStore.rescanLibrary();
+              toast.showToast("Cart Loaded", "success");
+            } else {
               toast.showToast("Saved to Library", "success");
             }
 
-            // boot it
-            router.push({
-              name: "player",
-              query: { cart: result.filename, t: Date.now() },
-            });
+            // unify launch logic
+            try {
+              await router.push({
+                name: "player",
+                query: { cart: result.filename, t: Date.now() },
+              });
+            } catch (e) {
+              console.error("[App] Router push failed:", e);
+            }
           } catch (err) {
             console.error("[App] handleDeepLink failed:", err);
             toast.showToast("Failed to download cart", "error");
@@ -118,7 +135,12 @@ onMounted(async () => {
   try {
     App.addListener("appUrlOpen", async (event) => {
       console.log("[App] appUrlOpen event received:", event.url);
-      await processDeepLink(event.url);
+      // debounce handler
+      if (window.handleOpenUrl) {
+        window.handleOpenUrl(event.url);
+      } else {
+        processDeepLink(event.url);
+      }
     });
   } catch (e) {
     console.warn("[App] Deep links not supported in this environment:", e);
@@ -128,9 +150,22 @@ onMounted(async () => {
   try {
     const launchUrl = await App.getLaunchUrl();
     console.log("[App] getLaunchUrl result:", launchUrl);
+
     if (launchUrl && launchUrl.url) {
-      console.log("[App] Cold start launch url detected:", launchUrl.url);
-      await processDeepLink(launchUrl.url);
+      // prevent loop & debounce conflict
+      const lastLaunch = sessionStorage.getItem("pico_last_launch_url");
+      if (lastLaunch !== launchUrl.url) {
+        console.log("[App] Cold start launch url detected:", launchUrl.url);
+        sessionStorage.setItem("pico_last_launch_url", launchUrl.url);
+
+        if (window.handleOpenUrl) {
+          window.handleOpenUrl(launchUrl.url);
+        } else {
+          processDeepLink(launchUrl.url);
+        }
+      } else {
+        console.log("[App] Ignoring duplicate launch URL (already processed).");
+      }
     }
   } catch (e) {
     console.error("[App] getLaunchUrl failed:", e);
@@ -140,7 +175,7 @@ onMounted(async () => {
   window.testDeepLink = (id) => {
     console.log(`[debug] simulating deep link for id: ${id}`);
     const mockUrl = `pocket8://play?id=${id}`;
-    processDeepLink(mockUrl);
+    if (window.handleOpenUrl) window.handleOpenUrl(mockUrl);
   };
 
   let lastProcessedUrl = "";
@@ -149,7 +184,7 @@ onMounted(async () => {
   window.handleOpenUrl = (url) => {
     const now = Date.now();
 
-    // debounce
+    // debounce: 3s
     if (url === lastProcessedUrl && now - lastProcessedTime < 3000) {
       console.log("[App] Ignoring duplicate pulse:", url);
       return;

@@ -52,5 +52,14 @@
 	<true />
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true />
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>pocket8</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

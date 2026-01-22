@@ -74,7 +74,7 @@
         class="flex flex-col gap-6 mb-8 px-2 !relative !z-[100] !pointer-events-auto"
       >
         <!-- title & actions -->
-        <div class="flex justify-between items-center">
+        <div class="flex justify-between items-center mb-1">
           <div class="flex flex-col">
             <h1
               class="font-pico-crisp text-white drop-shadow-md text-[clamp(1.5rem,5vw,3rem)]"
@@ -240,7 +240,7 @@
             <transition name="fade">
               <div
                 v-if="sortDropdownOpen"
-                class="absolute top-full right-0 mt-2 w-full bg-black/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl z-[9999]"
+                class="absolute top-full right-0 mt-2 w-full bg-black/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl z-[9999] max-h-60 overflow-y-auto custom-scrollbar"
               >
                 <div
                   v-for="opt in sortOptions"
@@ -829,6 +829,7 @@ import { useFocusable } from "../composables/useFocusable";
 import { FilePicker } from "@capawesome/capacitor-file-picker";
 import { inputManager } from "../services/InputManager";
 import { ScopedStorage } from "@daniele-rolli/capacitor-scoped-storage";
+import { Browser } from "@capacitor/browser";
 
 const router = useRouter();
 const route = useRoute();
@@ -1272,8 +1273,8 @@ function openOfficialBBS() {
   const url =
     "https://www.lexaloffle.com/bbs/?cat=7#sub=2&mode=carts&orderby=featured&ios_player=pocket8";
 
-  // open in system browser to ensure cookies are set globally for safari
-  window.open(url, "_system");
+  // open in system browser to set BBS cookie
+  Browser.open({ url: url, windowName: "_system" });
 }
 
 async function handleFileImport(event) {
