@@ -137,6 +137,30 @@
               </svg>
             </button>
 
+            <!-- bbs explorer button -->
+            <button
+              @click="openBBSExplorer"
+              class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105"
+              :class="{
+                'ring-2 ring-purple-500 bg-white/20': headerFocusIndex === 5,
+              }"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-5 h-5 text-white/80"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
+                />
+              </svg>
+            </button>
+
             <!-- settings button -->
             <button
               @click="$router.push('/settings')"
@@ -262,6 +286,21 @@
               </div>
             </transition>
           </div>
+
+          <button
+            @click="cycleGridSize"
+            class="w-10 h-10 rounded-xl bg-white/10 border border-white/10 text-white transition-all active:scale-95 hover:bg-white/20 flex items-center justify-center"
+            :title="`Grid: ${gridSize === 'S' ? '3 columns' : gridSize === 'M' ? '2 columns' : '1 column'}`"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect v-if="gridSize === 'S'" x="3" y="8" width="5" height="8" rx="1"/>
+              <rect v-if="gridSize === 'S'" x="9.5" y="8" width="5" height="8" rx="1"/>
+              <rect v-if="gridSize === 'S'" x="16" y="8" width="5" height="8" rx="1"/>
+              <rect v-if="gridSize === 'M'" x="3" y="3" width="8" height="18" rx="1"/>
+              <rect v-if="gridSize === 'M'" x="13" y="3" width="8" height="18" rx="1"/>
+              <rect v-if="gridSize === 'L'" x="3" y="3" width="18" height="18" rx="1"/>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -378,7 +417,12 @@
 
         <div
           key="fav-grid"
-          class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 justify-center"
+          class="grid gap-6 justify-center"
+          :class="{
+            'grid-cols-3': gridSize === 'S',
+            'grid-cols-2': gridSize === 'M',
+            'grid-cols-1': gridSize === 'L'
+          }"
         >
           <div
             v-for="(game, index) in favorites"
@@ -554,10 +598,10 @@
 
               <!-- title band -->
               <div
-                class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-12"
+                class="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-6"
               >
                 <h3
-                  class="text-white font-medium text-sm truncate drop-shadow-md transform transition-transform translate-y-1 group-hover:translate-y-0"
+                  class="text-white font-medium text-xs truncate drop-shadow-md transform transition-transform translate-y-1 group-hover:translate-y-0"
                 >
                   {{ formatName(game.name) }}
                 </h3>
@@ -582,7 +626,12 @@
       <transition-group
         name="list"
         tag="div"
-        class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6"
+        class="grid gap-6"
+        :class="{
+          'grid-cols-3': gridSize === 'S',
+          'grid-cols-2': gridSize === 'M',
+          'grid-cols-1': gridSize === 'L'
+        }"
       >
         <div
           v-for="(game, index) in nonFavorites"
@@ -744,10 +793,10 @@
 
             <!-- title band -->
             <div
-              class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-12"
+              class="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-6"
             >
               <h3
-                class="text-white font-medium text-sm truncate drop-shadow-md transform transition-transform translate-y-1 group-hover:translate-y-0"
+                class="text-white font-medium text-xs truncate drop-shadow-md transform transition-transform translate-y-1 group-hover:translate-y-0"
               >
                 {{ formatName(game.name) }}
               </h3>
@@ -799,7 +848,7 @@
     <!-- versions footer -->
     <div class="mt-12 mb-6 text-center opacity-30">
       <p class="text-[10px] font-mono uppercase tracking-widest">
-        Pocket8 v1.6.2
+        Pocket8 v{{ appVersion }}
       </p>
     </div>
   </div>
@@ -830,14 +879,21 @@ import { FilePicker } from "@capawesome/capacitor-file-picker";
 import { inputManager } from "../services/InputManager";
 import { ScopedStorage } from "@daniele-rolli/capacitor-scoped-storage";
 import { Browser } from "@capacitor/browser";
+import packageJson from "../../package.json";
 
 const router = useRouter();
 const route = useRoute();
+const appVersion = packageJson.version;
 
 const width = ref(window.innerWidth);
+const gridSize = ref(localStorage.getItem('pico_library_grid_size') || 'M');
 
 // grid cols
 const gridColumns = computed(() => {
+  if (gridSize.value === 'S') return 3;
+  if (gridSize.value === 'M') return 2;
+  if (gridSize.value === 'L') return 1;
+  // fallback to responsive
   if (width.value >= 1024) return 5;
   if (width.value >= 768) return 4;
   return 3;
@@ -848,6 +904,10 @@ const updateWidth = () => {
 };
 onMounted(() => window.addEventListener("resize", updateWidth));
 onUnmounted(() => window.removeEventListener("resize", updateWidth));
+
+watch(gridSize, (newSize) => {
+  localStorage.setItem('pico_library_grid_size', newSize);
+});
 
 const libraryStore = useLibraryStore();
 // init games as safe computed/ref to prevent crash if store is empty
@@ -935,8 +995,8 @@ const headerFocusIndex = ref(-1); // -1 = inactive
 const headerEntryTime = ref(0);
 const isTransitioning = ref(false); // lock for preventing double-inputs
 
-// 0: search, 1: sort, 2: import, 3: bbs, 4: settings
-const headerOrder = ["search", "sort", "import", "bbs", "settings"];
+// 0: search, 1: sort, 2: import, 3: bbs, 4: settings, 5: bbsexplorer
+const headerOrder = ["search", "sort", "import", "bbs", "settings", "bbsexplorer"];
 
 const gridInputEnabled = computed(
   () =>
@@ -1135,6 +1195,7 @@ const triggerHeaderAction = (idx) => {
   } else if (idx === 2) triggerImport();
   else if (idx === 3) openOfficialBBS();
   else if (idx === 4) router.push("/settings");
+  else if (idx === 5) openBBSExplorer();
 };
 
 const handleCardMenuNav = (e) => {
@@ -1197,6 +1258,7 @@ const closeCardMenu = () => {
 };
 
 const isAndroid = computed(() => Capacitor.getPlatform() === "android");
+const needsDirectorySetup = computed(() => isAndroid.value && games.value.length === 0);
 
 async function pickExternalFolder() {
   haptics.impact(ImpactStyle.Light).catch(() => {});
@@ -1280,6 +1342,18 @@ function openOfficialBBS() {
     // ios and legacy web
     window.open(url, "_system");
   }
+}
+
+function openBBSExplorer() {
+  haptics.impact(ImpactStyle.Light).catch(() => {});
+  router.push("/bbs");
+}
+
+function cycleGridSize() {
+  const modes = ['S', 'M', 'L'];
+  const currentIndex = modes.indexOf(gridSize.value);
+  gridSize.value = modes[(currentIndex + 1) % modes.length];
+  haptics.impact(ImpactStyle.Light).catch(() => {});
 }
 
 async function handleFileImport(event) {
@@ -1425,10 +1499,7 @@ async function handleDelete(game, event) {
 }
 
 function formatName(filename) {
-  return filename
-    .replace(/\.p8(\.png)?$/, "")
-    .replace(/_/g, " ")
-    .replace(/-/g, " ");
+  return filename.replace(/\.p8(\.png)?$/, "");
 }
 
 const formatDate = (ms) => new Date(ms).toLocaleDateString();
@@ -1620,19 +1691,21 @@ const handleHeaderAction = (action) => {
     // bottom: search(0) -> sort(1) -> loop(0)
     if (current === 0) headerFocusIndex.value = 1;
     else if (current === 1) headerFocusIndex.value = 0;
-    // Top (Standard: 2->3->4)
+    // Top (Standard: 2->3->5->4)
     else if (current === 2) headerFocusIndex.value = 3;
-    else if (current === 3) headerFocusIndex.value = 4;
+    else if (current === 3) headerFocusIndex.value = 5;
+    else if (current === 5) headerFocusIndex.value = 4;
     else if (current === 4) headerFocusIndex.value = 2;
     didTransition = true;
   } else if (action === "nav-left") {
     // bottom: sort(1) -> search(0) -> loop(1)
     if (current === 1) headerFocusIndex.value = 0;
     else if (current === 0) headerFocusIndex.value = 1;
-    // top (standard: 4->3->2)
+    // top (standard: 4->5->3->2)
     else if (current === 2) headerFocusIndex.value = 4;
     else if (current === 3) headerFocusIndex.value = 2;
-    else if (current === 4) headerFocusIndex.value = 3;
+    else if (current === 5) headerFocusIndex.value = 3;
+    else if (current === 4) headerFocusIndex.value = 5;
     didTransition = true;
   } else if (action === "confirm" || action === "menu") {
     if (headerFocusIndex.value === 1) {

@@ -100,7 +100,9 @@ Aiming to submit to the App Store as soon as possible!
 ### Build from Source
 
 ```bash
-npm install && npx cap sync
+npm install
+npm run build
+npx cap sync ios
 npx cap open ios      # for Xcode
 npx cap open android  # for Android Studio
 ```

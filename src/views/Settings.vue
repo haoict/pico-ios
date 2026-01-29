@@ -128,7 +128,7 @@
       <!-- app info -->
       <section class="pt-8 flex flex-col items-center opacity-30">
         <p class="text-[10px] font-mono uppercase tracking-widest">
-          Pocket8 v1.6.2
+          Pocket8 v{{ appVersion }}
         </p>
       </section>
     </div>
@@ -150,10 +150,12 @@ import { inputManager } from "../services/InputManager";
 
 import { useToast } from "../composables/useToast";
 import { Dialog } from "@capacitor/dialog";
+import packageJson from "../../package.json";
 
 const Permission = registerPlugin("Permission");
 
 const router = useRouter();
+const appVersion = packageJson.version;
 const { showToast } = useToast();
 const libraryStore = useLibraryStore();
 const { swapButtons, useJoystick, hapticsEnabled, fullscreen, rootDir } =

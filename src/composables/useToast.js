@@ -10,10 +10,10 @@ export function useToast() {
     type.value = msgType;
     isVisible.value = true;
 
-    // auto-hide after 2s
+    // auto-hide after 3s
     setTimeout(() => {
       isVisible.value = false;
-    }, 2000);
+    }, 3000);
   };
 
   return {
