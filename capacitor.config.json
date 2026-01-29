@@ -11,15 +11,14 @@
       "@capacitor/filesystem",
       "@capacitor/haptics",
       "@capacitor/share",
+      "@capacitor/browser",
       "@capawesome/capacitor-file-picker"
     ]
   },
   "server": {
     "allowNavigation": [
-      "corsproxy.io",
       "lexaloffle.com",
-      "www.lexaloffle.com",
-      "api.allorigins.win"
+      "www.lexaloffle.com"
     ]
   },
   "plugins": {

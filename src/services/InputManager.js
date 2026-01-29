@@ -414,7 +414,8 @@ class InputManagerService {
     // UI MODE
     else {
       // nav
-      const isTyping = document.activeElement?.tagName === "INPUT";
+      const isTyping = document.activeElement?.tagName === "INPUT" ||
+                       document.activeElement?.tagName === "TEXTAREA";
 
       this.handleNavInput("nav-up", buf.up);
       this.handleNavInput("nav-down", buf.down);
@@ -437,23 +438,27 @@ class InputManagerService {
         if (buf.a) back = true;
       }
 
-      // keyboard
-      if (
-        this.keys["z"] ||
-        this.keys["Z"] ||
-        this.keys["Enter"] ||
-        this.keys[" "]
-      )
-        confirm = true;
-      if (this.keys["x"] || this.keys["X"] || this.keys["Escape"]) back = true;
+      // keyboard (only when not typing)
+      if (!isTyping) {
+        if (
+          this.keys["z"] ||
+          this.keys["Z"] ||
+          this.keys["Enter"] ||
+          this.keys[" "]
+        )
+          confirm = true;
+        if (this.keys["x"] || this.keys["X"] || this.keys["Escape"]) back = true;
+      }
 
       this.emitChange("confirm", confirm);
       this.emitChange("back", back);
 
-      // edit mode
+      // edit mode (only when not typing)
       let wiggle = false;
-      if (buf.y) wiggle = true;
-      if (this.keys["e"] || this.keys["E"]) wiggle = true;
+      if (!isTyping) {
+        if (buf.y) wiggle = true;
+        if (this.keys["e"] || this.keys["E"]) wiggle = true;
+      }
       this.emitChange("wiggle", wiggle);
     }
   }

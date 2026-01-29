@@ -256,17 +256,18 @@ onMounted(async () => {
           throw new Error(`Failed to download BBS cartridge: ${err.message}`);
         }
       } else {
-        console.log(`[player] hybrid fetching ${props.cartId}...`);
+        const cartName = localStorage.getItem("pico_handoff_name"); // fix resetGame cart not found "bb_cart" when reloading from BBSExplorer
+        console.log(`[player] hybrid fetching ${cartName}...`);
 
         // look up metadata to get source info
         // if exists, reconstruct GameEntry obj
-        const meta = libraryManager.getMetadata(props.cartId);
-        let gameObj = props.cartId;
+        const meta = libraryManager.getMetadata(cartName);
+        let gameObj = cartName;
 
         if (meta) {
           // reconstruct enough for loadCartData to work
           gameObj = {
-            filename: props.cartId,
+            filename: cartName,
             sourceType: meta.sourceType || "internal",
             sourceId: meta.sourceId,
             relativePath: meta.relativePath,
@@ -275,14 +276,14 @@ onMounted(async () => {
         } else {
           // redundant check
           const found = libraryManager.games.find(
-            (g) => g.filename === props.cartId,
+            (g) => g.filename === cartName,
           );
           if (found) gameObj = found;
         }
 
         let rawData = await libraryManager.loadCartData(gameObj);
         if (rawData) {
-          console.log(`[player] hybrid load success: ${props.cartId}`);
+          console.log(`[player] hybrid load success: ${cartName}`);
           cartData = base64ToUint8Array(rawData);
         }
       }

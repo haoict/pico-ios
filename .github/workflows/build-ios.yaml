@@ -1,0 +1,70 @@
+name: Build iOS IPA
+
+on:
+  # push:
+  #   branches: [ main, develop ]
+  # pull_request:
+  #   branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Build with Capacitor
+        run: |
+          npm ci
+          npm run build
+          npx cap sync ios
+
+      - name: Build Unsigned Archive
+        run: |
+          echo "Set iOS version to $VERSION"
+          VERSION=$(node -p "require('./package.json').version")
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" ios/App/App/Info.plist
+          xcodebuild -project ios/App/App.xcodeproj \
+            -scheme Pocket8 \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath $PWD/build/Pocket8.xcarchive \
+            clean archive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Create Unsigned IPA
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          mkdir -p $PWD/build/Payload
+          cp -r $PWD/build/Pocket8.xcarchive/Products/Applications/Pocket8.app $PWD/build/Payload/
+          cd $PWD/build
+          zip -r Pico8-${VERSION}.ipa Payload
+          rm -rf Payload
+          echo "ARTIFACT_NAME=Pocket8-iOS-${VERSION}" >> $GITHUB_ENV
+          echo "IPA_PATH=build/Pico8-${VERSION}.ipa" >> $GITHUB_ENV
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.IPA_PATH }}
+          retention-days: 10
+
+      # - name: Upload to TestFlight (Optional)
+      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      #   run: |
+      #     xcrun altool --upload-app \
+      #       --type ios \
+      #       --file build/*.ipa \
+      #       --apiKey ${{ secrets.APPSTORE_KEY_ID }} \
+      #       --apiIssuer ${{ secrets.APPSTORE_ISSUER_ID }}

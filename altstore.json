@@ -17,11 +17,11 @@
       "tintColor": "#8e2de2",
       "versions": [
         {
-          "version": "1.6.2",
+          "version": "2.0.0",
           "buildVersion": "11",
           "date": "2026-01-22",
-          "localizedDescription": "v1.6.2: Small BBS to Scoped Storage fixes",
-          "downloadURL": "https://github.com/jevonlipsey/pico-ios/releases/download/v1.6.2/pocket8.ipa",
+          "localizedDescription": "v2.0.0: Small BBS to Scoped Storage fixes",
+          "downloadURL": "https://github.com/jevonlipsey/pico-ios/releases/download/v2.0.0/pocket8.ipa",
           "size": 19479747,
           "minOSVersion": "15.0"
         },

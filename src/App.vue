@@ -17,7 +17,7 @@
     <Transition name="slide-down">
       <div
         v-if="toast.isVisible.value"
-        class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-4 py-3 rounded-full shadow-2xl backdrop-blur-md bg-neutral-900/90 border border-white/10 !pointer-events-none"
+        class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-8 py-3 min-w-[280px] rounded-full shadow-2xl backdrop-blur-md bg-neutral-900/90 border border-white/10 !pointer-events-none text-center"
       >
         <span class="text-white font-medium text-sm tracking-wide">{{
           toast.message.value

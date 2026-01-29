@@ -634,7 +634,7 @@ export class LibraryManager {
     }
 
     // clean up
-    return stem.replace(/_/g, " ").trim();
+    // return stem.replace(/_/g, " ").trim();
   }
 
   async importBundle(fileList) {
@@ -825,8 +825,18 @@ export class LibraryManager {
 
     // write files to disk
     for (const file of files) {
-      const lowerName = file.name.toLowerCase();
-      file.name = lowerName; // update in-memory object to match disk
+      file.name = file.name.toLowerCase();
+      if (!file.name.endsWith(".png") && !file.name.endsWith(".p8")) {
+        console.log(`[library_manager] skipping non-cart file: ${file.name}`);
+        continue;
+      }
+
+      // check if file.name is .png but not .p8.png, rename it to .p8.png
+      if (file.name.endsWith(".png") && !file.name.endsWith(".p8.png")) {
+        const newName = file.name.replace(/\.png$/i, ".p8.png");
+        console.log(`[library_manager] renaming image file "${file.name}" to "${newName}"`);
+        file.name = newName;
+      }
 
       // binary enforcement: .p8 files blocked at import
       // only accept valid .p8.png images here
@@ -852,10 +862,7 @@ export class LibraryManager {
       this.metadata[leader.name] = { playCount: 0, lastPlayed: 0 };
     }
 
-    // simplified display name: title case of stem
-    let clean = stemName.replace(/_/g, " ").trim();
-    clean = clean.charAt(0).toUpperCase() + clean.slice(1);
-    this.metadata[leader.name].displayName = clean;
+    this.metadata[leader.name].displayName = leader.name;
 
     // sub-cart linking
     this.metadata[leader.name].subCarts = subCarts;
@@ -1178,9 +1185,7 @@ export class LibraryManager {
           e1,
         );
         // proxy download
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(
-          `https://carts.lexaloffle.com/${targetFilename}`,
-        )}`;
+        const proxyUrl = `https://carts.lexaloffle.com/${targetFilename}`;
         blob = await fetchBlob(proxyUrl);
       }
 
