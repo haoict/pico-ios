@@ -1,5 +1,6 @@
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { haptics } from "../utils/haptics";
+import { EngineLoader } from "../utils/EngineLoader";
 
 /*
  * architecture:
@@ -353,20 +354,8 @@ class Pico8Bridge {
       },
     };
 
-    // # inject script
-    this.injectScript();
-  }
-
-  injectScript() {
-    const existing = document.getElementById("pico8-engine-script");
-    if (existing) existing.remove();
-
-    const script = document.createElement("script");
-    script.id = "pico8-engine-script";
-    script.src = "/pico8.js";
-    script.async = true;
-    document.body.appendChild(script);
-    console.log("[pico_bridge] injected /pico8.js");
+    // inject script
+    await EngineLoader.inject();
   }
 
   shutdown() {

@@ -29,7 +29,6 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
-import { Filesystem, Directory } from "@capacitor/filesystem";
 import { App } from "@capacitor/app";
 import { Fullscreen } from "@boengli/capacitor-fullscreen";
 import { Capacitor, registerPlugin } from "@capacitor/core";
@@ -49,7 +48,6 @@ const toast = useToast();
 const router = useRouter();
 const isEngineReady = ref(false);
 const isCheckingEngine = ref(true);
-const showImporter = ref(false);
 
 onMounted(async () => {
   inputManager.init();
@@ -77,20 +75,15 @@ onMounted(async () => {
     }
   }
 
-  // prep engine
-  const hasEngine = await EngineLoader.init();
-
-  if (!hasEngine) {
-    console.warn("[App.vue] Bios missing. Prompting import.");
-    showImporter.value = true;
-  } else {
-    console.log(
-      "[App.vue] Engine ready (cached). Waiting for Player to inject.",
-    );
-    isEngineReady.value = true;
-  }
-
+  // check engine existence
+  isEngineReady.value = await EngineLoader.check();
   isCheckingEngine.value = false;
+
+  if (!isEngineReady.value) {
+    console.warn("[App.vue] Bios missing. Prompting import.");
+  } else {
+    console.log("[App.vue] Engine ready. Waiting for Player to inject.");
+  }
 
   // helper: process deep link url
   const processDeepLink = async (urlString) => {

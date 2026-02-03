@@ -1,9 +1,3 @@
-var _cartname = window._cartname || ["cart.png"];
-var _cartdat = window._cartdat;
-var _cdpos = 0;
-iii = 0;
-var ciii = 0;
-var _cartdat = window._cartdat || [];
 var Module = typeof Module !== "undefined" ? Module : {};
 if (!Module.expectedDataFileDownloads) {
   Module.expectedDataFileDownloads = 0;
@@ -610,7 +604,7 @@ Module.expectedDataFileDownloads++;
           15, 80, 0, 37, 4, 252, 4, 0, 76, 34, 15, 128, 2, 255, 162, 15, 68, 20,
           11, 15, 88, 0, 39, 0, 56, 43, 38, 0, 155, 16, 0, 4, 76, 43, 4, 116, 0,
           0,
-        ]
+        ],
       );
       fileData0.push.apply(
         fileData0,
@@ -1183,7 +1177,7 @@ Module.expectedDataFileDownloads++;
           6, 15, 16, 8, 17, 15, 129, 0, 21, 31, 255, 86, 0, 21, 15, 215, 0, 21,
           4, 222, 2, 3, 6, 0, 15, 43, 0, 21, 47, 255, 0, 47, 2, 16, 3, 54, 3,
           31, 0, 100, 7, 16, 5, 6, 0, 15, 88, 1, 12, 5,
-        ]
+        ],
       );
       fileData0.push.apply(
         fileData0,
@@ -1282,7 +1276,7 @@ Module.expectedDataFileDownloads++;
           14, 188, 0, 15, 63, 0, 19, 14, 51, 3, 15, 78, 12, 28, 11, 204, 0, 31,
           255, 47, 4, 22, 10, 58, 3, 12, 64, 0, 15, 110, 4, 25, 9, 84, 11, 15,
           15, 12, 25, 6, 215, 9, 3, 143, 9, 160, 0, 0, 0, 0, 0, 0, 255, 0, 0, 0,
-        ]
+        ],
       );
       Module["FS_createDataFile"](
         "/",
@@ -1290,7 +1284,7 @@ Module.expectedDataFileDownloads++;
         fileData0,
         true,
         true,
-        false
+        false,
       );
     }
     if (Module["calledRun"]) {
@@ -1421,29 +1415,12 @@ if (ENVIRONMENT_IS_NODE) {
   if (scriptDirectory.indexOf("blob:") !== 0) {
     scriptDirectory = scriptDirectory.substr(
       0,
-      scriptDirectory.lastIndexOf("/") + 1
+      scriptDirectory.lastIndexOf("/") + 1,
     );
   } else {
     scriptDirectory = "";
   }
   Module["read"] = function shell_read(url) {
-    // PHASE 73 PATCH: Check VFS First
-    if (typeof FS !== "undefined") {
-      try {
-        var path = url.startsWith("/") ? url : "/" + url;
-        // Try reading as string (utf8)
-        var content = FS.readFile(path, { encoding: "utf8" });
-        if (content) {
-          console.log(
-            "⚡️ [PicoBridge] Module.read intercepted path from VFS: " + path
-          );
-          return content;
-        }
-      } catch (e) {
-        // Not in VFS, proceed to XHR
-      }
-    }
-
     try {
       var xhr = new XMLHttpRequest();
       xhr.open("GET", url, false);
@@ -1459,21 +1436,6 @@ if (ENVIRONMENT_IS_NODE) {
   };
   if (ENVIRONMENT_IS_WORKER) {
     Module["readBinary"] = function readBinary(url) {
-      // PHASE 73 PATCH: Check VFS First
-      if (typeof FS !== "undefined") {
-        try {
-          var path = url.startsWith("/") ? url : "/" + url;
-          var content = FS.readFile(path); // Returns Uint8Array by default
-          if (content) {
-            console.log(
-              "⚡️ [PicoBridge] Module.readBinary intercepted path from VFS: " +
-                path
-            );
-            return content;
-          }
-        } catch (e) {}
-      }
-
       try {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url, false);
@@ -1490,25 +1452,6 @@ if (ENVIRONMENT_IS_NODE) {
     };
   }
   Module["readAsync"] = function readAsync(url, onload, onerror) {
-    // PHASE 73 PATCH: Check VFS First
-    if (typeof FS !== "undefined") {
-      try {
-        var path = url.startsWith("/") ? url : "/" + url;
-        var content = FS.readFile(path); // Returns Uint8Array
-        if (content) {
-          console.log(
-            "⚡️ [PicoBridge] Module.readAsync intercepted path from VFS: " +
-              path
-          );
-          // Simulate async callback
-          setTimeout(function () {
-            onload(content.buffer);
-          }, 1);
-          return;
-        }
-      } catch (e) {}
-    }
-
     var xhr = new XMLHttpRequest();
     xhr.open("GET", url, true);
     xhr.responseType = "arraybuffer";
@@ -1582,7 +1525,7 @@ function getNativeTypeSize(type) {
         var bits = parseInt(type.substr(1));
         assert(
           bits % 8 === 0,
-          "getNativeTypeSize invalid bits " + bits + ", type " + type
+          "getNativeTypeSize invalid bits " + bits + ", type " + type,
         );
         return bits / 8;
       } else {
@@ -1650,7 +1593,7 @@ function getCFunc(ident) {
   var func = Module["_" + ident];
   assert(
     func,
-    "Cannot call unknown function " + ident + ", make sure it is exported"
+    "Cannot call unknown function " + ident + ", make sure it is exported",
   );
   return func;
 }
@@ -1721,7 +1664,7 @@ function setValue(ptr, value, type, noSafe) {
                 0) >>>
               0
             : ~~+Math_ceil(
-                (tempDouble - +(~~tempDouble >>> 0)) / +4294967296
+                (tempDouble - +(~~tempDouble >>> 0)) / +4294967296,
               ) >>> 0
           : 0),
       ]),
@@ -1755,7 +1698,7 @@ function allocate(slab, types, allocator, ptr) {
     ret = ptr;
   } else {
     ret = [_malloc, stackAlloc, dynamicAlloc][allocator](
-      Math.max(size, singleType ? 1 : types.length)
+      Math.max(size, singleType ? 1 : types.length),
     );
   }
   if (zeroinit) {
@@ -1962,7 +1905,7 @@ if (INITIAL_TOTAL_MEMORY < TOTAL_STACK)
       INITIAL_TOTAL_MEMORY +
       "! (TOTAL_STACK=" +
       TOTAL_STACK +
-      ")"
+      ")",
   );
 if (Module["buffer"]) {
   buffer = Module["buffer"];
@@ -2086,7 +2029,7 @@ var ASM_CONSTS = [
     return 0;
   },
   function () {
-    return Math.ceil(_cartdat.length / 32768);
+    return _cartdat.length / 32768;
   },
   function () {
     _cdpos = _cdpos + 1;
@@ -2138,14 +2081,7 @@ var ASM_CONSTS = [
       }
     }
     mkdir_0("/user_data");
-    try {
-      FS.mount(IDBFS, {}, "/user_data");
-    } catch (e) {
-      console.warn(
-        "☢️ [Nuclear] Ignored FS.mount error (likely already mounted)",
-        e
-      );
-    }
+    FS.mount(IDBFS, {}, "/user_data");
     FS.syncfs(true, function (err) {
       if (!err) {
         console.log("codo: mounted filesystem.\n");
@@ -2256,7 +2192,7 @@ var ASM_CONSTS = [
             p8imgholder.removeChild(p8imgholder.firstChild);
           p8imgholder.style.display = "none";
         },
-        false
+        false,
       );
       dismiss.innerHTML = "X";
       p8imgholder.appendChild(dismiss);
@@ -2361,13 +2297,11 @@ var ASM_CONSTS = [
   },
   function ($0) {
     function audio_log(msg) {
-      /*
       if (window.console && window.console.log) {
         window.console.log("[codo] audio_init_webaudio " + msg);
       }
-      */
     }
-    // audio_log("audio_init");
+    audio_log("audio_init");
     var codo_audio_context;
     if (typeof Module === "undefined") audio_log(" *** Module undefined");
     else if (typeof Module.ccall === "undefined")
@@ -2395,27 +2329,18 @@ var ASM_CONSTS = [
           audio_log("Buffer Size: " + $0);
           node = codo_audio_context.createScriptProcessor($0, 1, 1);
           node.onaudioprocess = function (e) {
-            // Phase 76: Hard Audio Kill Switch
-            if (window.Pico8Kill) return;
-
-            try {
-              if (!Module || !Module.ccall) return;
-
-              var data = e.outputBuffer.getChannelData(0);
-              var r = 22050 / codo_audio_context.sampleRate;
-              var len0 = Math.floor(data.length * r);
-              var len1 = data.length;
-              var ptr = Module.ccall(
-                "mix_0",
-                "number",
-                ["number", "number"],
-                [len0, len1]
-              );
-              for (var j = 0; j < data.length; j++)
-                data[j] = Module.getValue(ptr + j * 2, "i16") / 32768;
-            } catch (e) {
-              // Silent failure preferred during shutdown
-            }
+            var data = e.outputBuffer.getChannelData(0);
+            var r = 22050 / codo_audio_context.sampleRate;
+            var len0 = Math.floor(data.length * r);
+            var len1 = data.length;
+            var ptr = Module.ccall(
+              "mix_0",
+              "number",
+              ["number", "number"],
+              [len0, len1],
+            );
+            for (var j = 0; j < data.length; j++)
+              data[j] = Module.getValue(ptr + j * 2, "i16") / 32768;
           };
           node.connect(codo_audio_context.destination);
         } else {
@@ -2487,8 +2412,8 @@ var ASM_CONSTS = [
         ? document.getElementById("codo_textarea")
         : codo_textarea;
     if (el && el.style.display != "none") {
-      // el.focus();
-      // el.select();
+      el.focus();
+      el.select();
     }
   },
   function () {
@@ -2550,8 +2475,8 @@ var ASM_CONSTS = [
       (typeof p8_touch_detected === "undefined" || !p8_touch_detected)
     ) {
       el.style.display = "";
-      // el.focus();
-      // el.select();
+      el.focus();
+      el.select();
     }
   },
   function () {
@@ -2634,7 +2559,7 @@ var PATH = {
       path.split("/").filter(function (p) {
         return !!p;
       }),
-      !isAbsolute
+      !isAbsolute,
     ).join("/");
     if (!path && !isAbsolute) {
       path = ".";
@@ -2691,7 +2616,7 @@ var PATH_FS = {
       resolvedPath.split("/").filter(function (p) {
         return !!p;
       }),
-      !resolvedAbsolute
+      !resolvedAbsolute,
     ).join("/");
     return (resolvedAbsolute ? "/" : "") + resolvedPath || ".";
   },
@@ -2975,7 +2900,7 @@ var MEMFS = {
     var CAPACITY_DOUBLING_MAX = 1024 * 1024;
     newCapacity = Math.max(
       newCapacity,
-      (prevCapacity * (prevCapacity < CAPACITY_DOUBLING_MAX ? 2 : 1.125)) | 0
+      (prevCapacity * (prevCapacity < CAPACITY_DOUBLING_MAX ? 2 : 1.125)) | 0,
     );
     if (prevCapacity != 0) newCapacity = Math.max(newCapacity, 256);
     var oldContents = node.contents;
@@ -2996,7 +2921,7 @@ var MEMFS = {
       node.contents = new Uint8Array(new ArrayBuffer(newSize));
       if (oldContents) {
         node.contents.set(
-          oldContents.subarray(0, Math.min(newSize, node.usedBytes))
+          oldContents.subarray(0, Math.min(newSize, node.usedBytes)),
         );
       }
       node.usedBytes = newSize;
@@ -3123,7 +3048,7 @@ var MEMFS = {
           return length;
         } else if (node.usedBytes === 0 && position === 0) {
           node.contents = new Uint8Array(
-            buffer.subarray(offset, offset + length)
+            buffer.subarray(offset, offset + length),
           );
           node.usedBytes = length;
           return length;
@@ -3182,7 +3107,7 @@ var MEMFS = {
             contents = Array.prototype.slice.call(
               contents,
               position,
-              position + length
+              position + length,
             );
           }
         }
@@ -3208,7 +3133,7 @@ var MEMFS = {
         0,
         length,
         offset,
-        false
+        false,
       );
       return 0;
     },
@@ -3305,7 +3230,7 @@ var IDBFS = {
       if (FS.isDir(stat.mode)) {
         check.push.apply(
           check,
-          FS.readdir(path).filter(isRealDir).map(toAbsolute(path))
+          FS.readdir(path).filter(isRealDir).map(toAbsolute(path)),
         );
       }
       entries[path] = { timestamp: stat.mtime };
@@ -3687,7 +3612,7 @@ var NODEFS = {
         path = fs.readlinkSync(path);
         path = NODEJS_PATH.relative(
           NODEJS_PATH.resolve(node.mount.opts.root),
-          path
+          path,
         );
         return path;
       } catch (e) {
@@ -3726,7 +3651,7 @@ var NODEFS = {
           NODEFS.bufferFrom(buffer.buffer),
           offset,
           length,
-          position
+          position,
         );
       } catch (e) {
         throw new FS.ErrnoError(-e.errno);
@@ -3739,7 +3664,7 @@ var NODEFS = {
           NODEFS.bufferFrom(buffer.buffer),
           offset,
           length,
-          position
+          position,
         );
       } catch (e) {
         throw new FS.ErrnoError(-e.errno);
@@ -3785,7 +3710,7 @@ var WORKERFS = {
             parent,
             parts[i],
             WORKERFS.DIR_MODE,
-            0
+            0,
           );
         }
         parent = createdParents[curr];
@@ -3803,7 +3728,7 @@ var WORKERFS = {
         WORKERFS.FILE_MODE,
         0,
         file,
-        file.lastModifiedDate
+        file.lastModifiedDate,
       );
     });
     (mount.opts["blobs"] || []).forEach(function (obj) {
@@ -3812,7 +3737,7 @@ var WORKERFS = {
         base(obj["name"]),
         WORKERFS.FILE_MODE,
         0,
-        obj["data"]
+        obj["data"],
       );
     });
     (mount.opts["packages"] || []).forEach(function (pack) {
@@ -3823,7 +3748,7 @@ var WORKERFS = {
           base(name),
           WORKERFS.FILE_MODE,
           0,
-          pack["blob"].slice(file.start, file.end)
+          pack["blob"].slice(file.start, file.end),
         );
       });
     });
@@ -3933,7 +3858,7 @@ var WORKERFS = {
     },
   },
 };
-var FS = (window.FS = {
+var FS = {
   root: null,
   mounts: [],
   devices: {},
@@ -3970,7 +3895,7 @@ var FS = (window.FS = {
       path.split("/").filter(function (p) {
         return !!p;
       }),
-      false
+      false,
     );
     var current = FS.root;
     var current_path = "/";
@@ -4339,7 +4264,7 @@ var FS = (window.FS = {
       console.log(
         "warning: " +
           FS.syncFSRequests +
-          " FS.syncfs operations in flight at once, probably just doing extra work"
+          " FS.syncfs operations in flight at once, probably just doing extra work",
       );
     }
     var mounts = FS.getMounts(FS.root.mount);
@@ -4559,7 +4484,7 @@ var FS = (window.FS = {
           "', '" +
           new_path +
           "') threw an exception: " +
-          e.message
+          e.message,
       );
     }
     FS.hashRemoveNode(old_node);
@@ -4580,7 +4505,7 @@ var FS = (window.FS = {
           "', '" +
           new_path +
           "') threw an exception: " +
-          e.message
+          e.message,
       );
     }
   },
@@ -4608,7 +4533,7 @@ var FS = (window.FS = {
         "FS.trackingDelegate['willDeletePath']('" +
           path +
           "') threw an exception: " +
-          e.message
+          e.message,
       );
     }
     parent.node_ops.rmdir(parent, name);
@@ -4621,7 +4546,7 @@ var FS = (window.FS = {
         "FS.trackingDelegate['onDeletePath']('" +
           path +
           "') threw an exception: " +
-          e.message
+          e.message,
       );
     }
   },
@@ -4657,7 +4582,7 @@ var FS = (window.FS = {
         "FS.trackingDelegate['willDeletePath']('" +
           path +
           "') threw an exception: " +
-          e.message
+          e.message,
       );
     }
     parent.node_ops.unlink(parent, name);
@@ -4670,7 +4595,7 @@ var FS = (window.FS = {
         "FS.trackingDelegate['onDeletePath']('" +
           path +
           "') threw an exception: " +
-          e.message
+          e.message,
       );
     }
   },
@@ -4685,7 +4610,7 @@ var FS = (window.FS = {
     }
     return PATH_FS.resolve(
       FS.getPath(link.parent),
-      link.node_ops.readlink(link)
+      link.node_ops.readlink(link),
     );
   },
   stat: function (path, dontFollow) {
@@ -4855,7 +4780,7 @@ var FS = (window.FS = {
         error: false,
       },
       fd_start,
-      fd_end
+      fd_end,
     );
     if (stream.stream_ops.open) {
       stream.stream_ops.open(stream);
@@ -4883,7 +4808,7 @@ var FS = (window.FS = {
         "FS.trackingDelegate['onOpenFile']('" +
           path +
           "', flags) threw an exception: " +
-          e.message
+          e.message,
       );
     }
     return stream;
@@ -4948,7 +4873,7 @@ var FS = (window.FS = {
       buffer,
       offset,
       length,
-      position
+      position,
     );
     if (!seeking) stream.position += bytesRead;
     return bytesRead;
@@ -4984,7 +4909,7 @@ var FS = (window.FS = {
       offset,
       length,
       position,
-      canOwn
+      canOwn,
     );
     if (!seeking) stream.position += bytesWritten;
     try {
@@ -4995,7 +4920,7 @@ var FS = (window.FS = {
         "FS.trackingDelegate['onWriteToFile']('" +
           stream.path +
           "') threw an exception: " +
-          e.message
+          e.message,
       );
     }
     return bytesWritten;
@@ -5032,7 +4957,7 @@ var FS = (window.FS = {
       length,
       position,
       prot,
-      flags
+      flags,
     );
   },
   msync: function (stream, buffer, offset, length, mmapFlags) {
@@ -5182,7 +5107,7 @@ var FS = (window.FS = {
         },
       },
       {},
-      "/proc/self/fd"
+      "/proc/self/fd",
     );
   },
   createStandardStreams: function () {
@@ -5323,7 +5248,7 @@ var FS = (window.FS = {
   createFolder: function (parent, name, canRead, canWrite) {
     var path = PATH.join2(
       typeof parent === "string" ? parent : FS.getPath(parent),
-      name
+      name,
     );
     var mode = FS.getMode(canRead, canWrite);
     return FS.mkdir(path, mode);
@@ -5345,7 +5270,7 @@ var FS = (window.FS = {
   createFile: function (parent, name, properties, canRead, canWrite) {
     var path = PATH.join2(
       typeof parent === "string" ? parent : FS.getPath(parent),
-      name
+      name,
     );
     var mode = FS.getMode(canRead, canWrite);
     return FS.create(path, mode);
@@ -5354,7 +5279,7 @@ var FS = (window.FS = {
     var path = name
       ? PATH.join2(
           typeof parent === "string" ? parent : FS.getPath(parent),
-          name
+          name,
         )
       : parent;
     var mode = FS.getMode(canRead, canWrite);
@@ -5377,7 +5302,7 @@ var FS = (window.FS = {
   createDevice: function (parent, name, input, output) {
     var path = PATH.join2(
       typeof parent === "string" ? parent : FS.getPath(parent),
-      name
+      name,
     );
     var mode = FS.getMode(!!input, !!output);
     if (!FS.createDevice.major) FS.createDevice.major = 64;
@@ -5431,7 +5356,7 @@ var FS = (window.FS = {
   createLink: function (parent, name, target, canRead, canWrite) {
     var path = PATH.join2(
       typeof parent === "string" ? parent : FS.getPath(parent),
-      name
+      name,
     );
     return FS.symlink(target, path);
   },
@@ -5440,7 +5365,7 @@ var FS = (window.FS = {
     var success = true;
     if (typeof XMLHttpRequest !== "undefined") {
       throw new Error(
-        "Lazy loading should have been performed (contents set) in createLazyFile, but it was not. Lazy loading only works in web workers. Use --embed-file or --preload-file in emcc on the main thread."
+        "Lazy loading should have been performed (contents set) in createLazyFile, but it was not. Lazy loading only works in web workers. Use --embed-file or --preload-file in emcc on the main thread.",
       );
     } else if (Module["read"]) {
       try {
@@ -5492,11 +5417,11 @@ var FS = (window.FS = {
         var doXHR = function (from, to) {
           if (from > to)
             throw new Error(
-              "invalid range (" + from + ", " + to + ") or no bytes requested!"
+              "invalid range (" + from + ", " + to + ") or no bytes requested!",
             );
           if (to > datalength - 1)
             throw new Error(
-              "only " + datalength + " bytes available! programmer error!"
+              "only " + datalength + " bytes available! programmer error!",
             );
           var xhr = new XMLHttpRequest();
           xhr.open("GET", url, false);
@@ -5533,7 +5458,7 @@ var FS = (window.FS = {
           datalength = this.getter(0).length;
           chunkSize = datalength;
           console.log(
-            "LazyFiles on gzip forces download of the whole file when length is accessed"
+            "LazyFiles on gzip forces download of the whole file when length is accessed",
           );
         }
         this._length = datalength;
@@ -5596,7 +5521,7 @@ var FS = (window.FS = {
       buffer,
       offset,
       length,
-      position
+      position,
     ) {
       if (!FS.forceLoadFile(node)) {
         throw new FS.ErrnoError(5);
@@ -5628,7 +5553,7 @@ var FS = (window.FS = {
     onerror,
     dontCreateFile,
     canOwn,
-    preFinish
+    preFinish,
   ) {
     Browser.init();
     var fullname = name ? PATH_FS.resolve(PATH.join2(parent, name)) : parent;
@@ -5662,7 +5587,7 @@ var FS = (window.FS = {
         function (byteArray) {
           processData(byteArray);
         },
-        onerror
+        onerror,
       );
     } else {
       processData(url);
@@ -5759,7 +5684,7 @@ var FS = (window.FS = {
             getRequest.result,
             true,
             true,
-            true
+            true,
           );
           ok++;
           if (ok + fail == total) finish();
@@ -5773,7 +5698,7 @@ var FS = (window.FS = {
     };
     openRequest.onerror = onerror;
   },
-});
+};
 function _emscripten_set_main_loop_timing(mode, value) {
   Browser.mainLoop.timingMode = mode;
   Browser.mainLoop.timingValue = value;
@@ -5786,7 +5711,7 @@ function _emscripten_set_main_loop_timing(mode, value) {
         var timeUntilNextTick =
           Math.max(
             0,
-            Browser.mainLoop.tickStartTime + value - _emscripten_get_now()
+            Browser.mainLoop.tickStartTime + value - _emscripten_get_now(),
           ) | 0;
         setTimeout(Browser.mainLoop.runner, timeUntilNextTick);
       };
@@ -5836,12 +5761,12 @@ function _emscripten_set_main_loop(
   fps,
   simulateInfiniteLoop,
   arg,
-  noSetTiming
+  noSetTiming,
 ) {
   Module["noExitRuntime"] = true;
   assert(
     !Browser.mainLoop.func,
-    "emscripten_set_main_loop: there can only be one main loop function at once: call emscripten_cancel_main_loop to cancel the previous one before setting a new one with different parameters."
+    "emscripten_set_main_loop: there can only be one main loop function at once: call emscripten_cancel_main_loop to cancel the previous one before setting a new one with different parameters.",
   );
   Browser.mainLoop.func = func;
   Browser.mainLoop.arg = arg;
@@ -5857,7 +5782,6 @@ function _emscripten_set_main_loop(
   }
   var thisMainLoopId = Browser.mainLoop.currentlyRunningMainloop;
   Browser.mainLoop.runner = function Browser_mainLoop_runner() {
-    if (window.Pico8Kill) return;
     if (ABORT) return;
     if (Browser.mainLoop.queue.length > 0) {
       var start = Date.now();
@@ -5878,7 +5802,7 @@ function _emscripten_set_main_loop(
           blocker.name +
           '" took ' +
           (Date.now() - start) +
-          " ms"
+          " ms",
       );
       Browser.mainLoop.updateStatus();
       if (thisMainLoopId < Browser.mainLoop.currentlyRunningMainloop) return;
@@ -5900,7 +5824,7 @@ function _emscripten_set_main_loop(
     }
     if (Browser.mainLoop.method === "timeout" && Module.ctx) {
       err(
-        "Looks like you are rendering without using requestAnimationFrame for the main loop. You should use 0 for the frame rate in emscripten_set_main_loop in order to use requestAnimationFrame, as that can greatly improve your frame rates!"
+        "Looks like you are rendering without using requestAnimationFrame for the main loop. You should use 0 for the frame rate in emscripten_set_main_loop in order to use requestAnimationFrame, as that can greatly improve your frame rates!",
       );
       Browser.mainLoop.method = "";
     }
@@ -5952,7 +5876,7 @@ var Browser = {
         if (remaining) {
           if (remaining < expected) {
             Module["setStatus"](
-              message + " (" + (expected - remaining) + "/" + expected + ")"
+              message + " (" + (expected - remaining) + "/" + expected + ")",
             );
           } else {
             Module["setStatus"](message);
@@ -5964,14 +5888,6 @@ var Browser = {
     },
     runIter: function (func) {
       if (ABORT) return;
-      // Phase 74: The Silent Ship - Kill Switch
-      if (window.Pico8Kill) {
-        if (window.p8_is_running) {
-          console.log("[Pico8] Kill Switch Active. Halting loop.");
-          window.p8_is_running = false;
-        }
-        return;
-      }
       if (Module["preMainLoop"]) {
         var preRet = Module["preMainLoop"]();
         if (preRet === false) {
@@ -6006,7 +5922,7 @@ var Browser = {
     } catch (e) {
       Browser.hasBlobConstructor = false;
       console.log(
-        "warning: no blob constructor, cannot create blobs with mimetypes"
+        "warning: no blob constructor, cannot create blobs with mimetypes",
       );
     }
     Browser.BlobBuilder =
@@ -6025,7 +5941,7 @@ var Browser = {
         : undefined;
     if (!Module.noImageDecoding && typeof Browser.URLObject === "undefined") {
       console.log(
-        "warning: Browser does not support creating object URLs. Built-in browser image decoding will not be available."
+        "warning: Browser does not support creating object URLs. Built-in browser image decoding will not be available.",
       );
       Module.noImageDecoding = true;
     }
@@ -6037,7 +5953,7 @@ var Browser = {
       byteArray,
       name,
       onload,
-      onerror
+      onerror,
     ) {
       var b = null;
       if (Browser.hasBlobConstructor) {
@@ -6052,7 +5968,7 @@ var Browser = {
           warnOnce(
             "Blob constructor present but fails: " +
               e +
-              "; falling back to blob builder"
+              "; falling back to blob builder",
           );
         }
       }
@@ -6092,7 +6008,7 @@ var Browser = {
       byteArray,
       name,
       onload,
-      onerror
+      onerror,
     ) {
       var done = false;
       function finish(audio) {
@@ -6120,14 +6036,14 @@ var Browser = {
           function () {
             finish(audio);
           },
-          false
+          false,
         );
         audio.onerror = function audio_onerror(event) {
           if (done) return;
           console.log(
             "warning: browser could not fully decode audio " +
               name +
-              ", trying slower base64 approach"
+              ", trying slower base64 approach",
           );
           function encode64(data) {
             var BASE =
@@ -6196,17 +6112,17 @@ var Browser = {
       document.addEventListener(
         "mozpointerlockchange",
         pointerLockChange,
-        false
+        false,
       );
       document.addEventListener(
         "webkitpointerlockchange",
         pointerLockChange,
-        false
+        false,
       );
       document.addEventListener(
         "mspointerlockchange",
         pointerLockChange,
-        false
+        false,
       );
       if (Module["elementPointerLock"]) {
         canvas.addEventListener(
@@ -6217,7 +6133,7 @@ var Browser = {
               ev.preventDefault();
             }
           },
-          false
+          false,
         );
       }
     }
@@ -6226,7 +6142,7 @@ var Browser = {
     canvas,
     useWebGL,
     setInModule,
-    webGLContextAttributes
+    webGLContextAttributes,
   ) {
     if (useWebGL && Module.ctx && canvas == Module.canvas) return Module.ctx;
     var ctx;
@@ -6256,7 +6172,7 @@ var Browser = {
       if (!useWebGL)
         assert(
           typeof GLctx === "undefined",
-          "cannot set in module if GLctx is used, but we are a non-GL context that would replace it"
+          "cannot set in module if GLctx is used, but we are a non-GL context that would replace it",
         );
       Module.ctx = ctx;
       if (useWebGL) GL.makeContextCurrent(contextHandle);
@@ -6326,7 +6242,7 @@ var Browser = {
       document.addEventListener(
         "webkitfullscreenchange",
         fullscreenChange,
-        false
+        false,
       );
       document.addEventListener("MSFullscreenChange", fullscreenChange, false);
     }
@@ -6340,14 +6256,14 @@ var Browser = {
       (canvasContainer["webkitRequestFullscreen"]
         ? function () {
             canvasContainer["webkitRequestFullscreen"](
-              Element["ALLOW_KEYBOARD_INPUT"]
+              Element["ALLOW_KEYBOARD_INPUT"],
             );
           }
         : null) ||
       (canvasContainer["webkitRequestFullScreen"]
         ? function () {
             canvasContainer["webkitRequestFullScreen"](
-              Element["ALLOW_KEYBOARD_INPUT"]
+              Element["ALLOW_KEYBOARD_INPUT"],
             );
           }
         : null);
@@ -6359,7 +6275,7 @@ var Browser = {
   },
   requestFullScreen: function (lockPointer, resizeCanvas, vrDevice) {
     err(
-      "Browser.requestFullScreen() is deprecated. Please call Browser.requestFullscreen instead."
+      "Browser.requestFullScreen() is deprecated. Please call Browser.requestFullscreen instead.",
     );
     Browser.requestFullScreen = function (lockPointer, resizeCanvas, vrDevice) {
       return Browser.requestFullscreen(lockPointer, resizeCanvas, vrDevice);
@@ -6392,10 +6308,7 @@ var Browser = {
           window["oRequestAnimationFrame"] ||
           Browser.fakeRequestAnimationFrame;
       }
-      window.requestAnimationFrame((ts) => {
-        if (window.Pico8Kill) return;
-        func(ts);
-      });
+      window.requestAnimationFrame(func);
     }
   },
   safeCallback: function (func) {
@@ -6420,7 +6333,6 @@ var Browser = {
   },
   safeRequestAnimationFrame: function (func) {
     return Browser.requestAnimationFrame(function () {
-      if (window.Pico8Kill) return;
       if (ABORT) return;
       if (Browser.allowAsyncCallbacks) {
         func();
@@ -6575,7 +6487,7 @@ var Browser = {
       function (arrayBuffer) {
         assert(
           arrayBuffer,
-          'Loading data file "' + url + '" failed (no arrayBuffer).'
+          'Loading data file "' + url + '" failed (no arrayBuffer).',
         );
         onload(new Uint8Array(arrayBuffer));
         if (dep) removeRunDependency(dep);
@@ -6586,7 +6498,7 @@ var Browser = {
         } else {
           throw 'Loading data file "' + url + '" failed.';
         }
-      }
+      },
     );
     if (dep) addRunDependency(dep);
   },
@@ -6697,7 +6609,7 @@ function _SDL_LockSurface(surf) {
     if (!surfData.image) {
       surfData.image = surfData.ctx.createImageData(
         surfData.width,
-        surfData.height
+        surfData.height,
       );
     }
     if (!SDL.defaults.opaqueFrontBuffer) return;
@@ -6706,7 +6618,7 @@ function _SDL_LockSurface(surf) {
       0,
       0,
       surfData.width,
-      surfData.height
+      surfData.height,
     );
   }
   if (surf == SDL.screen && SDL.defaults.opaqueFrontBuffer) {
@@ -7024,7 +6936,7 @@ var SDL = {
     rmask,
     gmask,
     bmask,
-    amask
+    amask,
   ) {
     flags = flags || 0;
     var is_SDL_HWSURFACE = flags & 1;
@@ -7079,7 +6991,7 @@ var SDL = {
       canvas,
       is_SDL_OPENGL,
       usePageCanvas,
-      webGLContextAttributes
+      webGLContextAttributes,
     );
     SDL.surfaces[surf] = {
       width: width,
@@ -7186,7 +7098,7 @@ var SDL = {
       dr.x,
       dr.y,
       blitw,
-      blith
+      blith,
     );
     dstData.ctx.globalAlpha = oldAlpha;
     if (dst != SDL.screen) {
@@ -7486,7 +7398,7 @@ var SDL = {
       Module["dynCall_iii"](
         SDL.eventHandler,
         SDL.eventHandlerContext,
-        SDL.eventHandlerTemp
+        SDL.eventHandlerTemp,
       );
     }
   },
@@ -7597,7 +7509,7 @@ var SDL = {
                   0) >>>
                 0
               : ~~+Math_ceil(
-                  (tempDouble - +(~~tempDouble >>> 0)) / +4294967296
+                  (tempDouble - +(~~tempDouble >>> 0)) / +4294967296,
                 ) >>> 0
             : 0),
         ]),
@@ -7612,7 +7524,7 @@ var SDL = {
                   0) >>>
                 0
               : ~~+Math_ceil(
-                  (tempDouble - +(~~tempDouble >>> 0)) / +4294967296
+                  (tempDouble - +(~~tempDouble >>> 0)) / +4294967296,
                 ) >>> 0
             : 0),
         ]),
@@ -7798,7 +7710,7 @@ var SDL = {
   fillWebAudioBufferFromHeap: function (
     heapPtr,
     sizeSamplesPerChannel,
-    dstAudioBuffer
+    dstAudioBuffer,
   ) {
     var numChannels = SDL.audio.channels;
     for (var c = 0; c < numChannels; ++c) {
@@ -7834,13 +7746,13 @@ var SDL = {
   debugSurface: function (surfData) {
     console.log(
       "dumping surface " +
-        [surfData.surf, surfData.source, surfData.width, surfData.height]
+        [surfData.surf, surfData.source, surfData.width, surfData.height],
     );
     var image = surfData.ctx.getImageData(
       0,
       0,
       surfData.width,
-      surfData.height
+      surfData.height,
     );
     var data = image.data;
     var num = Math.min(surfData.width, surfData.height);
@@ -7854,7 +7766,7 @@ var SDL = {
             data[i * surfData.width * 4 + i * 4 + 1],
             data[i * surfData.width * 4 + i * 4 + 2],
             data[i * surfData.width * 4 + i * 4 + 3],
-          ]
+          ],
       );
     }
   },
@@ -7950,7 +7862,7 @@ function _SDL_GetError() {
     SDL.errorMessage = allocate(
       intArrayFromString("unknown SDL-emscripten error"),
       "i8",
-      ALLOC_NORMAL
+      ALLOC_NORMAL,
     );
   }
   return SDL.errorMessage;
@@ -8055,7 +7967,7 @@ var GL = {
       var len = length ? HEAP32[(length + i * 4) >> 2] : -1;
       source += UTF8ToString(
         HEAP32[(string + i * 4) >> 2],
-        len < 0 ? undefined : len
+        len < 0 ? undefined : len,
       );
     }
     return source;
@@ -8097,7 +8009,7 @@ var GL = {
       GL.currentContext = null;
     if (typeof JSEvents === "object")
       JSEvents.removeAllHandlersOnTarget(
-        GL.contexts[contextHandle].GLctx.canvas
+        GL.contexts[contextHandle].GLctx.canvas,
       );
     if (GL.contexts[contextHandle] && GL.contexts[contextHandle].GLctx.canvas)
       GL.contexts[contextHandle].GLctx.canvas.GLctxObject = undefined;
@@ -8119,13 +8031,13 @@ var GL = {
           mode,
           first,
           count,
-          primcount
+          primcount,
         ) {
           instancedArraysExt["drawArraysInstancedANGLE"](
             mode,
             first,
             count,
-            primcount
+            primcount,
           );
         };
         GLctx["drawElementsInstanced"] = function (
@@ -8133,14 +8045,14 @@ var GL = {
           count,
           type,
           indices,
-          primcount
+          primcount,
         ) {
           instancedArraysExt["drawElementsInstancedANGLE"](
             mode,
             count,
             type,
             indices,
-            primcount
+            primcount,
           );
         };
       }
@@ -8167,7 +8079,7 @@ var GL = {
       }
     }
     GLctx.disjointTimerQueryExt = GLctx.getExtension(
-      "EXT_disjoint_timer_query"
+      "EXT_disjoint_timer_query",
     );
     var automaticallyEnabledExtensions = [
       "OES_texture_float",
@@ -8221,7 +8133,7 @@ var GL = {
       var name = u.name;
       ptable.maxUniformLength = Math.max(
         ptable.maxUniformLength,
-        name.length + 1
+        name.length + 1,
       );
       if (name.slice(-1) == "]") {
         name = name.slice(0, name.lastIndexOf("["));
@@ -8703,7 +8615,7 @@ function ___syscall220(which, varargs) {
                 0) >>>
               0
             : ~~+Math_ceil(
-                (tempDouble - +(~~tempDouble >>> 0)) / +4294967296
+                (tempDouble - +(~~tempDouble >>> 0)) / +4294967296,
               ) >>> 0
           : 0),
       ]),
@@ -8718,7 +8630,7 @@ function ___syscall220(which, varargs) {
                 0) >>>
               0
             : ~~+Math_ceil(
-                (tempDouble - +(~~tempDouble >>> 0)) / +4294967296
+                (tempDouble - +(~~tempDouble >>> 0)) / +4294967296,
               ) >>> 0
           : 0),
       ]),
@@ -8876,7 +8788,7 @@ function _emscripten_async_wget_data(url, arg, onload, onerror) {
     function () {
       if (onerror) dynCall_vi(onerror, arg);
     },
-    true
+    true,
   );
 }
 function _emscripten_get_heap_size() {
@@ -8917,7 +8829,7 @@ function _tzset() {
   var winter = new Date(2e3, 0, 1);
   var summer = new Date(2e3, 6, 1);
   HEAP32[__get_daylight() >> 2] = Number(
-    winter.getTimezoneOffset() != summer.getTimezoneOffset()
+    winter.getTimezoneOffset() != summer.getTimezoneOffset(),
   );
   function extractZone(date) {
     var match = date.toTimeString().match(/\(([A-Za-z ]+)\)$/);
@@ -8928,12 +8840,12 @@ function _tzset() {
   var winterNamePtr = allocate(
     intArrayFromString(winterName),
     "i8",
-    ALLOC_NORMAL
+    ALLOC_NORMAL,
   );
   var summerNamePtr = allocate(
     intArrayFromString(summerName),
     "i8",
-    ALLOC_NORMAL
+    ALLOC_NORMAL,
   );
   if (summer.getTimezoneOffset() < winter.getTimezoneOffset()) {
     HEAP32[__get_tzname() >> 2] = winterNamePtr;
@@ -9171,9 +9083,9 @@ function _strftime(s, maxsize, format, tm) {
             __isLeapYear(date.tm_year + 1900)
               ? __MONTH_DAYS_LEAP
               : __MONTH_DAYS_REGULAR,
-            date.tm_mon - 1
+            date.tm_mon - 1,
           ),
-        3
+        3,
       );
     },
     "%m": function (date) {
@@ -9206,7 +9118,7 @@ function _strftime(s, maxsize, format, tm) {
         0,
         0,
         0,
-        0
+        0,
       );
       return day.getDay() || 7;
     },
@@ -9223,7 +9135,7 @@ function _strftime(s, maxsize, format, tm) {
             __isLeapYear(endDate.getFullYear())
               ? __MONTH_DAYS_LEAP
               : __MONTH_DAYS_REGULAR,
-            endDate.getMonth() - 1
+            endDate.getMonth() - 1,
           ) - 31;
         var firstSundayUntilEndJanuary = 31 - firstSunday.getDate();
         var days =
@@ -9241,7 +9153,7 @@ function _strftime(s, maxsize, format, tm) {
       var firstWeekStartNextYear = getFirstWeekStartDate(janFourthNextYear);
       var endDate = __addDays(
         new Date(date.tm_year + 1900, 0, 1),
-        date.tm_yday
+        date.tm_yday,
       );
       if (compareByDay(endDate, firstWeekStartThisYear) < 0) {
         return "53";
@@ -9265,7 +9177,7 @@ function _strftime(s, maxsize, format, tm) {
         0,
         0,
         0,
-        0
+        0,
       );
       return day.getDay();
     },
@@ -9276,7 +9188,7 @@ function _strftime(s, maxsize, format, tm) {
           ? janFirst
           : __addDays(
               janFirst,
-              janFirst.getDay() === 0 ? 1 : 7 - janFirst.getDay() + 1
+              janFirst.getDay() === 0 ? 1 : 7 - janFirst.getDay() + 1,
             );
       var endDate = new Date(date.tm_year + 1900, date.tm_mon, date.tm_mday);
       if (compareByDay(firstMonday, endDate) < 0) {
@@ -9285,7 +9197,7 @@ function _strftime(s, maxsize, format, tm) {
             __isLeapYear(endDate.getFullYear())
               ? __MONTH_DAYS_LEAP
               : __MONTH_DAYS_REGULAR,
-            endDate.getMonth() - 1
+            endDate.getMonth() - 1,
           ) - 31;
         var firstMondayUntilEndJanuary = 31 - firstMonday.getDate();
         var days =
@@ -9320,7 +9232,7 @@ function _strftime(s, maxsize, format, tm) {
     if (pattern.indexOf(rule) >= 0) {
       pattern = pattern.replace(
         new RegExp(rule, "g"),
-        EXPANSION_RULES_2[rule](date)
+        EXPANSION_RULES_2[rule](date),
       );
     }
   }
@@ -9355,10 +9267,10 @@ if (ENVIRONMENT_IS_NODE) {
 Module["requestFullScreen"] = function Module_requestFullScreen(
   lockPointer,
   resizeCanvas,
-  vrDevice
+  vrDevice,
 ) {
   err(
-    "Module.requestFullScreen is deprecated. Please call Module.requestFullscreen instead."
+    "Module.requestFullScreen is deprecated. Please call Module.requestFullscreen instead.",
   );
   Module["requestFullScreen"] = Module["requestFullscreen"];
   Browser.requestFullScreen(lockPointer, resizeCanvas, vrDevice);
@@ -9366,7 +9278,7 @@ Module["requestFullScreen"] = function Module_requestFullScreen(
 Module["requestFullscreen"] = function Module_requestFullscreen(
   lockPointer,
   resizeCanvas,
-  vrDevice
+  vrDevice,
 ) {
   Browser.requestFullscreen(lockPointer, resizeCanvas, vrDevice);
 };
@@ -9376,7 +9288,7 @@ Module["requestAnimationFrame"] = function Module_requestAnimationFrame(func) {
 Module["setCanvasSize"] = function Module_setCanvasSize(
   width,
   height,
-  noUpdates
+  noUpdates,
 ) {
   Browser.setCanvasSize(width, height, noUpdates);
 };
@@ -9393,13 +9305,13 @@ Module["createContext"] = function Module_createContext(
   canvas,
   useWebGL,
   setInModule,
-  webGLContextAttributes
+  webGLContextAttributes,
 ) {
   return Browser.createContext(
     canvas,
     useWebGL,
     setInModule,
-    webGLContextAttributes
+    webGLContextAttributes,
   );
 };
 if (ENVIRONMENT_IS_NODE) {
@@ -9444,7 +9356,7 @@ function intArrayToString(array) {
             String.fromCharCode(chr) +
             ")  at offset " +
             i +
-            " not in 0x00-0xFF."
+            " not in 0x00-0xFF.",
         );
       }
       chr &= 255;
@@ -12827,7 +12739,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
     a = c[554364] | 0;
     Rs(
       3126573,
-      (a | 0) < 1 ? 0 : (187248 + ((((a + -1) | 0) * 1320) | 0) + 288) | 0
+      (a | 0) < 1 ? 0 : (187248 + ((((a + -1) | 0) * 1320) | 0) + 288) | 0,
     ) | 0;
     c[780903] = 20;
     a = c[554364] | 0;
@@ -12874,7 +12786,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       g,
       127,
       (g + 5 + ((((((bu(b) | 0) + -1) | 0) >>> 5) * 6) | 0)) | 0,
-      0
+      0,
     );
     Bo(c[742782] | 0, b, c[742805] | 0, c[781023] | 0, c[781024] | 0, 17, d) |
       0;
@@ -13846,7 +13758,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         a,
         i,
         (19 - (((((k | 0) > 0 ? k : 0) >>> 0) / 6144) | 0)) | 0,
-        (j | 0) == 0 ? 1 : j
+        (j | 0) == 0 ? 1 : j,
       );
       f = (f + 1) | 0;
     } while ((f | 0) != 64);
@@ -13970,7 +13882,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         63,
         20,
         1,
-        (c[798454] | 0) < (c[798455] | 0) ? 8 : 13
+        (c[798454] | 0) < (c[798455] | 0) ? 8 : 13,
       ) | 0;
     } else {
       d = c[798455] | 0;
@@ -13986,7 +13898,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         63,
         20,
         1,
-        (c[798454] | 0) < (c[798455] | 0) ? 8 : 13
+        (c[798454] | 0) < (c[798455] | 0) ? 8 : 13,
       ) | 0;
     }
     Xn(a);
@@ -16830,7 +16742,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       0,
       0,
       128,
-      128
+      128,
     );
     c[484610] = 1;
     return;
@@ -20237,7 +20149,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       (m - (c[781030] << 16)) >> 16,
       (l - (c[781031] << 16)) >> 16,
       j,
-      c[781038] | 0
+      c[781038] | 0,
     );
     return 0;
   }
@@ -20586,7 +20498,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       o,
       q,
       r,
-      3123880
+      3123880,
     );
     tk(c[554383] | 0, c[742782] | 0, 0, 0, p, m, s, o);
     c[d >> 2] = s;
@@ -20744,7 +20656,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       q,
       z,
       y,
-      3123880
+      3123880,
     );
     sk(c[554382] | 0, c[742782] | 0, p, n, r, s);
     c[d >> 2] = r;
@@ -21430,7 +21342,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           c[(b + 4) >> 2] | 0,
           c[(b + 8) >> 2] | 0,
           c[(b + 12) >> 2] | 0,
-          c[f >> 2] | 0
+          c[f >> 2] | 0,
         ) | 0
       )
     ) {
@@ -21512,7 +21424,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     p,
                     o,
                     (a[s >> 0] | 0) != 0,
-                    c[(n + ((m * 36) | 0) + 20) >> 2] | 0
+                    c[(n + ((m * 36) | 0) + 20) >> 2] | 0,
                   ) | 0
                 )
               ) {
@@ -22776,7 +22688,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         60,
         19,
         1,
-        7
+        7,
       ) | 0;
       Bo(b, 92298, c[742805] | 0, 60, 26, 1, 13) | 0;
       Bo(b, 92314, c[742805] | 0, 60, 33, 1, 13) | 0;
@@ -22885,7 +22797,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       g,
       h,
       7,
-      7
+      7,
     );
     a[j >> 0] = (d[(92551 + e) >> 0] | 0) + 31;
     a[(j + 1) >> 0] = 0;
@@ -23153,7 +23065,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       n,
       j,
       7,
-      7
+      7,
     );
     a[f >> 0] = -114;
     A = (f + 1) | 0;
@@ -23170,7 +23082,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       C,
       j,
       7,
-      7
+      7,
     );
     a[f >> 0] = -105;
     a[A >> 0] = 0;
@@ -23191,7 +23103,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       n,
       j,
       7,
-      7
+      7,
     );
     a[f >> 0] = -114;
     a[A >> 0] = 0;
@@ -24248,7 +24160,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               ((sm(
                 1529360,
                 (k + ((r * 696) | 0) + 388) | 0,
-                (k + ((r * 696) | 0) + 260) | 0
+                (k + ((r * 696) | 0) + 260) | 0,
               ) |
                 0) !=
                 -1) &
@@ -24803,7 +24715,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         ((sm(
           1529360,
           (t + ((b * 696) | 0) + 388) | 0,
-          (t + ((b * 696) | 0) + 260) | 0
+          (t + ((b * 696) | 0) + 260) | 0,
         ) |
           0) !=
           -1) &
@@ -25381,7 +25293,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           ((sm(
             1529360,
             (B + ((b * 696) | 0) + 388) | 0,
-            (B + ((b * 696) | 0) + 260) | 0
+            (B + ((b * 696) | 0) + 260) | 0,
           ) |
             0) !=
             -1) &
@@ -25932,7 +25844,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       c[(1528192 + ((g * 1168) | 0) + 1084) >> 2] = 0;
       Rs(
         (1528192 + ((g * 1168) | 0) + 1040) | 0,
-        c[(3632 + (g << 2)) >> 2] | 0
+        c[(3632 + (g << 2)) >> 2] | 0,
       ) | 0;
       j = (1528192 + ((g * 1168) | 0) + 1036) | 0;
       c[j >> 2] = g + 187;
@@ -26020,7 +25932,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         ((sm(
           1529360,
           (e + ((g * 696) | 0) + 388) | 0,
-          (e + ((g * 696) | 0) + 260) | 0
+          (e + ((g * 696) | 0) + 260) | 0,
         ) |
           0) !=
           -1) &
@@ -26653,7 +26565,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                   2971096,
                   c[781999] | 0,
                   (t + e) | 0,
-                  d[((c[554809] | 0) + t) >> 0] | 0
+                  d[((c[554809] | 0) + t) >> 0] | 0,
                 );
                 t = (t + 1) | 0;
               } while ((t | 0) < (v | 0));
@@ -26674,7 +26586,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     2971096,
                     c[781999] | 0,
                     (u + e) | 0,
-                    d[((c[554793] | 0) + t) >> 0] | 0
+                    d[((c[554793] | 0) + t) >> 0] | 0,
                   );
                   t = ((c[554794] | 0) + 1) | 0;
                   c[554794] = t;
@@ -26703,7 +26615,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     2971096,
                     c[781999] | 0,
                     (q + e) | 0,
-                    d[((c[554796] | 0) + t) >> 0] | 0
+                    d[((c[554796] | 0) + t) >> 0] | 0,
                   );
                   t = ((c[554797] | 0) + 1) | 0;
                   c[554797] = t;
@@ -27041,7 +26953,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
     Vv(
       ((c[554796] | 0) + 4) | 0,
       c[(b + 12) >> 2] | 0,
-      B(c[d >> 2] | 0, c[b >> 2] | 0) | 0
+      B(c[d >> 2] | 0, c[b >> 2] | 0) | 0,
     ) | 0;
     c[554797] = 0;
     return;
@@ -27359,7 +27271,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           1,
           1,
           40,
-          10
+          10,
         );
         c[781022] = 6;
         i = 0;
@@ -27373,7 +27285,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           1,
           1,
           40,
-          10
+          10,
         );
         i = 0;
       } else if ((h | 0) == 28) {
@@ -27429,7 +27341,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           (l << 3) | 2,
           (l | 0) == 3 ? (b + -2) | 0 : b,
           7,
-          5
+          5,
         );
         c[798948] = (c[798948] | 0) + 1;
         c[742774] = (c[742774] | 0) + -1;
@@ -28162,7 +28074,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             b,
             (l + 40) | 0,
             i,
-            (a[n >> 0] | 0) == 0 ? 5591122 : 16777215
+            (a[n >> 0] | 0) == 0 ? 5591122 : 16777215,
           );
           Bo(
             c[742765] | 0,
@@ -28171,7 +28083,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             (l + 22) | 0,
             k,
             1,
-            (a[n >> 0] | 0) == 0 ? 11184810 : 0
+            (a[n >> 0] | 0) == 0 ? 11184810 : 0,
           ) | 0;
           h = (h + 1) | 0;
         } while ((h | 0) != 32);
@@ -28327,7 +28239,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           wq(
             c[((c[t >> 2] | 0) + (q << 2)) >> 2] | 0,
             0,
-            B(c[p >> 2] >> 3, c[n >> 2] | 0) | 0
+            B(c[p >> 2] >> 3, c[n >> 2] | 0) | 0,
           );
           q = (q + 1) | 0;
         } while ((q | 0) < (c[o >> 2] | 0));
@@ -28356,7 +28268,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       wq(
         c[((c[d >> 2] | 0) + (f << 2)) >> 2] | 0,
         0,
-        B(c[e >> 2] >> 3, c[a >> 2] | 0) | 0
+        B(c[e >> 2] >> 3, c[a >> 2] | 0) | 0,
       );
       f = (f + 1) | 0;
     } while ((f | 0) < (c[b >> 2] | 0));
@@ -28618,7 +28530,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         wq(
           c[((c[k >> 2] | 0) + (b << 2)) >> 2] | 0,
           0,
-          B(c[h >> 2] >> 3, c[f >> 2] | 0) | 0
+          B(c[h >> 2] >> 3, c[f >> 2] | 0) | 0,
         );
         b = (b + 1) | 0;
       } while ((b | 0) < (c[g >> 2] | 0));
@@ -30263,7 +30175,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         wq(
           c[c[a >> 2] >> 2] | 0,
           0,
-          B(c[d >> 2] | 0, c[(a + 28) >> 2] | 0) | 0
+          B(c[d >> 2] | 0, c[(a + 28) >> 2] | 0) | 0,
         );
       if (c[d >> 2] | 0) Cn(95845);
     } else zq(c[c[a >> 2] >> 2] | 0);
@@ -30699,7 +30611,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                   c[b >> 2] | 0,
                   c[d >> 2] | 0,
                   c[e >> 2] | 0,
-                  18
+                  18,
                 );
               y = Xr() | 0;
               if (
@@ -30713,7 +30625,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                   c[b >> 2] | 0,
                   c[d >> 2] | 0,
                   c[e >> 2] | 0,
-                  11
+                  11,
                 );
                 c[557107] = Xr() | 0;
               }
@@ -30729,7 +30641,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 c[b >> 2] | 0,
                 c[d >> 2] | 0,
                 c[e >> 2] | 0,
-                1
+                1,
               );
             }
             y = c[554951] | 0;
@@ -30750,7 +30662,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 c[b >> 2] | 0,
                 c[d >> 2] | 0,
                 c[e >> 2] | 0,
-                2
+                2,
               );
               C = c[z >> 2] | 0;
             }
@@ -30779,7 +30691,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                   c[b >> 2] | 0,
                   c[d >> 2] | 0,
                   c[557106] | 0,
-                  15
+                  15,
                 );
               c[557111] = Xr() | 0;
               c[557109] = c[b >> 2];
@@ -30797,7 +30709,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 c[b >> 2] | 0,
                 c[d >> 2] | 0,
                 c[557106] | 0,
-                12
+                12,
               );
             F = ((c[b >> 2] | 0) - (c[557109] | 0)) | 0;
             D = B(F, F) | 0;
@@ -30810,7 +30722,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 c[b >> 2] | 0,
                 c[d >> 2] | 0,
                 c[557106] | 0,
-                15
+                15,
               );
             c[557111] = Xr() | 0;
             c[557109] = c[b >> 2];
@@ -30884,7 +30796,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           c[e >> 2] | 0,
           c[f >> 2] | 0,
           c[g >> 2] | 0,
-          a
+          a,
         );
         j = (j + 1) | 0;
         i = c[557103] | 0;
@@ -30907,7 +30819,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           c[e >> 2] | 0,
           c[f >> 2] | 0,
           c[g >> 2] | 0,
-          a
+          a,
         );
         l = c[557103] | 0;
       } else l = i;
@@ -32336,7 +32248,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Wv(
               ((c[((c[j >> 2] | 0) + 12) >> 2] | 0) + (o + 4096)) | 0,
               h | 0,
-              (x - o) | 0
+              (x - o) | 0,
             ) | 0;
         }
       while (0);
@@ -34448,7 +34360,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           40,
           (Pa + 2) | 0,
           1,
-          (Ra | 0) == 7 ? 5 : 7
+          (Ra | 0) == 7 ? 5 : 7,
         ) | 0;
         Sa = (Sa + 1) | 0;
       } while ((Sa | 0) != 4);
@@ -37033,7 +36945,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         b | 0,
         ((((b | 0) < 0) << 31) >> 31) | 0,
         a | 0,
-        ((((a | 0) < 0) << 31) >> 31) | 0
+        ((((a | 0) < 0) << 31) >> 31) | 0,
       ) | 0;
     a = Qv(c | 0, G() | 0, 16) | 0;
     G() | 0;
@@ -37252,7 +37164,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             B | 0,
             ((((B | 0) < 0) << 31) >> 31) | 0,
             b | 0,
-            ((((b | 0) < 0) << 31) >> 31) | 0
+            ((((b | 0) < 0) << 31) >> 31) | 0,
           ) | 0;
         a = Qv(d | 0, G() | 0, 16) | 0;
         G() | 0;
@@ -41508,7 +41420,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 Vv(
                   j | 0,
                   (j + (0 - ((n & 15) | ((l << 4) + -960)))) | 0,
-                  m | 0
+                  m | 0,
                 ) | 0;
                 o = m;
                 p = (f + 2) | 0;
@@ -43983,7 +43895,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             (g + 63) | 0,
             59,
             10,
-            10
+            10,
           );
           if ((up(((((Xr() | 0) * 50) | 0) + 32768) | 0) | 0) < -1999) h = 0;
           else h = ((up(((((Xr() | 0) * 50) | 0) + 32768) | 0) | 0) / 2e3) | 0;
@@ -43999,7 +43911,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             (56 - h) | 0,
             59,
             10,
-            10
+            10,
           );
         }
         if ((c[485556] | 0) <= 0) return;
@@ -44013,7 +43925,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             (h | 0) == (c[485557] | 0) ? 35 : 34,
             g,
             1,
-            7
+            7,
           ) | 0;
           if ((h | 0) == (c[485557] | 0))
             Rn(
@@ -44024,7 +43936,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               25,
               (g + -1) | 0,
               7,
-              7
+              7,
             );
           do
             if ((c[(106960 + ((h * 72) | 0) + 68) >> 2] | 0) == 2) {
@@ -44106,7 +44018,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       ((((c[b >> 2] | 0) + -128) | 0) / 2) | 0,
       ((((c[e >> 2] | 0) + -128) | 0) / 2) | 0,
       128,
-      128
+      128,
     );
     f = c[c[742804] >> 2] | 0;
     h = c[(f + 996) >> 2] | 0;
@@ -44357,7 +44269,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         (ao(
           h,
           ((c[h >> 2] | 0) + -2) | 0,
-          ((B(c[g >> 2] | 0, G) | 0) / 32) | 0
+          ((B(c[g >> 2] | 0, G) | 0) / 32) | 0,
         ) |
           0) >>>
         16;
@@ -44365,7 +44277,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         (ao(
           h,
           ((c[h >> 2] | 0) + -2) | 0,
-          ((B(c[g >> 2] | 0, G) | 0) / 32) | 0
+          ((B(c[g >> 2] | 0, G) | 0) / 32) | 0,
         ) |
           0) >>>
         8;
@@ -44373,7 +44285,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         ao(
           h,
           ((c[h >> 2] | 0) + -2) | 0,
-          ((B(c[g >> 2] | 0, G) | 0) / 32) | 0
+          ((B(c[g >> 2] | 0, G) | 0) / 32) | 0,
         ) | 0;
       I = (i + ((H * 3) | 0)) | 0;
       a[I >> 0] = l + ((((d[I >> 0] | 0) / 5) | 0) & 255);
@@ -44587,7 +44499,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               ((c[f >> 2] | 0) - (((m | 0) / 2) | 0)) | 0,
               ((c[g >> 2] | 0) - (((h | 0) / 2) | 0)) | 0,
               m,
-              h
+              h,
             ),
             (c[798589] | 0) != -1)
           : 0
@@ -44604,7 +44516,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           ((c[f >> 2] | 0) + 7) | 0,
           ((c[g >> 2] | 0) + 5) | 0,
           1,
-          14
+          14,
         ) | 0;
       }
     }
@@ -44644,7 +44556,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               3,
               3,
               12,
-              12
+              12,
             );
             break a;
           }
@@ -44663,7 +44575,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           3,
           3,
           12,
-          12
+          12,
         );
       }
     while (0);
@@ -44696,7 +44608,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             2,
             ((p << 1) + 112) | 0,
             15,
-            15
+            15,
           );
           break;
         }
@@ -44715,7 +44627,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             109,
             ((p << 1) + 112) | 0,
             17,
-            15
+            15,
           );
           break;
         } else {
@@ -44727,7 +44639,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             1,
             (p + 122) | 0,
             1,
-            c[535538] | 0
+            c[535538] | 0,
           ) | 0;
           break;
         }
@@ -46539,7 +46451,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       1,
       (((c[485555] | 0) == 0) & (((c[780894] | 0) == 1) & n) & 1) | 0,
       c[484610] | 0,
-      c[554811] | 0
+      c[554811] | 0,
     ) | 0;
     c[554341] = (c[554341] | 0) + 1;
     n = ka(11) | 0;
@@ -49458,7 +49370,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           (f - (g << 4)) << 3,
           g << 3,
           c[b >> 2] | 0,
-          c[d >> 2] | 0
+          c[d >> 2] | 0,
         );
       } else {
         if ((c[e >> 2] | 0) <= 128 ? (c[(e + 4) >> 2] | 0) <= 128 : 0) {
@@ -49555,7 +49467,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 (o - (p << 4)) << 3,
                 p << 3,
                 c[k >> 2] | 0,
-                c[m >> 2] | 0
+                c[m >> 2] | 0,
               );
             } else {
               p = c[l >> 2] | 0;
@@ -51397,7 +51309,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           (d + m) | 0,
           (f + -1 + n) | 0,
           (g + -1 + n) | 0,
-          i
+          i,
         ) | 0;
       n = (j + 2) | 0;
       j = (a + n) | 0;
@@ -51464,11 +51376,11 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           0,
           ((c[b >> 2] | 0) + -1) | 0,
           ((c[(b + 4) >> 2] | 0) + -1) | 0,
-          e
+          e,
         ) |
           0) /
           16) |
-          0
+          0,
       );
       return 0;
     }
@@ -51489,7 +51401,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           (d + k) | 0,
           (h + l) | 0,
           (g + -1 + l) | 0,
-          e
+          e,
         ) | 0;
       l = (d + (j + 2)) | 0;
       k = (d + g + (-2 - j)) | 0;
@@ -51558,11 +51470,11 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         (e - h) | 0,
         (f + b) | 0,
         (f + e) | 0,
-        d
+        d,
       ) |
         0) /
         2) |
-        0
+        0,
     );
     return 0;
   }
@@ -51607,11 +51519,11 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         (e - i) | 0,
         (f + b) | 0,
         (f + e) | 0,
-        g
+        g,
       ) |
         0) /
         16) |
-        0
+        0,
     );
     return 0;
   }
@@ -51640,7 +51552,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
     jh(
       ((zk(c[742782] | 0, b ? d : h, f ? a : i, b ? h : d, f ? i : a, g) | 0) /
         2) |
-        0
+        0,
     );
     return 0;
   }
@@ -51670,7 +51582,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
     jh(
       ((Ek(c[742782] | 0, b ? d : h, f ? a : i, b ? h : d, f ? i : a, g) | 0) /
         16) |
-        0
+        0,
     );
     return 0;
   }
@@ -51791,10 +51703,10 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         k,
         l,
         m,
-        d
+        d,
       ) |
         0) <<
-        1
+        1,
     );
     e = 0;
     return e | 0;
@@ -52328,7 +52240,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     b,
                     8,
                     8,
-                    3123880
+                    3123880,
                   );
                   c[e >> 2] = 8;
                   c[f >> 2] = 8;
@@ -52371,7 +52283,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                   b,
                   8,
                   8,
-                  3123880
+                  3123880,
                 );
                 c[e >> 2] = 8;
                 c[f >> 2] = 8;
@@ -52457,7 +52369,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         (((c[((c[781999] | 0) + 44832 + (e << 2)) >> 2] & (1 << (f >> 16))) |
           0) !=
           0) &
-          1
+          1,
       );
       b = 1;
       return b | 0;
@@ -52621,7 +52533,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         a,
         (Zq((h + 16 + ((j * 680) | 0)) | 0, (f | 0) > 0 ? f : 0, i, h, g) |
           0) <<
-          16
+          16,
       );
       b = 1;
       return b | 0;
@@ -55310,7 +55222,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                       (((e ? c[781047] | 0 : c[781239] | 0) |
                                         0) !=
                                         0)))))))))))))))) <<
-          16
+          16,
       );
       return;
     }
@@ -58416,7 +58328,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                       (((ao(
                         p,
                         ((w - (u << 4)) << 3) | ((F >> W) & 7),
-                        (u << 3) | ((g >> W) & 7)
+                        (u << 3) | ((g >> W) & 7),
                       ) |
                         0) &
                         15) <<
@@ -58474,7 +58386,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     (((ao(
                       p,
                       ((E - (A << 4)) << 3) | ((e >> W) & 7),
-                      (A << 3) | ((C >> W) & 7)
+                      (A << 3) | ((C >> W) & 7),
                     ) |
                       0) &
                       15) <<
@@ -58530,7 +58442,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                   (ao(
                     p,
                     ((R - (F << 4)) << 3) | ((b >> W) & 7),
-                    (F << 3) | ((C >> W) & 7)
+                    (F << 3) | ((C >> W) & 7),
                   ) |
                     0) &
                   15),
@@ -58583,7 +58495,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 (ao(
                   p,
                   ((S - (g << 4)) << 3) | ((L >> W) & 7),
-                  (g << 3) | ((f >> W) & 7)
+                  (g << 3) | ((f >> W) & 7),
                 ) |
                   0) &
                 15),
@@ -58709,7 +58621,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       c[781018] | 0,
       c[781019] | 0,
       c[781020] | 0,
-      c[781021] | 0
+      c[781021] | 0,
     );
     return;
   }
@@ -58833,7 +58745,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       c[781018] | 0,
       c[781019] | 0,
       c[781020] | 0,
-      c[781021] | 0
+      c[781021] | 0,
     );
     return;
   }
@@ -59768,7 +59680,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     0,
                     127,
                     127,
-                    q >>> 0 < 10 ? q : (o & 255) > 96 ? (r + -87) | 0 : 0
+                    q >>> 0 < 10 ? q : (o & 255) > 96 ? (r + -87) | 0 : 0,
                   );
                   jh(1024);
                   c[781023] = 0;
@@ -62030,7 +61942,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     m,
                                     1,
                                     M,
-                                    c[((c[u >> 2] | 0) + (N << 2)) >> 2] | 0
+                                    c[((c[u >> 2] | 0) + (N << 2)) >> 2] | 0,
                                   ) | 0;
                                   F = x;
                                   G = z;
@@ -62214,7 +62126,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     Su(
                                       (m + (((O * 5) | 0) + 8)) | 0,
                                       104506,
-                                      h
+                                      h,
                                     ) | 0;
                                     R = c[T >> 2] | 0;
                                     if ((R & 8) | 0)
@@ -62658,7 +62570,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             ] | 0,
             0,
             0,
-            0
+            0,
           ) | 0;
           f = (f + 1) | 0;
         } while ((f | 0) != 128);
@@ -62721,7 +62633,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             ((c[(b + 16 + ((j * 680) | 0) + 4) >> 2] | 0) != 0),
           (m | 0) > 0 ? m : 0,
           (f | 0) > 0 ? f : 0,
-          (h | 0) > 0 ? h : 0
+          (h | 0) > 0 ? h : 0,
         ) | 0;
         h = 0;
         do {
@@ -62745,7 +62657,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 : 8)) |
               0,
             (l | 0) > 0 ? l : 0,
-            (k | 0) > 0 ? k : 0
+            (k | 0) > 0 ? k : 0,
           ) | 0;
           h = (h + 1) | 0;
         } while ((h | 0) != 32);
@@ -62779,7 +62691,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           c[(b + 43536 + (p << 4)) >> 2] | 0,
           c[(b + 43536 + (p << 4) + 4) >> 2] | 0,
           c[(b + 43536 + (p << 4) + 8) >> 2] | 0,
-          c[(b + 43536 + (p << 4) + 12) >> 2] | 0
+          c[(b + 43536 + (p << 4) + 12) >> 2] | 0,
         ) | 0;
         if ((p | 0) == (j | 0)) break;
         else p = (p + 1) | 0;
@@ -63786,7 +63698,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         ? (tt(
             c[(a + 12) >> 2] | 0,
             c[(f + 12) >> 2] | 0,
-            (((d | 0) < 1 ? g : 0) + d) | 0
+            (((d | 0) < 1 ? g : 0) + d) | 0,
           ) |
             0) ==
           0
@@ -64856,7 +64768,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             e =
               B(
                 (128 - y) | 0,
-                b[(a + 262788 + ((u * 32848) | 0) + 80 + (y << 1)) >> 1] | 0
+                b[(a + 262788 + ((u * 32848) | 0) + 80 + (y << 1)) >> 1] | 0,
               ) | 0;
             w = (a + 4 + ((u * 32848) | 0) + 80 + (y << 1)) | 0;
             b[w >> 1] = (((B(y, b[w >> 1] | 0) | 0) + e) | 0) >>> 7;
@@ -68197,7 +68109,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         Gt(
           b,
           (y != y) | (0.0 != 0.0) ? (q ? 104878 : 104856) : q ? 104848 : 104852,
-          3
+          3,
         );
         Nt(b, 32, f, v, h ^ 8192);
         z = v;
@@ -70699,7 +70611,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               c[h >> 2] | 0,
               c[(h + 4) >> 2] | 0,
               o | 0,
-              ((((o | 0) < 0) << 31) >> 31) | 0
+              ((((o | 0) < 0) << 31) >> 31) | 0,
             ) | 0;
           o = G() | 0;
           h = p;
@@ -70970,7 +70882,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               h,
               (j + -1) | 0,
               1,
-              g
+              g,
             );
             gu(h, 1);
             q = c[h >> 2] | 1;
@@ -71686,7 +71598,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         c[d >> 2] | 0,
         c[(d + 4) >> 2] | 0,
         f | 0,
-        ((((f | 0) < 0) << 31) >> 31) | 0
+        ((((f | 0) < 0) << 31) >> 31) | 0,
       ) | 0;
     f = G() | 0;
     if (b | 0) c[b >> 2] = ((h | 0) == 0) & ((f | 0) == 0) ? a : (a + h) | 0;
@@ -72689,7 +72601,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         4,
         h,
         ((c[(a + 8) >> 2] | 0) - (c[(a + 28) >> 2] | 0)) | 0,
-        c[(a + 68) >> 2] | 0
+        c[(a + 68) >> 2] | 0,
       ) | 0;
     h = c[m >> 2] | 0;
     p = c[n >> 2] | 0;
@@ -72787,7 +72699,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           (e + 4) | 0,
           (e + 16) | 0,
           c[(e + 56) >> 2] | 0,
-          n
+          n,
         ) | 0;
     }
     n = (o + 6) | 0;
@@ -73364,7 +73276,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           h,
           8,
           255,
-          49029
+          49029,
         ) | 0;
       l = c[h >> 2] | 0;
     }
@@ -73756,7 +73668,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 Oa[c[(s + 8) >> 2] & 7](
                   c[(s + 16) >> 2] | 0,
                   c[(s + 12) >> 2] | 0,
-                  g
+                  g,
                 ) | 0;
               u = c[g >> 2] | 0;
               if (((t | 0) == 0) | ((u | 0) == 0)) v = -1;
@@ -73785,7 +73697,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 Oa[c[(s + 8) >> 2] & 7](
                   c[(s + 16) >> 2] | 0,
                   c[(s + 12) >> 2] | 0,
-                  g
+                  g,
                 ) | 0;
               u = c[g >> 2] | 0;
               if (((t | 0) == 0) | ((u | 0) == 0)) x = -1;
@@ -73824,7 +73736,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 Oa[c[(s + 8) >> 2] & 7](
                   c[(s + 16) >> 2] | 0,
                   c[(s + 12) >> 2] | 0,
-                  g
+                  g,
                 ) | 0;
               u = c[g >> 2] | 0;
               if (((t | 0) == 0) | ((u | 0) == 0)) z = -1;
@@ -73875,7 +73787,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                   Oa[c[(t + 8) >> 2] & 7](
                     c[(t + 16) >> 2] | 0,
                     c[(t + 12) >> 2] | 0,
-                    g
+                    g,
                   ) | 0;
                 C = c[g >> 2] | 0;
                 if (((u | 0) == 0) | ((C | 0) == 0)) D = -1;
@@ -73905,7 +73817,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 Oa[c[(s + 8) >> 2] & 7](
                   c[(s + 16) >> 2] | 0,
                   c[(s + 12) >> 2] | 0,
-                  g
+                  g,
                 ) | 0;
               u = c[g >> 2] | 0;
               if (((t | 0) == 0) | ((u | 0) == 0)) F = -1;
@@ -73944,7 +73856,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 Oa[c[(s + 8) >> 2] & 7](
                   c[(s + 16) >> 2] | 0,
                   c[(s + 12) >> 2] | 0,
-                  g
+                  g,
                 ) | 0;
               u = c[g >> 2] | 0;
               if (((t | 0) == 0) | ((u | 0) == 0)) H = -1;
@@ -73981,7 +73893,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                   Oa[c[(t + 8) >> 2] & 7](
                     c[(t + 16) >> 2] | 0,
                     c[(t + 12) >> 2] | 0,
-                    g
+                    g,
                   ) | 0;
                 C = c[g >> 2] | 0;
                 if (((u | 0) == 0) | ((C | 0) == 0)) J = -1;
@@ -74024,7 +73936,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(r + 8) >> 2] & 7](
               c[(r + 16) >> 2] | 0,
               c[(r + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           J = c[g >> 2] | 0;
           if (((K | 0) == 0) | ((J | 0) == 0)) L = -1;
@@ -74055,7 +73967,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(i + 8) >> 2] & 7](
               c[(i + 16) >> 2] | 0,
               c[(i + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           r = c[g >> 2] | 0;
           if (((M | 0) == 0) | ((r | 0) == 0)) N = -1;
@@ -74085,7 +73997,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(O + 8) >> 2] & 7](
               c[(O + 16) >> 2] | 0,
               c[(O + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           N = c[g >> 2] | 0;
           if (((i | 0) == 0) | ((N | 0) == 0)) P = -1;
@@ -74115,7 +74027,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(Q + 8) >> 2] & 7](
               c[(Q + 16) >> 2] | 0,
               c[(Q + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           P = c[g >> 2] | 0;
           if (((O | 0) == 0) | ((P | 0) == 0)) R = -1;
@@ -74145,7 +74057,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(S + 8) >> 2] & 7](
               c[(S + 16) >> 2] | 0,
               c[(S + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           R = c[g >> 2] | 0;
           if (((Q | 0) == 0) | ((R | 0) == 0)) T = -1;
@@ -74230,7 +74142,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(U + 8) >> 2] & 7](
               c[(U + 16) >> 2] | 0,
               c[(U + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           T = c[g >> 2] | 0;
           if (((S | 0) == 0) | ((T | 0) == 0)) V = -1;
@@ -74260,7 +74172,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(W + 8) >> 2] & 7](
               c[(W + 16) >> 2] | 0,
               c[(W + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           V = c[g >> 2] | 0;
           if (((U | 0) == 0) | ((V | 0) == 0)) X = -1;
@@ -74290,7 +74202,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(Y + 8) >> 2] & 7](
               c[(Y + 16) >> 2] | 0,
               c[(Y + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           X = c[g >> 2] | 0;
           if (((W | 0) == 0) | ((X | 0) == 0)) Z = -1;
@@ -74317,7 +74229,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 Oa[c[(_ + 8) >> 2] & 7](
                   c[(_ + 16) >> 2] | 0,
                   c[(_ + 12) >> 2] | 0,
-                  g
+                  g,
                 ) | 0;
               Z = c[g >> 2] | 0;
               if (((Y | 0) == 0) | ((Z | 0) == 0)) $ = -1;
@@ -74347,7 +74259,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 Oa[c[(aa + 8) >> 2] & 7](
                   c[(aa + 16) >> 2] | 0,
                   c[(aa + 12) >> 2] | 0,
-                  g
+                  g,
                 ) | 0;
               $ = c[g >> 2] | 0;
               if (((_ | 0) == 0) | (($ | 0) == 0)) ba = -1;
@@ -74374,7 +74286,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     Oa[c[(ca + 8) >> 2] & 7](
                       c[(ca + 16) >> 2] | 0,
                       c[(ca + 12) >> 2] | 0,
-                      g
+                      g,
                     ) | 0;
                   ba = c[g >> 2] | 0;
                   if (((aa | 0) == 0) | ((ba | 0) == 0)) da = -1;
@@ -74404,7 +74316,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     Oa[c[(ea + 8) >> 2] & 7](
                       c[(ea + 16) >> 2] | 0,
                       c[(ea + 12) >> 2] | 0,
-                      g
+                      g,
                     ) | 0;
                   da = c[g >> 2] | 0;
                   if (((ca | 0) == 0) | ((da | 0) == 0)) fa = -1;
@@ -74434,7 +74346,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     Oa[c[(ga + 8) >> 2] & 7](
                       c[(ga + 16) >> 2] | 0,
                       c[(ga + 12) >> 2] | 0,
-                      g
+                      g,
                     ) | 0;
                   fa = c[g >> 2] | 0;
                   if (((ea | 0) == 0) | ((fa | 0) == 0)) ha = -1;
@@ -74480,7 +74392,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(ia + 8) >> 2] & 7](
               c[(ia + 16) >> 2] | 0,
               c[(ia + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           ha = c[g >> 2] | 0;
           if (((ga | 0) == 0) | ((ha | 0) == 0)) ja = -1;
@@ -74507,7 +74419,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 Oa[c[(ka + 8) >> 2] & 7](
                   c[(ka + 16) >> 2] | 0,
                   c[(ka + 12) >> 2] | 0,
-                  g
+                  g,
                 ) | 0;
               ja = c[g >> 2] | 0;
               if (((ia | 0) == 0) | ((ja | 0) == 0)) la = -1;
@@ -74537,7 +74449,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 Oa[c[(ma + 8) >> 2] & 7](
                   c[(ma + 16) >> 2] | 0,
                   c[(ma + 12) >> 2] | 0,
-                  g
+                  g,
                 ) | 0;
               la = c[g >> 2] | 0;
               if (((ka | 0) == 0) | ((la | 0) == 0)) na = -1;
@@ -74567,7 +74479,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 Oa[c[(oa + 8) >> 2] & 7](
                   c[(oa + 16) >> 2] | 0,
                   c[(oa + 12) >> 2] | 0,
-                  g
+                  g,
                 ) | 0;
               na = c[g >> 2] | 0;
               if (((ma | 0) == 0) | ((na | 0) == 0)) pa = -1;
@@ -74605,7 +74517,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(qa + 8) >> 2] & 7](
               c[(qa + 16) >> 2] | 0,
               c[(qa + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           pa = c[g >> 2] | 0;
           if (((oa | 0) == 0) | ((pa | 0) == 0)) ra = -1;
@@ -74632,7 +74544,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 Oa[c[(sa + 8) >> 2] & 7](
                   c[(sa + 16) >> 2] | 0,
                   c[(sa + 12) >> 2] | 0,
-                  g
+                  g,
                 ) | 0;
               ra = c[g >> 2] | 0;
               if (((qa | 0) == 0) | ((ra | 0) == 0)) ta = -1;
@@ -74662,7 +74574,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 Oa[c[(ua + 8) >> 2] & 7](
                   c[(ua + 16) >> 2] | 0,
                   c[(ua + 12) >> 2] | 0,
-                  g
+                  g,
                 ) | 0;
               ta = c[g >> 2] | 0;
               if (((sa | 0) == 0) | ((ta | 0) == 0)) va = -1;
@@ -74689,7 +74601,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     Oa[c[(wa + 8) >> 2] & 7](
                       c[(wa + 16) >> 2] | 0,
                       c[(wa + 12) >> 2] | 0,
-                      g
+                      g,
                     ) | 0;
                   va = c[g >> 2] | 0;
                   if (((ua | 0) == 0) | ((va | 0) == 0)) xa = -1;
@@ -74719,7 +74631,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     Oa[c[(ya + 8) >> 2] & 7](
                       c[(ya + 16) >> 2] | 0,
                       c[(ya + 12) >> 2] | 0,
-                      g
+                      g,
                     ) | 0;
                   xa = c[g >> 2] | 0;
                   if (((wa | 0) == 0) | ((xa | 0) == 0)) za = -1;
@@ -74749,7 +74661,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     Oa[c[(Aa + 8) >> 2] & 7](
                       c[(Aa + 16) >> 2] | 0,
                       c[(Aa + 12) >> 2] | 0,
-                      g
+                      g,
                     ) | 0;
                   za = c[g >> 2] | 0;
                   if (((ya | 0) == 0) | ((za | 0) == 0)) Ba = -1;
@@ -74779,7 +74691,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     Oa[c[(Ca + 8) >> 2] & 7](
                       c[(Ca + 16) >> 2] | 0,
                       c[(Ca + 12) >> 2] | 0,
-                      g
+                      g,
                     ) | 0;
                   Ba = c[g >> 2] | 0;
                   if (((Aa | 0) == 0) | ((Ba | 0) == 0)) Da = -1;
@@ -74809,7 +74721,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     Oa[c[(Ea + 8) >> 2] & 7](
                       c[(Ea + 16) >> 2] | 0,
                       c[(Ea + 12) >> 2] | 0,
-                      g
+                      g,
                     ) | 0;
                   Da = c[g >> 2] | 0;
                   if (((Ca | 0) == 0) | ((Da | 0) == 0)) Fa = -1;
@@ -74855,7 +74767,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(Ga + 8) >> 2] & 7](
               c[(Ga + 16) >> 2] | 0,
               c[(Ga + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           Fa = c[g >> 2] | 0;
           if (((Ea | 0) == 0) | ((Fa | 0) == 0)) Ha = -1;
@@ -74885,7 +74797,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(Ja + 8) >> 2] & 7](
               c[(Ja + 16) >> 2] | 0,
               c[(Ja + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           Ha = c[g >> 2] | 0;
           if (((Ga | 0) == 0) | ((Ha | 0) == 0)) Ka = -1;
@@ -74954,7 +74866,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(Qa + 8) >> 2] & 7](
               c[(Qa + 16) >> 2] | 0,
               c[(Qa + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           Ra = c[g >> 2] | 0;
           if (((Na | 0) == 0) | ((Ra | 0) == 0)) Sa = -1;
@@ -75000,7 +74912,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                         Oa[c[(Ja + 8) >> 2] & 7](
                           c[(Ja + 16) >> 2] | 0,
                           c[(Ja + 12) >> 2] | 0,
-                          g
+                          g,
                         ) | 0;
                       La = c[g >> 2] | 0;
                       if (((Ka | 0) == 0) | ((La | 0) == 0)) Ua = -1;
@@ -75099,7 +75011,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                               Oa[c[(Ja + 8) >> 2] & 7](
                                 c[(Ja + 16) >> 2] | 0,
                                 c[(Ja + 12) >> 2] | 0,
-                                g
+                                g,
                               ) | 0;
                             La = c[g >> 2] | 0;
                             if (((Ka | 0) == 0) | ((La | 0) == 0)) Ya = -1;
@@ -75132,7 +75044,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                               Oa[c[(Ja + 8) >> 2] & 7](
                                 c[(Ja + 16) >> 2] | 0,
                                 c[(Ja + 12) >> 2] | 0,
-                                g
+                                g,
                               ) | 0;
                             Fa = c[g >> 2] | 0;
                             if (((La | 0) == 0) | ((Fa | 0) == 0)) $a = -1;
@@ -75185,7 +75097,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                               Oa[c[(Ka + 8) >> 2] & 7](
                                 c[(Ka + 16) >> 2] | 0,
                                 c[(Ka + 12) >> 2] | 0,
-                                g
+                                g,
                               ) | 0;
                             La = c[g >> 2] | 0;
                             if (((Ja | 0) == 0) | ((La | 0) == 0)) cb = -1;
@@ -75224,7 +75136,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     Oa[c[(Ja + 8) >> 2] & 7](
                                       c[(Ja + 16) >> 2] | 0,
                                       c[(Ja + 12) >> 2] | 0,
-                                      g
+                                      g,
                                     ) | 0;
                                   Fa = c[g >> 2] | 0;
                                   if (((La | 0) == 0) | ((Fa | 0) == 0))
@@ -75267,7 +75179,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                               Oa[c[(Ja + 8) >> 2] & 7](
                                 c[(Ja + 16) >> 2] | 0,
                                 c[(Ja + 12) >> 2] | 0,
-                                g
+                                g,
                               ) | 0;
                             Fa = c[g >> 2] | 0;
                             if (((La | 0) == 0) | ((Fa | 0) == 0)) hb = -1;
@@ -75296,7 +75208,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                 Oa[c[(Ja + 8) >> 2] & 7](
                                   c[(Ja + 16) >> 2] | 0,
                                   c[(Ja + 12) >> 2] | 0,
-                                  g
+                                  g,
                                 ) | 0;
                               Ma = c[g >> 2] | 0;
                               if (((Fa | 0) == 0) | ((Ma | 0) == 0)) jb = -1;
@@ -75325,7 +75237,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                   Oa[c[(Ja + 8) >> 2] & 7](
                                     c[(Ja + 16) >> 2] | 0,
                                     c[(Ja + 12) >> 2] | 0,
-                                    g
+                                    g,
                                   ) | 0;
                                 Ha = c[g >> 2] | 0;
                                 if (((Ma | 0) == 0) | ((Ha | 0) == 0)) lb = -1;
@@ -75367,7 +75279,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                           Oa[c[(Ka + 8) >> 2] & 7](
                             c[(Ka + 16) >> 2] | 0,
                             c[(Ka + 12) >> 2] | 0,
-                            g
+                            g,
                           ) | 0;
                         Fa = c[g >> 2] | 0;
                         if (((La | 0) == 0) | ((Fa | 0) == 0)) qb = -1;
@@ -75498,7 +75410,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                         Oa[c[(Ja + 8) >> 2] & 7](
                           c[(Ja + 16) >> 2] | 0,
                           c[(Ja + 12) >> 2] | 0,
-                          g
+                          g,
                         ) | 0;
                       Fa = c[g >> 2] | 0;
                       if (((Ka | 0) == 0) | ((Fa | 0) == 0)) Cb = -1;
@@ -75616,7 +75528,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(Ga + 8) >> 2] & 7](
               c[(Ga + 16) >> 2] | 0,
               c[(Ga + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           Fb = c[g >> 2] | 0;
           if (((Gb | 0) == 0) | ((Fb | 0) == 0)) Ib = -1;
@@ -75688,7 +75600,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(Mb + 8) >> 2] & 7](
               c[(Mb + 16) >> 2] | 0,
               c[(Mb + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           Nb = c[g >> 2] | 0;
           if (((Lb | 0) == 0) | ((Nb | 0) == 0)) Ob = -1;
@@ -75764,7 +75676,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(Pb + 8) >> 2] & 7](
               c[(Pb + 16) >> 2] | 0,
               c[(Pb + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           Rb = c[g >> 2] | 0;
           if (((Sb | 0) == 0) | ((Rb | 0) == 0)) Ub = -1;
@@ -75833,7 +75745,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               Oa[c[(Yb + 8) >> 2] & 7](
                 c[(Yb + 16) >> 2] | 0,
                 c[(Yb + 12) >> 2] | 0,
-                g
+                g,
               ) | 0;
             Zb = c[g >> 2] | 0;
             if (((Xb | 0) == 0) | ((Zb | 0) == 0)) _b = -1;
@@ -75905,7 +75817,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(Vb + 8) >> 2] & 7](
               c[(Vb + 16) >> 2] | 0,
               c[(Vb + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           bc = c[g >> 2] | 0;
           if (((cc | 0) == 0) | ((bc | 0) == 0)) ec = -1;
@@ -75960,7 +75872,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 Oa[c[(fc + 8) >> 2] & 7](
                   c[(fc + 16) >> 2] | 0,
                   c[(fc + 12) >> 2] | 0,
-                  g
+                  g,
                 ) | 0;
               ec = c[g >> 2] | 0;
               if (((Vb | 0) == 0) | ((ec | 0) == 0)) hc = -1;
@@ -76042,7 +75954,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               Oa[c[(gc + 8) >> 2] & 7](
                 c[(gc + 16) >> 2] | 0,
                 c[(gc + 12) >> 2] | 0,
-                g
+                g,
               ) | 0;
             fc = c[g >> 2] | 0;
             if (((Vb | 0) == 0) | ((fc | 0) == 0)) oc = -1;
@@ -76140,7 +76052,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         Oa[c[(sc + 8) >> 2] & 7](
           c[(sc + 16) >> 2] | 0,
           c[(sc + 12) >> 2] | 0,
-          g
+          g,
         ) | 0;
       tc = c[g >> 2] | 0;
       if (((rc | 0) == 0) | ((tc | 0) == 0)) uc = -1;
@@ -76208,7 +76120,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             Oa[c[(Bc + 8) >> 2] & 7](
               c[(Bc + 16) >> 2] | 0,
               c[(Bc + 12) >> 2] | 0,
-              g
+              g,
             ) | 0;
           Cc = c[g >> 2] | 0;
           if (((Ac | 0) == 0) | ((Cc | 0) == 0)) Dc = -1;
@@ -76280,7 +76192,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               Oa[c[(wc + 8) >> 2] & 7](
                 c[(wc + 16) >> 2] | 0,
                 c[(wc + 12) >> 2] | 0,
-                g
+                g,
               ) | 0;
             Jc = c[g >> 2] | 0;
             if (((Mc | 0) == 0) | ((Jc | 0) == 0)) Oc = -1;
@@ -76382,7 +76294,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           Oa[c[(wc + 8) >> 2] & 7](
             c[(wc + 16) >> 2] | 0,
             c[(wc + 12) >> 2] | 0,
-            g
+            g,
           ) | 0;
         Oc = c[g >> 2] | 0;
         if (((Mc | 0) == 0) | ((Oc | 0) == 0)) Vc = -1;
@@ -78927,7 +78839,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           e,
           4,
           2147483645,
-          48287
+          48287,
         ) | 0;
       c[u >> 2] = h;
       v = h;
@@ -78959,7 +78871,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           w,
           4,
           2147483645,
-          48287
+          48287,
         ) | 0;
       x = c[g >> 2] | 0;
       y = b;
@@ -83213,7 +83125,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           ((Se(b, g) | 0) << 14) |
             f |
             (d[(h + 2) >> 0] << 6) |
-            (e[h >> 1] << 23)
+            (e[h >> 1] << 23),
         ) | 0;
         break;
       }
@@ -83885,7 +83797,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             if (A | 0) {
               oe(
                 n,
-                ((o & 255) << 6) | ((p | 0) == 7 ? 0 : 5) | (c[r >> 2] << 23)
+                ((o & 255) << 6) | ((p | 0) == 7 ? 0 : 5) | (c[r >> 2] << 23),
               ) | 0;
               u = a[q >> 0] | 0;
               v = ((u & 255) + 1) | 0;
@@ -85945,7 +85857,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               Oa[c[(f + 8) >> 2] & 7](
                 c[(f + 16) >> 2] | 0,
                 c[(f + 12) >> 2] | 0,
-                e
+                e,
               ) | 0;
             l = c[e >> 2] | 0;
             if (((g | 0) == 0) | ((l | 0) == 0)) m = -1;
@@ -86152,7 +86064,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           Oa[c[(z + 8) >> 2] & 7](
             c[(z + 16) >> 2] | 0,
             c[(z + 12) >> 2] | 0,
-            f
+            f,
           ) | 0;
         j = c[f >> 2] | 0;
         if (((l | 0) == 0) | ((j | 0) == 0)) N = -1;
@@ -86397,7 +86309,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                   Oa[c[(B + 8) >> 2] & 7](
                     c[(B + 16) >> 2] | 0,
                     c[(B + 12) >> 2] | 0,
-                    h
+                    h,
                   ) | 0;
                 l = c[h >> 2] | 0;
                 if (((n | 0) == 0) | ((l | 0) == 0)) K = -1;
@@ -86473,7 +86385,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 Oa[c[(n + 8) >> 2] & 7](
                   c[(n + 16) >> 2] | 0,
                   c[(n + 12) >> 2] | 0,
-                  h
+                  h,
                 ) | 0;
               l = c[h >> 2] | 0;
               if (((z | 0) == 0) | ((l | 0) == 0)) R = -1;
@@ -86543,7 +86455,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           Oa[c[(S + 8) >> 2] & 7](
             c[(S + 16) >> 2] | 0,
             c[(S + 12) >> 2] | 0,
-            h
+            h,
           ) | 0;
         V = c[h >> 2] | 0;
         if (((i | 0) == 0) | ((V | 0) == 0)) X = -1;
@@ -86570,7 +86482,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         qe(
           b,
           ((c[D >> 2] | 0) + j) | 0,
-          ((c[(D + 4) >> 2] | 0) - (j << 1)) | 0
+          ((c[(D + 4) >> 2] | 0) - (j << 1)) | 0,
         ) | 0;
       Ia = g;
       return;
@@ -91888,7 +91800,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 ((M & 4194304) | 0) == 0
                   ? (O + ((R & 511) << 3)) | 0
                   : (A + ((R & 255) << 3)) | 0,
-                T
+                T,
               );
               U = c[B >> 2] | 0;
               break;
@@ -91901,7 +91813,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 ((M & 4194304) | 0) == 0
                   ? (O + ((R & 511) << 3)) | 0
                   : (A + ((R & 255) << 3)) | 0,
-                T
+                T,
               );
               U = c[B >> 2] | 0;
               break;
@@ -91915,7 +91827,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 (M | 0) < 0 ? (A + ((R & 255) << 3)) | 0 : (O + (R << 3)) | 0,
                 ((M & 4194304) | 0) == 0
                   ? (O + ((V & 511) << 3)) | 0
-                  : (A + ((V & 255) << 3)) | 0
+                  : (A + ((V & 255) << 3)) | 0,
               );
               U = c[B >> 2] | 0;
               break;
@@ -91957,7 +91869,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 (M | 0) < 0 ? (A + ((V & 255) << 3)) | 0 : (O + (V << 3)) | 0,
                 ((M & 4194304) | 0) == 0
                   ? (O + ((X & 511) << 3)) | 0
-                  : (A + ((X & 255) << 3)) | 0
+                  : (A + ((X & 255) << 3)) | 0,
               );
               U = c[B >> 2] | 0;
               break;
@@ -92170,7 +92082,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 ((M & 4194304) | 0) == 0
                   ? (O + ((aa & 511) << 3)) | 0
                   : (A + ((aa & 255) << 3)) | 0,
-                T
+                T,
               );
               U = c[B >> 2] | 0;
               break;
@@ -92672,7 +92584,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     : (O + (ba << 3)) | 0,
                   ((M & 4194304) | 0) == 0
                     ? (O + ((aa & 511) << 3)) | 0
-                    : (A + ((aa & 255) << 3)) | 0
+                    : (A + ((aa & 255) << 3)) | 0,
                 ) |
                   0) ==
                 (N | 0);
@@ -92702,7 +92614,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                     : (O + (aa << 3)) | 0,
                   ((M & 4194304) | 0) == 0
                     ? (O + ((Z & 511) << 3)) | 0
-                    : (A + ((Z & 255) << 3)) | 0
+                    : (A + ((Z & 255) << 3)) | 0,
                 ) |
                   0) ==
                 (N | 0);
@@ -97127,7 +97039,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           o,
           ((((c[(f + 28) >> 2] | 0) - (c[(o + 12) >> 2] | 0)) >> 2) + -1) | 0,
           (d - r) >> 3,
-          j
+          j,
         ) | 0;
       if (!m) {
         c[g >> 2] = e;
@@ -104112,7 +104024,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               c[n >> 2] | 0,
               c[o >> 2] | 0,
               c[s >> 2] | 0,
-              c[t >> 2] | 0
+              c[t >> 2] | 0,
             ) | 0;
             tq(
               ((c[b >> 2] | 0) + (c[(p + 4) >> 2] | 0)) | 0,
@@ -104120,7 +104032,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               c[(n + 4) >> 2] | 0,
               c[(o + 4) >> 2] | 0,
               c[s >> 2] | 0,
-              c[t >> 2] | 0
+              c[t >> 2] | 0,
             ) | 0;
             tq(
               ((c[b >> 2] | 0) + (c[(p + 8) >> 2] | 0)) | 0,
@@ -104128,7 +104040,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               c[(n + 8) >> 2] | 0,
               c[(o + 8) >> 2] | 0,
               c[s >> 2] | 0,
-              c[t >> 2] | 0
+              c[t >> 2] | 0,
             ) | 0;
             tq(
               ((c[b >> 2] | 0) + (c[(p + 12) >> 2] | 0)) | 0,
@@ -104136,7 +104048,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               c[(n + 12) >> 2] | 0,
               c[(o + 12) >> 2] | 0,
               c[s >> 2] | 0,
-              c[t >> 2] | 0
+              c[t >> 2] | 0,
             ) | 0;
             tq(
               ((c[b >> 2] | 0) + (c[(p + 16) >> 2] | 0)) | 0,
@@ -104144,7 +104056,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               c[(n + 16) >> 2] | 0,
               c[(o + 16) >> 2] | 0,
               c[s >> 2] | 0,
-              c[t >> 2] | 0
+              c[t >> 2] | 0,
             ) | 0;
             tq(
               ((c[b >> 2] | 0) + (c[(p + 20) >> 2] | 0)) | 0,
@@ -104152,7 +104064,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               c[(n + 20) >> 2] | 0,
               c[(o + 20) >> 2] | 0,
               c[s >> 2] | 0,
-              c[t >> 2] | 0
+              c[t >> 2] | 0,
             ) | 0;
             tq(
               ((c[b >> 2] | 0) + (c[(p + 24) >> 2] | 0)) | 0,
@@ -104160,7 +104072,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               c[(n + 24) >> 2] | 0,
               c[(o + 24) >> 2] | 0,
               c[s >> 2] | 0,
-              c[t >> 2] | 0
+              c[t >> 2] | 0,
             ) | 0;
             break;
           }
@@ -104191,7 +104103,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                   G,
                   F,
                   c[s >> 2] | 0,
-                  c[t >> 2] | 0
+                  c[t >> 2] | 0,
                 ) | 0;
               W = X;
             } else {
@@ -104226,7 +104138,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                   G,
                   z,
                   c[s >> 2] | 0,
-                  c[t >> 2] | 0
+                  c[t >> 2] | 0,
                 ) | 0;
               Z = _;
             } else {
@@ -104261,7 +104173,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                   G,
                   e,
                   c[s >> 2] | 0,
-                  c[t >> 2] | 0
+                  c[t >> 2] | 0,
                 ) | 0;
               aa = ba;
             } else {
@@ -104296,7 +104208,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                   G,
                   F,
                   c[s >> 2] | 0,
-                  c[t >> 2] | 0
+                  c[t >> 2] | 0,
                 ) | 0;
               da = ea;
             } else {
@@ -104331,7 +104243,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                   G,
                   z,
                   c[s >> 2] | 0,
-                  c[t >> 2] | 0
+                  c[t >> 2] | 0,
                 ) | 0;
               ga = ha;
             } else {
@@ -104366,7 +104278,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                   G,
                   e,
                   c[s >> 2] | 0,
-                  c[t >> 2] | 0
+                  c[t >> 2] | 0,
                 ) | 0;
               ja = ka;
             } else {
@@ -104398,7 +104310,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 K,
                 G,
                 c[s >> 2] | 0,
-                c[t >> 2] | 0
+                c[t >> 2] | 0,
               ) | 0;
               la = ma;
             } else la = ma;
@@ -106864,7 +106776,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         Vv(
           (a + 8610 + ((((c[r >> 2] | 0) % 8 | 0) * 366) | 0)) | 0,
           l | 0,
-          366
+          366,
         ) | 0;
         c[r >> 2] = (((c[r >> 2] | 0) + 1) | 0) % 8 | 0;
         if (v) {
@@ -107248,7 +107160,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             ((c[(a + 96 + (((((t + 1024) | 0) >>> 10) & 63) << 2)) >> 2] | 0) -
               v) |
               0,
-            t & 1023
+            t & 1023,
           ) |
             0) +
             (v << 10)) >>
@@ -107264,7 +107176,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 0) -
                 x) |
                 0,
-              v & 1023
+              v & 1023,
             ) |
               0) +
               (x << 10)) >>
@@ -107274,7 +107186,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
               0) +
               w) |
               0,
-            p
+            p,
           ) |
             0) /
             3072) |
@@ -107490,7 +107402,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 ((((k << 1) & 65534) >>> 0 < N >>> 0 ? -3071 : 3071) +
                   ((u | 0) < (N | 0) ? -6143 : 6143)) |
                   0,
-                p
+                p,
               ) |
                 0) /
                 3072) |
@@ -107518,7 +107430,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 (((O & 65535) >>> 0 < N >>> 0 ? -3071 : 3071) +
                   ((u | 0) < (N | 0) ? -6143 : 6143)) |
                   0,
-                p
+                p,
               ) |
                 0) /
                 3072) |
@@ -107567,7 +107479,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                 b[(d + (O << 1)) >> 1] =
                   ((B(
                     (W + -8192 + (((k & J) | 0) == 0 ? -1535 : 1535)) | 0,
-                    p
+                    p,
                   ) |
                     0) /
                     3072) |
@@ -111032,7 +110944,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
       c[a >> 2] | 0,
       c[(a + 4) >> 2] | 0,
       c[742750] | 0,
-      0
+      0,
     ) | 0;
     return;
   }
@@ -113667,7 +113579,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                         Vv(
                                           g | 0,
                                           ((c[o >> 2] | 0) + ra) | 0,
-                                          sa | 0
+                                          sa | 0,
                                         ) | 0;
                                         c[n >> 2] = sa + ra;
                                         break;
@@ -113694,7 +113606,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                         Vv(
                                           g | 0,
                                           ((c[o >> 2] | 0) + sa) | 0,
-                                          ta | 0
+                                          ta | 0,
                                         ) | 0;
                                         c[n >> 2] = ta + sa;
                                         sa = c[y >> 2] | 0;
@@ -113742,7 +113654,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                       Vv(
                                         g | 0,
                                         ((c[o >> 2] | 0) + ra) | 0,
-                                        sa | 0
+                                        sa | 0,
                                       ) | 0;
                                       c[n >> 2] = sa + ra;
                                       xa = wa;
@@ -114597,7 +114509,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     Vv(
                                       K | 0,
                                       ((c[o >> 2] | 0) + ra) | 0,
-                                      u | 0
+                                      u | 0,
                                     ) | 0;
                                     c[n >> 2] = u + (c[n >> 2] | 0);
                                     k = 202;
@@ -114628,7 +114540,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     Vv(
                                       J | 0,
                                       ((c[o >> 2] | 0) + ra) | 0,
-                                      K | 0
+                                      K | 0,
                                     ) | 0;
                                     c[n >> 2] = K + (c[n >> 2] | 0);
                                     break;
@@ -114655,7 +114567,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     Vv(
                                       K | 0,
                                       ((c[o >> 2] | 0) + ra) | 0,
-                                      u | 0
+                                      u | 0,
                                     ) | 0;
                                     c[n >> 2] = u + (c[n >> 2] | 0);
                                     k = 209;
@@ -114717,7 +114629,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     Vv(
                                       u | 0,
                                       ((c[o >> 2] | 0) + ra) | 0,
-                                      sa | 0
+                                      sa | 0,
                                     ) | 0;
                                     c[n >> 2] = sa + (c[n >> 2] | 0);
                                     k = 217;
@@ -114748,7 +114660,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     Vv(
                                       K | 0,
                                       ((c[o >> 2] | 0) + ra) | 0,
-                                      u | 0
+                                      u | 0,
                                     ) | 0;
                                     c[n >> 2] = u + (c[n >> 2] | 0);
                                     break;
@@ -114775,7 +114687,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     Vv(
                                       u | 0,
                                       ((c[o >> 2] | 0) + ra) | 0,
-                                      sa | 0
+                                      sa | 0,
                                     ) | 0;
                                     c[n >> 2] = sa + (c[n >> 2] | 0);
                                     k = 224;
@@ -114836,7 +114748,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     Vv(
                                       K | 0,
                                       ((c[o >> 2] | 0) + sa) | 0,
-                                      C | 0
+                                      C | 0,
                                     ) | 0;
                                     c[n >> 2] = C + (c[n >> 2] | 0);
                                     k = 232;
@@ -114867,7 +114779,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     Vv(
                                       ra | 0,
                                       ((c[o >> 2] | 0) + sa) | 0,
-                                      K | 0
+                                      K | 0,
                                     ) | 0;
                                     c[n >> 2] = K + (c[n >> 2] | 0);
                                     break;
@@ -114892,7 +114804,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     Vv(
                                       K | 0,
                                       ((c[o >> 2] | 0) + sa) | 0,
-                                      ta | 0
+                                      ta | 0,
                                     ) | 0;
                                     c[n >> 2] = ta + (c[n >> 2] | 0);
                                     break E;
@@ -114929,7 +114841,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                       Vv(
                                         g | 0,
                                         ((c[o >> 2] | 0) + K) | 0,
-                                        C | 0
+                                        C | 0,
                                       ) | 0;
                                       c[n >> 2] = C + K;
                                       break;
@@ -114961,7 +114873,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                           Vv(
                                             C | 0,
                                             ((c[o >> 2] | 0) + ra) | 0,
-                                            oc | 0
+                                            oc | 0,
                                           ) | 0;
                                           c[n >> 2] = oc + (c[n >> 2] | 0);
                                           k = 249;
@@ -114992,7 +114904,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                           Vv(
                                             u | 0,
                                             ((c[o >> 2] | 0) + ra) | 0,
-                                            C | 0
+                                            C | 0,
                                           ) | 0;
                                           c[n >> 2] = C + (c[n >> 2] | 0);
                                           break;
@@ -115017,7 +114929,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                           Vv(
                                             C | 0,
                                             ((c[o >> 2] | 0) + ra) | 0,
-                                            pc | 0
+                                            pc | 0,
                                           ) | 0;
                                           c[n >> 2] = pc + (c[n >> 2] | 0);
                                           break G;
@@ -115077,7 +114989,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     Vv(
                                       J | 0,
                                       ((c[o >> 2] | 0) + sa) | 0,
-                                      ra | 0
+                                      ra | 0,
                                     ) | 0;
                                     c[n >> 2] = ra + (c[n >> 2] | 0);
                                     k = 264;
@@ -115108,7 +115020,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     Vv(
                                       K | 0,
                                       ((c[o >> 2] | 0) + sa) | 0,
-                                      J | 0
+                                      J | 0,
                                     ) | 0;
                                     c[n >> 2] = J + (c[n >> 2] | 0);
                                     break;
@@ -115133,7 +115045,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     Vv(
                                       J | 0,
                                       ((c[o >> 2] | 0) + sa) | 0,
-                                      C | 0
+                                      C | 0,
                                     ) | 0;
                                     c[n >> 2] = C + (c[n >> 2] | 0);
                                     break H;
@@ -118737,13 +118649,13 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
         rp(
           ((c[j >> 2] | 0) + (((e[(r + (b << 5)) >> 1] | 0) * 48) | 0)) | 0,
           ((c[a >> 2] | 0) + ((b * 12) | 0)) | 0,
-          (r + (b << 5) + 8) | 0
+          (r + (b << 5) + 8) | 0,
         );
         r = c[i >> 2] | 0;
         rp(
           ((c[j >> 2] | 0) + (((e[(r + (b << 5) + 2) >> 1] | 0) * 48) | 0)) | 0,
           ((c[a >> 2] | 0) + ((b * 12) | 0)) | 0,
-          (r + (b << 5) + 20) | 0
+          (r + (b << 5) + 20) | 0,
         );
         b = (b + 1) | 0;
       } while ((b | 0) < (c[k >> 2] | 0));
@@ -118842,7 +118754,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           c[o >> 2] | 0,
           h,
           c[q >> 2] | 0,
-          0
+          0,
         );
         Ia = k;
         return;
@@ -118901,7 +118813,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           ((c[((c[u >> 2] | 0) + (((c[m >> 2] | 0) + f) << 2)) >> 2] | 0) +
             (B(c[l >> 2] | 0, j) | 0)) |
             0,
-          B(t, j) | 0
+          B(t, j) | 0,
         ) | 0;
         w = (f + 1) | 0;
         if ((w | 0) >= (c[q >> 2] | 0)) break;
@@ -129400,7 +129312,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                 (ea + (c[q >> 2] | 0)) | 0,
                                 c[o >> 2] | 0,
                                 c[p >> 2] | 0,
-                                fa
+                                fa,
                               ) | 0;
                             if (!xa) {
                               ab =
@@ -129409,7 +129321,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                   (ea + (c[(q + 4) >> 2] | 0)) | 0,
                                   c[(o + 4) >> 2] | 0,
                                   c[(p + 4) >> 2] | 0,
-                                  fa
+                                  fa,
                                 ) | 0;
                               if (!ab) {
                                 ya =
@@ -129418,7 +129330,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                     (ea + (c[(q + 8) >> 2] | 0)) | 0,
                                     c[(o + 8) >> 2] | 0,
                                     c[(p + 8) >> 2] | 0,
-                                    fa
+                                    fa,
                                   ) | 0;
                                 if (!ya) {
                                   na =
@@ -129427,7 +129339,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                       (ea + (c[(q + 12) >> 2] | 0)) | 0,
                                       c[(o + 12) >> 2] | 0,
                                       c[(p + 12) >> 2] | 0,
-                                      fa
+                                      fa,
                                     ) | 0;
                                   if (!na) {
                                     eb =
@@ -129436,7 +129348,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                         (ea + (c[(q + 16) >> 2] | 0)) | 0,
                                         c[(o + 16) >> 2] | 0,
                                         c[(p + 16) >> 2] | 0,
-                                        fa
+                                        fa,
                                       ) | 0;
                                     if (!eb) {
                                       db =
@@ -129445,7 +129357,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                           (ea + (c[(q + 20) >> 2] | 0)) | 0,
                                           c[(o + 20) >> 2] | 0,
                                           c[(p + 20) >> 2] | 0,
-                                          fa
+                                          fa,
                                         ) | 0;
                                       if (db | 0) {
                                         yb = 0;
@@ -129459,7 +129371,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                           (ea + (c[(q + 24) >> 2] | 0)) | 0,
                                           c[(o + 24) >> 2] | 0,
                                           c[(p + 24) >> 2] | 0,
-                                          fa
+                                          fa,
                                         ) | 0;
                                       if (!db) ba = 255;
                                       else {
@@ -129504,7 +129416,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                                   (ea + (c[(q + (xa << 2)) >> 2] | 0)) | 0,
                                   ya,
                                   na,
-                                  fa
+                                  fa,
                                 ) | 0;
                               if (eb | 0) {
                                 yb = 0;
@@ -132362,7 +132274,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                           la | 0,
                           G() | 0,
                           ka | 0,
-                          ((((ka | 0) < 0) << 31) >> 31) | 0
+                          ((((ka | 0) < 0) << 31) >> 31) | 0,
                         ) | 0;
                       $ = M;
                       aa = G() | 0;
@@ -132655,7 +132567,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                             c[qa >> 2] | 0,
                             c[(qa + 4) >> 2] | 0,
                             ka | 0,
-                            ((((ka | 0) < 0) << 31) >> 31) | 0
+                            ((((ka | 0) < 0) << 31) >> 31) | 0,
                           ) | 0;
                         ka = G() | 0;
                         if (((za | 0) == 0) & ((ka | 0) == 0)) {
@@ -132840,7 +132752,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
                       J | 0,
                       G() | 0,
                       N | 0,
-                      ((((N | 0) < 0) << 31) >> 31) | 0
+                      ((((N | 0) < 0) << 31) >> 31) | 0,
                     ) | 0;
                   ca = Sa;
                   da = I;
@@ -134380,7 +134292,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
             (l & b) | 0,
             (((((i | 0) < 0 ? -1 : 0) >> 31) | (((i | 0) < 0 ? -1 : 0) << 1)) &
               d) |
-              0
+              0,
           ) | 0;
         w = G() | 0;
         u = (u - 1) | 0;
@@ -134428,7 +134340,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
           0,
         ((G() | 0) ^ e) | 0,
         a | 0,
-        e | 0
+        e | 0,
       ) | 0
     );
   }
@@ -135151,7 +135063,7 @@ var asm = /** @suppress {uselessCode} */ (function (global, env, buffer) {
   // EMSCRIPTEN_END_ASM
   asmGlobalArg,
   asmLibraryArg,
-  buffer
+  buffer,
 );
 var ___divdi3 = (Module["___divdi3"] = asm["___divdi3"]);
 var ___emscripten_environ_constructor = (Module[
@@ -135237,7 +135149,7 @@ if (memoryInitializer) {
         applyMemoryInitializer,
         function () {
           throw "could not load memory initializer " + memoryInitializer;
-        }
+        },
       );
     };
     var memoryInitializerBytes = tryParseAsDataURI(memoryInitializer);
@@ -135256,7 +135168,7 @@ if (memoryInitializer) {
               "a problem seems to have happened with Module.memoryInitializerRequest, status: " +
                 request.status +
                 ", retrying " +
-                memoryInitializer
+                memoryInitializer,
             );
             doBrowserLoad();
             return;

@@ -149,8 +149,8 @@ import { useFocusable } from "../composables/useFocusable";
 import { inputManager } from "../services/InputManager";
 
 import { useToast } from "../composables/useToast";
-import { Dialog } from "@capacitor/dialog";
 import packageJson from "../../package.json";
+import { EngineLoader } from "../utils/EngineLoader";
 
 const Permission = registerPlugin("Permission");
 
@@ -258,21 +258,32 @@ const dangerItems = computed(() => {
   }
 
   items.push({
+    id: "bios-reset",
+    label: "BIOS Reset",
+    subtext: "Delete BIOS file",
+    action: async () => {
+      if (confirm("DANGER: This will delete the BIOS file. Are you sure?")) {
+        await EngineLoader.delete();
+        showToast("BIOS Reset Complete");
+        haptics.success();
+        router.push("/");
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+    },
+  })
+
+  items.push({
     id: "factory-reset",
-    label: "Factory Reset Library",
+    label: "Factory Reset",
     subtext: "Delete ALL internal games, metadata, and clears external links",
     action: async () => {
-      if (
-        confirm(
-          "DANGER: This will delete ALL internal cartridges and reset everything. Are you sure?",
-        )
-      ) {
-        if (confirm("Really sure? This cannot be undone.")) {
-          await libraryStore.resetLibrary(true);
-          showToast("Library Reset Complete");
-          haptics.success();
-          router.push("/");
-        }
+      if (confirm("DANGER: This will delete ALL internal cartridges and reset everything. Are you sure?")) {
+        await libraryStore.resetLibrary(true);
+        showToast("Factory Reset Complete");
+        haptics.success();
+        router.push("/");
       }
     },
   });

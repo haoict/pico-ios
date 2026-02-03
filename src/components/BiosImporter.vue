@@ -13,12 +13,35 @@
         Engine Required
       </h1>
       <p class="text-gray-400 mb-8 leading-relaxed">
-        To play PICO-8 games, you need to provide the <code>bios.js</code> file
-        from your official PICO-8 web export.
+        To play PICO-8 games, we need the <code>pico8_xxxx.js</code> file from official PICO-8 website.
       </p>
 
+      <!-- download url editor -->
+      <div class="mb-6" v-if="!isSuccess">
+        <label class="block text-xs font-medium text-gray-400 mb-2">
+          Download URL
+        </label>
+        <textarea
+          v-model="downloadUrl"
+          rows="2"
+          class="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all font-mono resize-none"
+          placeholder="https://www.lexaloffle.com/play/pico8_xxxx.js"
+        ></textarea>
+      </div>
+
       <!-- input area -->
-      <div
+      <div v-if="!isSuccess"
+        class="group relative rounded-2xl border-2 border-white/20 bg-white/10 p-8 transition-all hover:border-purple-500/50 hover:bg-white/20"
+        @click="triggerDownloadBios"
+      >
+        <div class="flex flex-col items-center gap-4">
+          <p class="text-sm font-medium text-gray-300 group-hover:text-white">
+            Tap to download <span class="text-purple-400">pico8_xxxx.js</span>
+          </p>
+        </div>
+      </div>
+
+      <div v-if="false"
         class="group relative rounded-2xl border-2 border-dashed border-white/20 bg-white/5 p-8 transition-all hover:border-purple-500/50 hover:bg-white/10"
         @click="triggerFilePicker"
         @dragover.prevent
@@ -64,7 +87,11 @@
       <div
         class="mt-8 text-xs text-gray-500 max-w-sm mx-auto text-center leading-relaxed"
       >
-        <p>
+        <p v-if="true">
+          Pocket8 stores the <span class="text-gray-300">pico8_xxxx.js</span> file in
+          <span class="text-gray-300">Pocket8 > BIOS</span>.
+        </p>
+        <p v-if="false">
           Open PICO-8, and load any cartridge. Type
           <code class="text-purple-400">export bios.html</code>, then type
           <code class="text-purple-400">folder</code> and an explorer window
@@ -82,11 +109,26 @@ import { ref } from "vue";
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { libraryManager } from "../services/LibraryManager";
 import { haptics } from "../utils/haptics";
+import { EngineLoader, DEFAULT_BIOS_URL } from "../utils/EngineLoader";
 
 const fileInput = ref(null);
 const statusMessage = ref("");
 const isError = ref(false);
 const isSuccess = ref(false);
+const downloadUrl = ref(DEFAULT_BIOS_URL);
+
+const triggerDownloadBios = async () => {
+  haptics.impact();
+  try {
+    await EngineLoader.downloadAndInstall(downloadUrl.value);
+    isSuccess.value = true;
+    isError.value = false;
+    statusMessage.value = "Success! Engine installed.";
+  } catch (err) {
+    console.error(err);
+    showError("Failed to install BIOS: " + err.message);
+  }
+};
 
 const triggerFilePicker = () => {
   haptics.impact();
