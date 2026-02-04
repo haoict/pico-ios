@@ -7,12 +7,12 @@
       deleteMode
         ? 'animate-wiggle'
         : isFavorite
-          ? 'hover:scale-[1.03] hover:shadow-2xl hover:shadow-pink-500/20'
-          : 'hover:scale-[1.03] hover:shadow-2xl hover:shadow-purple-500/20',
+          ? 'hover:shadow-2xl hover:shadow-pink-500/20'
+          : 'hover:shadow-2xl hover:shadow-purple-500/20',
       isFocused
         ? isFavorite
-          ? '!scale-105 ring-4 ring-pink-500 shadow-2xl z-20'
-          : '!scale-105 ring-4 ring-purple-500 shadow-2xl z-20'
+          ? 'ring-4 ring-pink-500 shadow-2xl z-20'
+          : 'ring-4 ring-purple-500 shadow-2xl z-20'
         : '',
     ]">
     <!-- heart icon (always visible for favorites or if card menu open or delete mode) -->
@@ -73,7 +73,7 @@
     <!-- card content -->
     <div
       class="absolute inset-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-lg z-0">
-      <img v-if="game.cover" :src="game.cover" alt="Cover"
+      <img v-if="game.cover" :src="game.cover" :alt="game.name"
         class="w-full h-full object-cover opacity-90 transition-transform duration-500"
         :class="isFavorite ? 'pixelated' : ''" />
       <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-transparent">
