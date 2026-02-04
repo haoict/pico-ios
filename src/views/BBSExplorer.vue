@@ -56,8 +56,8 @@
           <div class="bg-white/5 p-1 rounded-xl flex border border-white/10">
             <button v-for="tab in ['Featured', 'New', 'Popular', 'Lucky']" :key="tab" @click="switchTab(tab)"
               class="flex-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all" :class="activeTab === tab
-                  ? 'bg-white/10 text-white shadow-sm'
-                  : 'text-white/40 hover:text-white/60'
+                ? 'bg-white/10 text-white shadow-sm'
+                : 'text-white/40 hover:text-white/60'
                 ">
               {{ tab }}
             </button>
@@ -116,11 +116,8 @@
         'grid-cols-2': gridSize === 'M',
         'grid-cols-1': gridSize === 'L'
       }">
-        <div v-for="(game, index) in games" :key="game.id" 
-          @click.stop.prevent="showContextMenu(game, $event)"
-          @touchstart="handleTouchStart(game, $event)"
-          @touchend="handleTouchEnd"
-          @touchmove="handleTouchEnd"
+        <div v-for="(game, index) in games" :key="game.id" @click.stop.prevent="showContextMenu(game, $event)"
+          @touchstart="handleTouchStart(game, $event)" @touchend="handleTouchEnd" @touchmove="handleTouchEnd"
           class="group relative aspect-[5/5] rounded-2xl cursor-pointer transition-all duration-300"
           :style="{ '--index': index }">
           <!-- card container -->
@@ -184,32 +181,39 @@
     </div>
 
     <!-- Context Menu -->
-    <div v-if="contextMenu.visible" @click="closeContextMenu" 
+    <div v-if="contextMenu.visible" @click="closeContextMenu"
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div @click.stop class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden shadow-2xl min-w-[200px]">
+      <div @click.stop
+        class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden shadow-2xl min-w-[200px]">
         <div class="p-2 bg-gradient-to-b from-white/5 to-transparent border-b border-white/10">
           <p class="text-white/90 font-medium text-sm px-3 py-1 truncate">{{ contextMenu.game?.title }}</p>
         </div>
         <div class="p-2 space-y-1">
           <button @click="handleContextAction('download', $event)"
             class="w-full px-4 py-3 text-left text-white/90 hover:bg-white/10 rounded-xl transition-all active:scale-95 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
             <span class="text-sm font-medium">Download</span>
           </button>
           <button @click="handleContextAction('play', $event)"
             class="w-full px-4 py-3 text-left text-white/90 hover:bg-white/10 rounded-xl transition-all active:scale-95 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span class="text-sm font-medium">Download and Play</span>
           </button>
           <button @click="handleContextAction('open-bbs', $event)"
             class="w-full px-4 py-3 text-left text-white/90 hover:bg-white/10 rounded-xl transition-all active:scale-95 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
             <span class="text-sm font-medium">Open BBS Page</span>
           </button>
@@ -226,6 +230,7 @@ import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Browser } from "@capacitor/browser";
 import { useLibraryStore } from "../stores/library";
 import { useToast } from "../composables/useToast";
+import { libraryManager } from "../services/LibraryManager";
 
 const router = useRouter();
 const libraryStore = useLibraryStore();
@@ -366,7 +371,7 @@ function handleContextAction(action, event) {
   }
   const game = contextMenu.value.game;
   closeContextMenu();
-  
+
   if (action === 'download') {
     performDownload(game, false)
   } else if (action === 'play') {
@@ -386,63 +391,13 @@ async function performDownload(game, andPlay = true) {
 
   downloadingId.value = game.id;
   Haptics.impact({ style: ImpactStyle.Medium });
-  console.log(`[bbs_explorer] Downloading ${game.title}... URL: ${game.cart_url}`);
 
   try {
-    let downloadUrl = game.cart_url;
-    let fileName;
-    if (!downloadUrl) {
-      console.log(`[bbs_explorer] cart_url missing, trying to find cartridge link on forum post page ${game.source_page_url}...`);
-      const pageRes = await fetch(game.source_page_url);
-      const pageHtml = await pageRes.text();
-      const cart_found = pageHtml.match(
-        /Module\.arguments\s*=\s*\[\s*["']([^"']+)["']/i
-      );
-      if (!cart_found) {
-        throw new Error("Could not find cartridge link on BBS page.");
-      };
-      downloadUrl = `https://www.lexaloffle.com${cart_found[1]}`;
-      console.log(`[bbs_explorer] 🎯 SOURCE LOCKED: ${downloadUrl}`);
-      fileName = game.title.replace(/[^a-z0-9_\-]/gi, "_").substring(0, 30);
-    } else {
-      fileName = downloadUrl.split("/").pop().split("?")[0] || `bbs_game_${game.id}`;
-    }
-
-    if (!fileName.endsWith(".p8.png")) {
-      fileName += ".p8.png";
-    }
-
-    const response = await fetch(downloadUrl, {
-      headers: {
-        Accept: "image/png,image/*;q=0.8",
-      },
-    });
-
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const blob = await response.blob();
-    if (blob.size < 1000) {
-      throw new Error(`404/Incomplete Data`);
-    }
-    console.log(`[bbs_explorer] 📥 Downloaded Size: ${blob.size}`);
-
-    // save to library persistently
-    try {
-      const file = new File([blob], fileName, { type: "image/png" });
-      const saved = await libraryStore.addCartridge(file);
-
-      if (saved) {
-        toast.showToast(`Downloaded ${game.title}`, "success");
-      }
-    } catch (saveErr) {
-      console.error("Save to library failed", saveErr.message);
-      toast.showToast(`Save to library failed: ${saveErr.message}`, "error");
-    }
-
+    const result = await libraryStore.downloadCart(game);
+    toast.showToast(`Downloaded ${game.title}`, "success");
     if (andPlay) {
-      // store in global stash (using _bbs_cartdat to strictly isolate)
-      window._bbs_cartdat = new Uint8Array(await blob.arrayBuffer());
-      console.log("[bbs_explorer] 📦 Stashed in window._bbs_cartdat");
-      router.push({ name: "player", query: { cart: "bbs_cart" } });
+      await libraryManager.updateLastPlayed(result.fileName);
+      router.push({ name: "player", query: { cart: result.fileName } });
     }
   } catch (e) {
     console.error("Download failed:", e);

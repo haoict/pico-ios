@@ -164,21 +164,8 @@ export const useLibraryStore = defineStore("library", () => {
   }
 
   async function toggleFavorite(game) {
-    // optimistic update (immediate)
-    // Use unique filename to find index
-    const idx = rawGames.value.findIndex((g) => g.filename === game.filename);
-    if (idx !== -1) {
-      rawGames.value[idx].isFavorite = !rawGames.value[idx].isFavorite;
-    }
-
-    // perform actual
-    // use filename for metadata lookup
     const isFav = await libraryManager.toggleFavorite(game.filename);
-
-    // reconcile if mismatch
-    if (idx !== -1 && rawGames.value[idx].isFavorite !== isFav) {
-      rawGames.value[idx].isFavorite = isFav;
-    }
+    rawGames.value = [...rawGames.value];
     return isFav;
   }
 
@@ -194,8 +181,6 @@ export const useLibraryStore = defineStore("library", () => {
       if (idx !== -1) {
         rawGames.value[idx].name = newName;
       }
-      // persist in localStorage
-      localStorage.setItem("pico_cached_games", JSON.stringify(rawGames.value));
     }
     return success;
   }
@@ -263,6 +248,22 @@ export const useLibraryStore = defineStore("library", () => {
     }
   }
 
+  async function downloadCart(game) {
+    loading.value = true;
+    try {
+      const result = await libraryManager.downloadCart(game);
+      // Rescan library to include the new game
+      rawGames.value = await libraryManager.scan();
+      libraryManager.loadCovers(rawGames.value);
+      return result;
+    } catch (e) {
+      error.value = e.message;
+      throw e;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   return {
     games: filteredGames,
     rawGames,
@@ -286,6 +287,7 @@ export const useLibraryStore = defineStore("library", () => {
     removeCartridge,
     toggleFavorite,
     renameCartridge,
+    downloadCart,
     toggleFullscreen,
     fullscreen: computed(() => fullscreen.value),
     resetLibrary: async (fullWipe) => {

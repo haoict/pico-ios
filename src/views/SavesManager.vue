@@ -296,11 +296,8 @@ async function loadState(save) {
     const data = await libraryManager.loadCartData(targetCart);
     if (!data) throw new Error("Cart data not found");
 
-    localStorage.setItem("pico_handoff_payload", data);
-    localStorage.setItem("pico_handoff_name", targetCart);
-
     router.push({
-      path: "/play",
+      name: "player",
       query: {
         cart: targetCart,
         state: save.name,

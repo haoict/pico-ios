@@ -2,11 +2,9 @@ import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { ScopedStorage } from "@daniele-rolli/capacitor-scoped-storage";
 
-const ROOT = "";
 const CARTS_DIR = "Carts";
 const CACHE_DIR = Capacitor.getPlatform() === "android" ? "Cache" : "Images";
 const SAVES_DIR = "Saves";
-const LIBRARY_FILE = "library.json";
 const INDEX_FILE = "library_index.json";
 
 // skip during recursive scan
@@ -30,7 +28,6 @@ const getAppDataDir = () => {
 export class LibraryManager {
   constructor() {
     this.games = [];
-    this.metadata = {};
     this.initialized = false;
     this.rootDir = ""; // always "" for internal logic
     this.syncSources = []; // external SAF folders to sync from
@@ -86,20 +83,6 @@ export class LibraryManager {
       await ensureInternalDir(SAVES_DIR);
       await ensureInternalDir(CARTS_DIR);
 
-      // load metadata
-      try {
-        let libPath = this.resolvePath(LIBRARY_FILE);
-
-        const result = await Filesystem.readFile({
-          path: libPath,
-          directory: getAppDataDir(),
-          encoding: Encoding.UTF8,
-        });
-        this.metadata = JSON.parse(result.data);
-      } catch (e) {
-        this.metadata = {};
-      }
-
       // fast boot: try persistent index first
       let loadedFromIndex = false;
 
@@ -115,24 +98,6 @@ export class LibraryManager {
         console.log(
           `[LibraryManager] Fast boot: ${this.games.length} games from index.`,
         );
-      }
-
-      // fallback: localStorage
-      if (!loadedFromIndex) {
-        const cached = localStorage.getItem("pico_cached_games");
-        if (cached) {
-          try {
-            this.games = JSON.parse(cached);
-            this.games.forEach((g) => {
-              if (g.cover && g.cover.startsWith("blob:")) g.cover = null;
-            });
-            console.log(
-              `[LibraryManager] Loaded ${this.games.length} games from session cache.`,
-            );
-          } catch (e) {
-            console.warn("Invalid cache", e);
-          }
-        }
       }
 
       // last resort: full scan
@@ -222,17 +187,15 @@ export class LibraryManager {
           const cart = carts[i];
 
           // check if already in library
-          const existingId = this.games.findIndex(
+          const existingIdx = this.games.findIndex(
             (g) => g.filename === cart.name,
           );
+          const existing = existingIdx > -1 ? this.games[existingIdx] : null;
 
           const entry = {
-            id: cart.uri || cart.name,
             filename: cart.name,
-            name: this.getStemName(cart.name),
-            path: cart.name, // display path
+            name: cart.name.replace(/\.p8\.png$/i, "").replace(/\.p8$/i, ""),
             folder: source.name,
-            folderPath: source.id,
             mtime: cart.mtime || 0,
             cover: null,
 
@@ -245,11 +208,10 @@ export class LibraryManager {
             isFavorite: false,
           };
 
-          if (existingId > -1) {
+          if (existingIdx > -1) {
             // update existing external entry (preserve metadata)
-            const existing = this.games[existingId];
             if (existing.sourceType === "external") {
-              this.games[existingId] = {
+              this.games[existingIdx] = {
                 ...entry,
                 ...existing,
                 mtime: entry.mtime,
@@ -277,9 +239,8 @@ export class LibraryManager {
     // sort merged list
     this.games.sort((a, b) => (b.lastPlayed || 0) - (a.lastPlayed || 0));
 
-    // save index
-    await this._saveIndex(this.games);
-    localStorage.setItem("pico_cached_games", JSON.stringify(this.games));
+    // save unified cache
+    await this._updateCache();
 
     console.log(
       `[LibraryManager] Index update complete. ${newFilesCount} new external refs.`,
@@ -293,16 +254,16 @@ export class LibraryManager {
 
     // build hidden carts (multicart sub-files)
     const hiddenCarts = new Set();
-    Object.values(this.metadata).forEach((meta) => {
-      if (meta.subCarts && Array.isArray(meta.subCarts))
-        meta.subCarts.forEach((sc) => hiddenCarts.add(sc));
+    this.games.forEach((game) => {
+      if (game.subCarts && Array.isArray(game.subCarts))
+        game.subCarts.forEach((sc) => hiddenCarts.add(sc));
     });
 
     let internalGames = [];
 
     // scan internal storage
     const scanPath = this.resolvePath(CARTS_DIR);
-    internalGames = await this._scanLegacyRecursive(scanPath, CARTS_DIR);
+    internalGames = await this._scanRecursive(scanPath, CARTS_DIR);
 
     // filter hidden carts
     internalGames = internalGames.filter((g) => !hiddenCarts.has(g.filename));
@@ -313,7 +274,6 @@ export class LibraryManager {
     this.games.forEach((g) => previousGamesMap.set(g.filename, g));
 
     internalGames = internalGames.map((game) => {
-      const meta = this.metadata[game.filename] || {};
       const prev = previousGamesMap.get(game.filename);
 
       let preservedCover = null;
@@ -323,12 +283,13 @@ export class LibraryManager {
 
       return {
         ...game,
-        name: meta.displayName || game.name,
-        lastPlayed: meta.lastPlayed || 0,
-        playCount: meta.playCount || 0,
-        isFavorite: !!meta.isFavorite,
+        name: prev?.name || game.filename.replace(/\.p8\.png$/i, "").replace(/\.p8$/i, ""),
+        lastPlayed: prev?.lastPlayed || 0,
+        playCount: prev?.playCount || 0,
+        isFavorite: prev?.isFavorite ?? false,
         sourceType: "internal",
         cover: preservedCover,
+        subCarts: prev?.subCarts || [],
       };
     });
 
@@ -352,9 +313,8 @@ export class LibraryManager {
     // commit to state
     this.games = merged;
 
-    // save to persistent index and localStorage cache
-    await this._saveIndex(merged);
-    localStorage.setItem("pico_cached_games", JSON.stringify(this.games));
+    // save unified cache
+    await this._updateCache();
 
     return this.games;
   }
@@ -367,31 +327,38 @@ export class LibraryManager {
         directory: getAppDataDir(),
         encoding: Encoding.UTF8,
       });
-      const games = JSON.parse(result.data);
-      console.log(`[LibraryManager] Loaded ${games.length} games from index.`);
-      return games;
+      const data = JSON.parse(result.data);
+
+      // Handle v2.0 unified schema
+      if (data.version === "2.0") {
+        this.syncSources = data.syncSources || [];
+        console.log(`[LibraryManager] Loaded ${data.games.length} games from unified index v2.0.`);
+        return data.games;
+      }
+
+      // Legacy format (v1.0 - array of games)
+      console.log(`[LibraryManager] Loaded ${data.length} games from legacy index v1.0.`);
+      return data;
     } catch (e) {
       console.log("[LibraryManager] No index found, will scan.");
       return null;
     }
   }
 
+  // Legacy method - kept for backward compatibility
+  // New code should use _updateCache() instead
   async _saveIndex(games) {
     try {
       const indexPath = this.resolvePath(INDEX_FILE);
       // strip non serializable fields
       const serializable = games.map((g) => ({
-        id: g.id,
-        filename: g.filename,
+        filename: g.filename, // Primary key
         name: g.name,
-        path: g.path,
         folder: g.folder || "",
-        folderPath: g.folderPath || "",
         mtime: g.mtime || 0,
         lastPlayed: g.lastPlayed || 0,
         playCount: g.playCount || 0,
-        isFavorite: g.isFavorite || false,
-        fileUri: g.fileUri || null,
+        isFavorite: g.isFavorite ?? false,
         // hybrid fields
         sourceType: g.sourceType || "internal",
         sourceId: g.sourceId || null,
@@ -409,7 +376,67 @@ export class LibraryManager {
     }
   }
 
-  async _scanLegacyRecursive(basePath, relativePath, accumulated = []) {
+  // v2.0 unified index format (includes metadata)
+  async _saveUnifiedIndex(data) {
+    try {
+      const indexPath = this.resolvePath(INDEX_FILE);
+      const games = data.games || this.games;
+
+      // Serialize game objects directly (no separate metadata)
+      const unifiedGames = games.map((g) => {
+        return {
+          // File identity
+          filename: g.filename, // Primary key
+          name: g.name, // Display name
+          folder: g.folder || "",
+          mtime: g.mtime || 0,
+
+          // Source tracking
+          sourceType: g.sourceType || "internal",
+          sourceId: g.sourceId || null,
+          relativePath: g.relativePath || null,
+
+          // Metadata
+          lastPlayed: g.lastPlayed || 0,
+          playCount: g.playCount || 0,
+          isFavorite: g.isFavorite ?? false,
+          subCarts: g.subCarts || [],
+        };
+      });
+
+      await Filesystem.writeFile({
+        path: indexPath,
+        data: JSON.stringify({
+          version: "2.0",
+          games: unifiedGames,
+          syncSources: data.syncSources || this.syncSources,
+        }),
+        directory: getAppDataDir(),
+        encoding: Encoding.UTF8,
+      });
+
+      console.log(`[LibraryManager] Saved unified index v2.0 with ${games.length} games.`);
+    } catch (e) {
+      console.warn("[LibraryManager] Failed to save unified index:", e);
+    }
+  }
+
+  // Single cache update method - replaces 8+ scattered sync points
+  async _updateCache() {
+    try {
+      // Save to disk (single source of truth)
+      await this._saveUnifiedIndex({
+        games: this.games,
+        syncSources: this.syncSources,
+      });
+
+      console.log(`[LibraryManager] Cache updated: ${this.games.length} games synced.`);
+    } catch (e) {
+      console.error("[LibraryManager] Cache update failed:", e);
+    }
+  }
+
+  async _scanRecursive(basePath, relativePath, accumulated = []) {
     try {
       const result = await Filesystem.readdir({
         path: basePath,
@@ -424,7 +451,7 @@ export class LibraryManager {
           // recurse into subdir
           const subPath = `${basePath}/${file.name}`;
           const subRelative = `${relativePath}/${file.name}`;
-          await this._scanLegacyRecursive(subPath, subRelative, accumulated);
+          await this._scanRecursive(subPath, subRelative, accumulated);
         } else if (file.name.endsWith(".p8.png") || file.name.endsWith(".p8")) {
           // found a cart
           let filePath = file.uri;
@@ -433,15 +460,10 @@ export class LibraryManager {
           }
 
           accumulated.push({
-            id: file.uri || `${relativePath}/${file.name}`, // Unique ID
-            filename: file.name,
-            name: this.getStemName(file.name),
-            path: filePath || file.name,
+            filename: file.name, // Primary identifier
             folder: relativePath.split("/").pop() || "",
-            folderPath: relativePath,
             mtime: parseInt(file.mtime) || 0,
             cover: null,
-            fileUri: file.uri,
           });
         }
       }
@@ -453,9 +475,6 @@ export class LibraryManager {
     }
     return accumulated;
   }
-
-  // DEPRECATED: Scoped scan removed in favor of syncFromExternal
-  // async _scanScopedRecursive(folderObj, rootFolder, accumulated = []) { ... }
 
   async loadCovers(games) {
     const isWeb = Capacitor.getPlatform() === "web";
@@ -470,24 +489,6 @@ export class LibraryManager {
       await Promise.all(
         batch.map(async (game) => {
           if (game.cover) return; // already has a URI
-          if (game.sourceType === "internal") {
-            try {
-              // confirm existence primarily
-              const cartPath = this.resolvePath(
-                `${CARTS_DIR}/${game.filename}`,
-              );
-              await Filesystem.stat({
-                path: cartPath,
-                directory: getAppDataDir(),
-              });
-              const stat = await Filesystem.getUri({
-                path: cartPath,
-                directory: getAppDataDir(),
-              });
-              game.cover = Capacitor.convertFileSrc(stat.uri);
-            } catch (e) {}
-            return;
-          }
 
           try {
             // ios: cart itself is the image
@@ -613,7 +614,7 @@ export class LibraryManager {
       );
       await new Promise((r) => setTimeout(r, 20)); // yield
     }
-    localStorage.setItem("pico_cached_games", JSON.stringify(this.games));
+    await this._updateCache();
   }
 
   // helper: stem logic (tail-stripper)
@@ -628,13 +629,13 @@ export class LibraryManager {
     while (stem !== previousStem) {
       previousStem = stem;
       stem = stem.replace(
-        /(_\d+|_title|_boot|_sfx|_data|_main|_cart|_font|game|title)$/i,
+        /(_[1-9]|_title|_boot|_sfx|_data|_main|_cart|_font|game|title)$/i,
         "",
       );
     }
 
-    // clean up
-    // return stem.replace(/_/g, " ").trim();
+    // clean up - convert spaces to underscores
+    return stem.replace(/ /g, "_").trim();
   }
 
   async importBundle(fileList) {
@@ -718,38 +719,36 @@ export class LibraryManager {
       const stemNames = Object.keys(groups);
 
       for (const stem of stemNames) {
-        // look for existing game with same stem in metadata
-        const existingKeys = Object.keys(this.metadata);
-        let matchKey = null;
+        // look for existing game with same stem
+        let matchedGame = null;
 
-        for (const key of existingKeys) {
-          const existingStem = this.getStemName(key);
+        for (const game of this.games) {
+          const existingStem = this.getStemName(game.filename);
           if (existingStem === stem) {
-            matchKey = key;
+            matchedGame = game;
             break;
           }
         }
 
-        if (matchKey) {
+        if (matchedGame) {
           console.log(
-            `[library_manager] merge detected! merging '${stem}' into existing '${matchKey}'`,
+            `[library_manager] merge detected! merging '${stem}' into existing '${matchedGame.filename}'`,
           );
 
           // load leader data
-          const leaderData = await this.loadCartData(matchKey);
+          const leaderData = await this.loadCartData(matchedGame.filename);
           if (leaderData) {
             groups[stem].push({
-              name: matchKey,
+              name: matchedGame.filename,
               data: leaderData,
-              isP8: matchKey.toLowerCase().endsWith(".p8"),
-              isPng: matchKey.toLowerCase().endsWith(".png"),
+              isP8: matchedGame.filename.toLowerCase().endsWith(".p8"),
+              isPng: matchedGame.filename.toLowerCase().endsWith(".png"),
             });
           }
 
           // load existing subcarts data
-          const meta = this.metadata[matchKey];
-          if (meta && meta.subCarts) {
-            for (const sub of meta.subCarts) {
+          if (matchedGame.subCarts && matchedGame.subCarts.length > 0) {
+            for (const sub of matchedGame.subCarts) {
               const sData = await this.loadCartData(sub);
               if (sData) {
                 groups[stem].push({
@@ -857,29 +856,40 @@ export class LibraryManager {
       }
     }
 
-    // metadata & name cleaning
-    if (!this.metadata[leader.name]) {
-      this.metadata[leader.name] = { playCount: 0, lastPlayed: 0 };
+    // update game entry or create new one
+    let gameIdx = this.games.findIndex((g) => g.filename === leader.name);
+    if (gameIdx === -1) {
+      // create new game entry
+      this.games.push({
+        filename: leader.name,
+        name: leader.name.replace(/\.p8\.png$/i, "").replace(/\.p8$/i, ""),
+        folder: CARTS_DIR,
+        mtime: Date.now(),
+        lastPlayed: 0,
+        playCount: 0,
+        isFavorite: false,
+        sourceType: "internal",
+        cover: null,
+        subCarts: subCarts,
+      });
+    } else {
+      // update existing
+      this.games[gameIdx].name = leader.name
+        .replace(/\.p8\.png$/i, "")
+        .replace(/\.p8$/i, "");
+      this.games[gameIdx].subCarts = subCarts;
     }
 
-    this.metadata[leader.name].displayName = leader.name;
-
-    // sub-cart linking
-    this.metadata[leader.name].subCarts = subCarts;
-
-    // cleanup demoted leaders
+    // cleanup demoted leaders (remove from games array)
     for (const sub of subCarts) {
-      if (this.metadata[sub]) {
+      const subIdx = this.games.findIndex((g) => g.filename === sub);
+      if (subIdx !== -1) {
         console.log(`[library_manager] demoting previous leader: ${sub}`);
-        delete this.metadata[sub];
+        this.games.splice(subIdx, 1);
       }
     }
 
-    await this.saveMetadata();
-
-    // handoff update
-    localStorage.setItem("pico_handoff_payload", leader.data);
-    localStorage.setItem("pico_handoff_name", leader.name);
+    await this._updateCache();
 
     return true;
   }
@@ -928,7 +938,6 @@ export class LibraryManager {
     } else {
       // internal
       try {
-        const isAndroid = Capacitor.getPlatform() === "android";
         const res = await Filesystem.readFile({
           path: this.resolvePath(`${CARTS_DIR}/${game.filename}`),
           directory: getAppDataDir(),
@@ -945,7 +954,7 @@ export class LibraryManager {
   }
 
   getMetadata(cartName) {
-    return this.metadata[cartName];
+    return this.games.find((g) => g.filename === cartName);
   }
 
   // deprecated/wrapper for single file
@@ -955,32 +964,40 @@ export class LibraryManager {
     return this.importBundle([file]);
   }
 
-  async updateLastPlayed(cartName) {
-    if (!this.metadata[cartName]) {
-      this.metadata[cartName] = { playCount: 0, lastPlayed: 0 };
+  async updateLastPlayed(filename) {
+    const gameIdx = this.games.findIndex((g) => g.filename === filename);
+    if (gameIdx !== -1) {
+      this.games[gameIdx].lastPlayed = Date.now();
+      this.games[gameIdx].playCount = (this.games[gameIdx].playCount || 0) + 1;
+
+      // re-sort games by lastPlayed to maintain proper ordering
+      this.games.sort((a, b) => (b.lastPlayed || 0) - (a.lastPlayed || 0));
+    } else {
+      console.warn(`[LibraryManager] updateLastPlayed: game not found: ${filename}`);
     }
-    this.metadata[cartName].lastPlayed = Date.now();
-    this.metadata[cartName].playCount =
-      (this.metadata[cartName].playCount || 0) + 1;
-    await this.saveMetadata();
+
+    await this._updateCache();
   }
 
   async renameCartridge(filename, newName) {
-    if (!this.metadata[filename]) {
-      this.metadata[filename] = { playCount: 0, lastPlayed: 0 };
+    const gameIdx = this.games.findIndex((g) => g.filename === filename);
+    if (gameIdx !== -1) {
+      this.games[gameIdx].name = newName;
     }
-    this.metadata[filename].displayName = newName;
-    await this.saveMetadata();
+    await this._updateCache();
     return true;
   }
 
   async toggleFavorite(filename) {
-    if (!this.metadata[filename]) {
-      this.metadata[filename] = { playCount: 0, lastPlayed: 0 };
+    const gameIdx = this.games.findIndex((g) => g.filename === filename);
+    if (gameIdx !== -1) {
+      this.games[gameIdx].isFavorite = !this.games[gameIdx].isFavorite;
+      await this._updateCache();
+      return this.games[gameIdx].isFavorite;
+    } else {
+      console.warn(`[LibraryManager] toggleFavorite: game not found: ${filename}`);
     }
-    this.metadata[filename].isFavorite = !this.metadata[filename].isFavorite;
-    await this.saveMetadata();
-    return this.metadata[filename].isFavorite;
+    return false;
   }
 
   async deleteCartridge(filename, deleteExternalFile = false) {
@@ -990,14 +1007,14 @@ export class LibraryManager {
       const isExternal = game && game.sourceType === "external";
 
       // recursive bundle deletion (clean up sub-carts)
-      const meta = this.metadata[filename];
-      if (meta && meta.subCarts && Array.isArray(meta.subCarts)) {
+      const subCarts = game?.subCarts || [];
+      if (subCarts.length > 0) {
         console.log(
-          `[library_manager] deleting sub-carts for ${filename}: ${meta.subCarts.join(
+          `[library_manager] deleting sub-carts for ${filename}: ${subCarts.join(
             ", ",
           )}`,
         );
-        for (const sub of meta.subCarts) {
+        for (const sub of subCarts) {
           // subcarts follow
           // if external only delete if deleteExternalFile true
           if (isExternal) {
@@ -1020,9 +1037,6 @@ export class LibraryManager {
               /* ignore */
             }
           }
-
-          // delete sub-cart metadata
-          if (this.metadata[sub]) delete this.metadata[sub];
         }
       }
 
@@ -1068,15 +1082,9 @@ export class LibraryManager {
         });
       } catch (e) {}
 
-      // remove from metadata
-      if (this.metadata[filename]) {
-        delete this.metadata[filename];
-        await this.saveMetadata();
-      }
-
       // update internal state w/o rescan
       this.games = this.games.filter((g) => g.filename !== filename);
-      localStorage.setItem("pico_cached_games", JSON.stringify(this.games));
+      await this._updateCache();
 
       console.log(`[library_manager] removed ${filename} from internal state`);
       return true;
@@ -1086,157 +1094,84 @@ export class LibraryManager {
     }
   }
 
-  async saveMetadata() {
+  async downloadCart(game) {
+    if (!game) {
+      throw new Error("Invalid game data");
+    }
+
+    console.log(`[LibraryManager] Downloading ${game.title}... URL: ${game.cart_url}`);
+
     try {
-      await Filesystem.writeFile({
-        path: this.resolvePath(LIBRARY_FILE),
-        data: JSON.stringify(this.metadata),
-        directory: getAppDataDir(),
-        encoding: Encoding.UTF8,
+      let downloadUrl = game.cart_url;
+      let fileName;
+
+      // If cart_url is missing, try to find it on the forum post page
+      if (!downloadUrl) {
+        console.log(`[LibraryManager] cart_url missing, trying to find cartridge link on forum post page ${game.source_page_url}...`);
+        const pageRes = await fetch(game.source_page_url);
+        const pageHtml = await pageRes.text();
+        const cart_found = pageHtml.match(
+          /Module\.arguments\s*=\s*\[\s*["']([^"']+)["']/i
+        );
+        if (!cart_found) {
+          throw new Error("Could not find cartridge link on BBS page.");
+        }
+        downloadUrl = `https://www.lexaloffle.com${cart_found[1]}`;
+        console.log(`[LibraryManager] 🎯 SOURCE LOCKED: ${downloadUrl}`);
+        fileName = game.title.replace(/[^a-z0-9_\-]/gi, "_").substring(0, 30);
+      } else {
+        fileName = downloadUrl.split("/").pop().split("?")[0];
+      }
+
+      if (!fileName.endsWith(".p8.png")) {
+        fileName += ".p8.png";
+      }
+      fileName = fileName.toLowerCase();
+
+      const response = await fetch(downloadUrl, {
+        headers: {
+          Accept: "image/png,image/*;q=0.8",
+        },
       });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      if (blob.size < 1000) {
+        throw new Error(`404/Incomplete Data`);
+      }
+      console.log(`[LibraryManager] 📥 Downloaded Size: ${blob.size}`);
+
+      // Save to library
+      const file = new File([blob], fileName, { type: "image/png" });
+      const saved = await this.importBundle([file]);
+
+      if (!saved) {
+        throw new Error("Failed to save to library");
+      }
+
+      return { success: true, fileName };
     } catch (e) {
-      // failed to save metadata
+      console.error("[LibraryManager] Download failed:", e);
+      throw e;
     }
   }
+
   async handleDeepLink(cartId) {
     const targetFilename = `${cartId}.p8.png`;
-    const checkPath = this.resolvePath(`${CARTS_DIR}/${targetFilename}`);
 
-    // check if it exists & validate
+    // check if it exists
     try {
-      const stat = await Filesystem.stat({
-        path: checkPath,
-        directory: getAppDataDir(),
-      });
-
-      // validate existing file (prevent cached garbage)
-      const data = await Filesystem.readFile({
-        path: checkPath,
-        directory: getAppDataDir(),
-        // no encoding = get raw base64
-      });
-
-      if (stat.size < 100) {
-        throw new Error("Local file too small, re-downloading.");
-      }
-
-      if (!data.data.startsWith("iVBORw0KGgo")) {
-        throw new Error(
-          "Invalid local file signature (not PNG), re-downloading.",
-        );
-      }
-
-      // exists and looks valid
-      return { exists: true, filename: targetFilename };
+      const cartData = await this.loadCartData(targetFilename);
+      return { exists: true, filename: targetFilename, cartData: cartData.data };
     } catch (e) {
-      console.warn(
-        `[library_manager] local validation/check failed: ${e.message}. Deleting if exists.`,
-      );
-      // if it exists but failed validation, delete it
-      try {
-        await Filesystem.deleteFile({
-          path: checkPath,
-          directory: getAppDataDir(),
-        });
-      } catch (delErr) {
-        /* ignore */
-      }
+      console.warn(`[library_manager] local cart load failed: ${e.message}`);
     }
 
-    // download
+    // else download
     try {
       console.log(`[library_manager] downloading deep link: ${targetFilename}`);
-
-      const fetchBlob = async (url) => {
-        let blob;
-        if (Capacitor.getPlatform() === "web") {
-          const response = await fetch(url);
-          if (!response.ok) throw new Error("Status " + response.status);
-          blob = await response.blob();
-        } else {
-          const response = await CapacitorHttp.get({
-            url: url,
-            responseType: "blob",
-          });
-          if (response.status !== 200)
-            throw new Error("Status " + response.status);
-
-          const base64Data = response.data;
-          const binaryString = atob(base64Data);
-          const len = binaryString.length;
-          const bytes = new Uint8Array(len);
-          for (let i = 0; i < len; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-          }
-          blob = new Blob([bytes], { type: "image/png" });
-        }
-        return blob;
-      };
-
-      let blob;
-      try {
-        // direct download
-        blob = await fetchBlob(
-          `https://carts.lexaloffle.com/${targetFilename}`,
-        );
-      } catch (e1) {
-        console.warn(
-          "[library_manager] direct download failed, trying proxy...",
-          e1,
-        );
-        // proxy download
-        const proxyUrl = `https://carts.lexaloffle.com/${targetFilename}`;
-        blob = await fetchBlob(proxyUrl);
-      }
-
-      // WRITE TO DISK
-      // blob to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise((resolve, reject) => {
-        reader.onloadend = () => {
-          if (typeof reader.result === "string") {
-            const b64 = reader.result.split(",")[1];
-            resolve(b64);
-          } else {
-            reject(new Error("Failed to convert blob to base64"));
-          }
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-
-      const base64Data = await base64Promise;
-      try {
-        await Filesystem.stat({ path: CARTS_DIR, directory: getAppDataDir() });
-      } catch {
-        await Filesystem.mkdir({
-          path: CARTS_DIR,
-          directory: getAppDataDir(),
-          recursive: true,
-        });
-      }
-
-      // write the cart to disk
-      const savePath = this.resolvePath(`${CARTS_DIR}/${targetFilename}`);
-
-      await Filesystem.writeFile({
-        path: savePath,
-        data: base64Data,
-        directory: getAppDataDir(),
-      });
-
-      console.log(`[library_manager] Saved deep cart to ${savePath}`);
-
-      // update metadata to boost to top (fix sorting)
-      if (!this.metadata[targetFilename]) {
-        this.metadata[targetFilename] = { playCount: 0, lastPlayed: 0 };
-      }
-      this.metadata[targetFilename].lastPlayed = Date.now();
-      await this.saveMetadata();
-
-      // trigger visual refresh
-      await this.scan();
-
+      const game = { title: cartId, cart_url: `https://carts.lexaloffle.com/${targetFilename}`};
+      await this.downloadCart(game);
       return { exists: false, downloaded: true, filename: targetFilename };
     } catch (err) {
       console.error(`[library_manager] deep link download failed:`, err);
@@ -1298,13 +1233,6 @@ export class LibraryManager {
           });
         } catch (e) {}
 
-        // reset metadata
-        this.metadata = {};
-        await Filesystem.deleteFile({
-          path: this.resolvePath(LIBRARY_FILE),
-          directory: getAppDataDir(),
-        }).catch(() => {});
-
         // reset games
         this.games = [];
       } catch (e) {
@@ -1313,8 +1241,7 @@ export class LibraryManager {
     }
 
     // save state
-    await this._saveIndex(this.games);
-    localStorage.setItem("pico_cached_games", JSON.stringify(this.games));
+    await this._updateCache();
 
     return true;
   }

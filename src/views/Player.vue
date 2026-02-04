@@ -186,107 +186,11 @@ onMounted(async () => {
     // fetch data (player responsibility)
     let cartData = null;
     let payload = {};
-    let effectiveCartName = props.cartId;
-    let stashedName = localStorage.getItem("pico_handoff_name");
-    const stashedData = localStorage.getItem("pico_handoff_payload");
 
-    console.log(
-      `[player] handoff check - id: ${
-        props.cartId
-      }, stashedname: ${stashedName}, stasheddatalen: ${
-        stashedData ? stashedData.length : "N/A"
-      }`,
-    );
-
-    if (stashedData) {
-      console.log(
-        `[player] raw stashed data (first 50): ${stashedData.substring(0, 50)}`,
-      );
-    }
-
-    // resolve main cart data & name
-    // case a: bbs cart (memory)
-    if (props.cartId === "bbs_cart" && window._bbs_cartdat) {
-      console.log("[player] bbs stash found!");
-      cartData = window._bbs_cartdat;
-      effectiveCartName = "bbs_cart.p8.png";
-    }
-    // case b: stashed fast-load (memory)
-    else if (
-      (props.cartId === "boot" || stashedName === props.cartId) &&
-      stashedData
-    ) {
-      console.log(`[player] memory handoff found for ${stashedName}`);
-      effectiveCartName = stashedName;
-      activeCartName.value = stashedName.replace(".p8.png", "");
-
-      // raw pipe
-      // just convert base64 -> uint8array directly
-      console.log(`[player] handoff load: ${stashedName}`);
-      cartData = base64ToUint8Array(stashedData);
-    }
-
-    // case c: disk load (filesystem / hybrid)
-    else {
-      // case d: check if this looks like a bbs cart id
-      // bbs carts have format: [a-z]+-\d+ (e.g., abc-0, xyz-123)
-      const cartNameWithoutExt = props.cartId.replace(".p8.png", "");
-      const isBBSCartId = /^[a-z]+-\d+$/i.test(cartNameWithoutExt);
-
-      if (isBBSCartId) {
-        console.log(
-          `[player] detected BBS cart id: ${cartNameWithoutExt}, fetching from lexaloffle...`,
-        );
-        try {
-          const result = await libraryManager.handleDeepLink(
-            cartNameWithoutExt,
-          );
-          effectiveCartName = result.filename;
-          activeCartName.value = result.filename.replace(".p8.png", "");
-          // re-read from disk after download
-          const rawData = await libraryManager.loadCartData(result.filename);
-          if (rawData) {
-            console.log(
-              `[player] bbs cart downloaded and loaded: ${result.filename}`,
-            );
-            cartData = base64ToUint8Array(rawData);
-          }
-        } catch (err) {
-          console.error(`[player] failed to fetch BBS cart: ${err.message}`);
-          throw new Error(`Failed to download BBS cartridge: ${err.message}`);
-        }
-      } else {
-        const cartName = localStorage.getItem("pico_handoff_name"); // fix resetGame cart not found "bb_cart" when reloading from BBSExplorer
-        console.log(`[player] hybrid fetching ${cartName}...`);
-
-        // look up metadata to get source info
-        // if exists, reconstruct GameEntry obj
-        const meta = libraryManager.getMetadata(cartName);
-        let gameObj = cartName;
-
-        if (meta) {
-          // reconstruct enough for loadCartData to work
-          gameObj = {
-            filename: cartName,
-            sourceType: meta.sourceType || "internal",
-            sourceId: meta.sourceId,
-            relativePath: meta.relativePath,
-          };
-          // if missing in metadata (legacy), fallback is internal
-        } else {
-          // redundant check
-          const found = libraryManager.games.find(
-            (g) => g.filename === cartName,
-          );
-          if (found) gameObj = found;
-        }
-
-        let rawData = await libraryManager.loadCartData(gameObj);
-        if (rawData) {
-          console.log(`[player] hybrid load success: ${cartName}`);
-          cartData = base64ToUint8Array(rawData);
-        }
-      }
+    const rawData = await libraryManager.loadCartData(props.cartId);
+    if (rawData) {
+      console.log(`[player] Cart loaded: ${props.cartId}`);
+      cartData = base64ToUint8Array(rawData);
     }
 
     if (!cartData) {
@@ -294,7 +198,7 @@ onMounted(async () => {
     }
 
     // initialize payload
-    payload[effectiveCartName] = cartData;
+    payload[props.cartId] = cartData;
 
     // universal metadata check (run this for stashed carts too!)
     // if props.cartid is 'boot', we rely on stashedname for metadata lookup
@@ -303,14 +207,14 @@ onMounted(async () => {
       `[player] inspecting metadata for: ${metaKey} (universal check)`,
     );
 
-    const meta = libraryManager.metadata[metaKey];
+    const game = libraryManager.getMetadata(metaKey);
 
-    if (meta && meta.subCarts && meta.subCarts.length > 0) {
+    if (game && game.subCarts && game.subCarts.length > 0) {
       console.log(
-        `[player] bundle detected for ${metaKey}! loading ${meta.subCarts.length} sub-carts...`,
+        `[player] bundle detected for ${metaKey}! loading ${game.subCarts.length} sub-carts...`,
       );
 
-      for (const subFile of meta.subCarts) {
+      for (const subFile of game.subCarts) {
         console.log(`   -> loading sub-cart: ${subFile}`);
         const subBase64 = await libraryManager.loadCartData(subFile);
 
@@ -326,20 +230,10 @@ onMounted(async () => {
       );
     }
 
-    // boot engine
-    console.log(
-      `[player] sending payload with ${Object.keys(payload).length} files.`,
-    );
-
-    console.log("[player] booting via slot insertion...");
-
     // stagger boot
     setTimeout(async () => {
-      const finalPayload = payload;
-
       console.log("[player] booting via universal bundle mode.");
-
-      await picoBridge.boot(effectiveCartName, finalPayload);
+      await picoBridge.boot(props.cartId, payload);
 
       hookPicoQuit();
 

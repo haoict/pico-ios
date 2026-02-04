@@ -88,56 +88,44 @@ onMounted(async () => {
   // helper: process deep link url
   const processDeepLink = async (urlString) => {
     console.log("[App] Processing deep link:", urlString);
-    try {
-      const url = new URL(urlString);
-      // handle: pocket8://play?id=...
-      if (url.protocol.includes("pocket8") && url.host === "play") {
-        const cartId = url.searchParams.get("id");
-        if (cartId) {
-          try {
-            if (Capacitor.getPlatform() !== "android") {
-              toast.showToast("Loading Cartridge...", "info");
-            }
-
-            // create the Carts/Images/Saves directories if they don't exist
-            await libraryManager.init();
-
-            // use centralized handler
-            const result = await libraryManager.handleDeepLink(cartId);
-
-            if (result.exists) {
-              console.log("[App] Cart exists locally.");
-            } else if (result.downloaded) {
-              console.log("[App] Downloaded successfully.");
-            }
-
-            // android kickback
-            if (Capacitor.getPlatform() === "android") {
-              // refresh ui
-              const libraryStore = useLibraryStore();
-              await libraryStore.rescanLibrary();
-              toast.showToast("Cart Loaded", "success");
-            } else {
-              toast.showToast("Saved to Library", "success");
-            }
-
-            // unify launch logic
-            try {
-              await router.push({
-                name: "player",
-                query: { cart: result.filename, t: Date.now() },
-              });
-            } catch (e) {
-              console.error("[App] Router push failed:", e);
-            }
-          } catch (err) {
-            console.error("[App] handleDeepLink failed:", err);
-            toast.showToast("Failed to download cart", "error");
-          }
+    const url = new URL(urlString);
+    // handle example: pocket8://play?id=sphero_a1-0
+    if (url.protocol.includes("pocket8") && url.host === "play" && url.searchParams.get("id")) {
+      try {
+        if (Capacitor.getPlatform() !== "android") {
+          toast.showToast("Loading Cartridge...", "info");
         }
+
+        // create the Carts/Images/Saves directories if they don't exist
+        await libraryManager.init();
+
+        // use centralized handler
+        const result = await libraryManager.handleDeepLink(url.searchParams.get("id"));
+
+        if (result.exists) {
+          console.log("[App] Cart exists locally.");
+        } else if (result.downloaded) {
+          console.log("[App] Downloaded successfully.");
+          toast.showToast("Saved Cart to Library", "success");
+        }
+
+        // android kickback
+        if (Capacitor.getPlatform() === "android") {
+          // refresh ui
+          const libraryStore = useLibraryStore();
+          await libraryStore.rescanLibrary();
+          toast.showToast("Cart Loaded", "success");
+        }
+
+        // unify launch logic
+        await router.push({
+          name: "player",
+          query: { cart: result.filename, t: Date.now() },
+        });
+      } catch (err) {
+        console.error("[App] handleDeepLink failed:", err.message);
+        toast.showToast("Failed to handle deep link: " + err.message, "error");
       }
-    } catch (e) {
-      console.error("[App] Invalid Deep Link:", e);
     }
   };
 

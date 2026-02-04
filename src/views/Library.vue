@@ -68,241 +68,22 @@
           isRefreshing ? "Refreshing..." : "Pull to Scan"
         }}</span>
       </div>
+
       <!-- header -->
-      <!-- fix: aggressive z-index to beat global toast -->
-      <div
-        class="flex flex-col gap-6 mb-8 px-2 !relative !z-[100] !pointer-events-auto"
-      >
-        <!-- title & actions -->
-        <div class="flex justify-between items-center mb-1">
-          <div class="flex flex-col">
-            <h1
-              class="font-pico-crisp text-white drop-shadow-md text-[clamp(1.5rem,5vw,3rem)]"
-            >
-              Library
-            </h1>
-            <span
-              class="text-xs font-medium text-white/40 tracking-wider uppercase mt-1"
-            >
-              {{ games.length }} Cartridges
-            </span>
-          </div>
-
-          <div class="flex gap-3">
-            <!-- import button -->
-            <button
-              @click="triggerImport"
-              class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105 !relative !z-[9999] !pointer-events-auto"
-              :class="{
-                'ring-2 ring-purple-500 bg-white/20': headerFocusIndex === 2,
-              }"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5 text-white/80"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </button>
-
-            <!-- bbs button -->
-            <button
-              @click="openOfficialBBS"
-              class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105"
-              :class="{
-                'ring-2 ring-purple-500 bg-white/20': headerFocusIndex === 3,
-              }"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5 text-white/80"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-                />
-              </svg>
-            </button>
-
-            <!-- bbs explorer button -->
-            <button
-              @click="openBBSExplorer"
-              class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105"
-              :class="{
-                'ring-2 ring-purple-500 bg-white/20': headerFocusIndex === 5,
-              }"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5 text-white/80"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
-                />
-              </svg>
-            </button>
-
-            <!-- settings button -->
-            <button
-              @click="$router.push('/settings')"
-              class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105"
-              :class="{
-                'ring-2 ring-purple-500 bg-white/20': headerFocusIndex === 4,
-              }"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5 text-white/80"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- search & filter -->
-        <div class="flex gap-3">
-          <div class="relative flex-1 group">
-            <div
-              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-            >
-              <svg
-                class="h-4 w-4 text-white/40 group-focus-within:text-purple-400 transition-colors"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </div>
-            <input
-              v-model="searchQuery"
-              type="text"
-              class="block w-full pl-10 pr-3 py-2.5 border border-white/10 rounded-xl leading-5 bg-white/5 text-white placeholder-white/30 focus:outline-none focus:bg-white/10 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 sm:text-sm transition-all"
-              :class="{
-                'ring-2 ring-purple-500 bg-white/20': headerFocusIndex === 0,
-              }"
-              placeholder="Search cartridges..."
-              @keydown="handleHeaderNav"
-              @keydown.escape.stop.prevent="handleHeaderNav"
-            />
-          </div>
-
-          <div class="relative min-w-[140px] z-[200]">
-            <button
-              @click="sortDropdownOpen = !sortDropdownOpen"
-              @keydown.escape.stop.prevent="
-                sortDropdownOpen = false;
-                headerFocusIndex = -1;
-                focusedIndex = 0;
-                $event.target.blur();
-              "
-              class="w-full h-full flex items-center justify-between appearance-none bg-white/5 border border-white/10 text-white py-2.5 pl-4 pr-3 rounded-xl focus:outline-none focus:bg-white/10 text-sm transition-all"
-              :class="{
-                'ring-2 ring-purple-500 bg-white/20': headerFocusIndex === 1,
-                '!bg-black z-[201] ring-2 ring-purple-500': sortDropdownOpen,
-              }"
-            >
-              <span class="truncate">{{
-                sortOptions.find((o) => o.value === sortBy)?.label
-              }}</span>
-              <div class="pointer-events-none flex items-center text-white/40">
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
-            </button>
-
-            <!-- dropdown menu -->
-            <transition name="fade">
-              <div
-                v-if="sortDropdownOpen"
-                class="absolute top-full right-0 mt-2 w-full bg-black/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl z-[9999] max-h-60 overflow-y-auto custom-scrollbar"
-              >
-                <div
-                  v-for="opt in sortOptions"
-                  :key="opt.value"
-                  class="px-4 py-3 text-sm cursor-pointer transition-colors border-b border-white/5 last:border-0"
-                  :class="
-                    sortBy === opt.value
-                      ? 'bg-purple-500/20 text-purple-300 font-bold'
-                      : 'text-white/60'
-                  "
-                  @click="
-                    sortBy = opt.value;
-                    sortDropdownOpen = false;
-                    scrollToTop();
-                  "
-                >
-                  {{ opt.label }}
-                </div>
-              </div>
-            </transition>
-          </div>
-
-          <button
-            @click="cycleGridSize"
-            class="w-10 h-10 rounded-xl bg-white/10 border border-white/10 text-white transition-all active:scale-95 hover:bg-white/20 flex items-center justify-center"
-            :title="`Grid: ${gridSize === 'S' ? '3 columns' : gridSize === 'M' ? '2 columns' : '1 column'}`"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect v-if="gridSize === 'S'" x="3" y="8" width="5" height="8" rx="1"/>
-              <rect v-if="gridSize === 'S'" x="9.5" y="8" width="5" height="8" rx="1"/>
-              <rect v-if="gridSize === 'S'" x="16" y="8" width="5" height="8" rx="1"/>
-              <rect v-if="gridSize === 'M'" x="3" y="3" width="8" height="18" rx="1"/>
-              <rect v-if="gridSize === 'M'" x="13" y="3" width="8" height="18" rx="1"/>
-              <rect v-if="gridSize === 'L'" x="3" y="3" width="18" height="18" rx="1"/>
-            </svg>
-          </button>
-        </div>
-      </div>
+      <LibraryHeader
+        v-model:searchQuery="searchQuery"
+        v-model:sortBy="sortBy"
+        v-model:sortDropdownOpen="sortDropdownOpen"
+        v-model:headerFocusIndex="headerFocusIndex"
+        v-model:gridSize="gridSize"
+        :gamesCount="games.length"
+        @import="triggerImport"
+        @open-bbs="openOfficialBBS"
+        @open-bbs-explorer="openBBSExplorer"
+        @open-settings="$router.push('/settings')"
+        @keydown="handleHeaderNav"
+        @scroll-to-top="scrollToTop"
+      />
 
       <!-- loading state -->
       <transition name="fade">
@@ -424,190 +205,25 @@
             'grid-cols-1': gridSize === 'L'
           }"
         >
-          <div
+          <GameCard
             v-for="(game, index) in favorites"
             :key="game.filename"
-            @click="openGame(game)"
-            @touchstart="startLongPress(game)"
-            @touchend="cancelLongPress"
-            @touchmove="cancelLongPress"
-            @mousedown="handleMouseDown(game, $event)"
-            @mouseup="cancelLongPress"
-            @mouseleave="cancelLongPress"
-            @contextmenu.prevent
-            class="group relative aspect-[4/5] rounded-2xl cursor-pointer transition-all duration-500"
-            :class="[
-              deleteMode
-                ? 'animate-wiggle'
-                : 'hover:scale-[1.03] hover:shadow-2xl hover:shadow-pink-500/20',
-              focusedIndex === index
-                ? '!scale-105 ring-4 ring-pink-500 shadow-2xl z-20'
-                : '',
-            ]"
             :ref="(el) => setItemRef(el, index)"
-          >
-            <!-- heart icon (always visible for favorites or if card menu open) -->
-            <div
-              class="absolute -top-2 -right-2 z-20 transition-transform duration-300"
-              :class="{
-                'scale-110':
-                  (game.filename === cardMenuGameId &&
-                    cardMenuBtnIndex === 0) ||
-                  (!cardMenuGameId &&
-                    false) /* fixed: removed undefined hover check */,
-                'scale-125 ring-2 ring-white rounded-full':
-                  game.filename === cardMenuGameId && cardMenuBtnIndex === 0,
-              }"
-              v-if="
-                favorites.includes(game) ||
-                deleteMode ||
-                game.filename === cardMenuGameId
-              "
-            >
-              <button
-                @click.stop="handleFavorite(game, $event)"
-                class="rounded-full p-1.5 shadow-lg bg-pink-500 text-white hover:bg-pink-600 transition-colors"
-                :class="{
-                  'bg-gray-500/80 text-white/50': !favorites.includes(game),
-                }"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-3 w-3"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <!-- edit controls overlay -->
-            <template v-if="deleteMode || game.filename === cardMenuGameId">
-              <!-- rename -->
-              <div
-                class="absolute -top-2 -left-2 z-20"
-                :class="{
-                  'scale-125':
-                    game.filename === cardMenuGameId && cardMenuBtnIndex === 1,
-                }"
-              >
-                <button
-                  @click.stop="openRenameModal(game)"
-                  class="bg-blue-500 text-white rounded-full p-1 shadow-lg hover:bg-blue-600 transition-colors transform hover:scale-110"
-                  :class="{
-                    'ring-2 ring-white':
-                      game.filename === cardMenuGameId &&
-                      cardMenuBtnIndex === 1,
-                  }"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              <!-- delete (only if card menu is open or deleteMode is true) -->
-              <div
-                class="absolute -bottom-2 -right-2 z-20"
-                :class="{
-                  'scale-125':
-                    game.filename === cardMenuGameId && cardMenuBtnIndex === 2,
-                }"
-                v-if="
-                  game.filename === cardMenuGameId || nonFavorites.length > 0
-                "
-              >
-                <button
-                  @click.stop="handleDelete(game, $event)"
-                  class="bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors transform hover:scale-110"
-                  :class="{
-                    'ring-2 ring-white':
-                      game.filename === cardMenuGameId &&
-                      cardMenuBtnIndex === 2,
-                  }"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </template>
-
-            <!-- card content -->
-            <div
-              class="absolute inset-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-lg z-0"
-            >
-              <img
-                v-if="game.cover"
-                :src="game.cover"
-                alt="Cover"
-                class="w-full h-full object-cover pixelated opacity-90 transition-transform duration-500 group-hover:scale-110"
-              />
-              <div
-                v-else
-                class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-transparent"
-              >
-                <!-- placeholder svg -->
-                <svg
-                  class="w-12 h-12 opacity-20 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="1.5"
-                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="1.5"
-                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-
-              <!-- title band -->
-              <div
-                class="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-6"
-              >
-                <h3
-                  class="text-white font-medium text-xs truncate drop-shadow-md transform transition-transform translate-y-1 group-hover:translate-y-0"
-                >
-                  {{ formatName(game.name) }}
-                </h3>
-              </div>
-            </div>
-          </div>
+            :game="game"
+            :index="index"
+            :is-focused="focusedIndex === index"
+            :delete-mode="deleteMode"
+            :card-menu-open="game.filename === cardMenuGameId"
+            :card-menu-btn-index="cardMenuBtnIndex"
+            :is-favorite="true"
+            @click="openGame"
+            @long-press-start="startLongPress"
+            @long-press-cancel="cancelLongPress"
+            @mousedown="handleMouseDown"
+            @favorite="handleFavorite"
+            @rename="openRenameModal"
+            @delete="handleDelete"
+          />
         </div>
       </transition-group>
 
@@ -633,176 +249,25 @@
           'grid-cols-1': gridSize === 'L'
         }"
       >
-        <div
+        <GameCard
           v-for="(game, index) in nonFavorites"
           :key="game.filename"
-          @click="openGame(game)"
-          @touchstart="startLongPress(game)"
-          @touchend="cancelLongPress"
-          @touchmove="cancelLongPress"
-          @mousedown="handleMouseDown(game, $event)"
-          @mouseup="cancelLongPress"
-          @mouseleave="cancelLongPress"
-          @contextmenu.prevent
-          class="group relative aspect-[4/5] rounded-2xl cursor-pointer transition-all duration-500"
-          :class="[
-            deleteMode
-              ? 'animate-wiggle'
-              : 'hover:scale-[1.03] hover:shadow-2xl hover:shadow-purple-500/20',
-            focusedIndex === favorites.length + index
-              ? '!scale-105 ring-4 ring-purple-500 shadow-2xl z-20'
-              : '',
-          ]"
           :ref="(el) => setItemRef(el, favorites.length + index)"
-        >
-          <!-- controls overlay (delete mode OR card menu) -->
-          <template v-if="deleteMode || game.filename === cardMenuGameId">
-            <!-- favorite toggle (gray) -->
-            <div
-              class="absolute -top-2 -right-2 z-20"
-              :class="{
-                'scale-125':
-                  game.filename === cardMenuGameId && cardMenuBtnIndex === 0,
-              }"
-            >
-              <button
-                @click.stop="handleFavorite(game, $event)"
-                class="rounded-full p-1.5 shadow-lg bg-gray-500/80 text-white/50 hover:bg-pink-500 hover:text-white transition-all transform hover:scale-110"
-                :class="{
-                  'ring-2 ring-white !bg-pink-500 !text-white':
-                    game.filename === cardMenuGameId && cardMenuBtnIndex === 0,
-                }"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-3 w-3"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <!-- rename -->
-            <div
-              class="absolute -top-2 -left-2 z-20"
-              :class="{
-                'scale-125':
-                  game.filename === cardMenuGameId && cardMenuBtnIndex === 1,
-              }"
-            >
-              <button
-                @click.stop="openRenameModal(game)"
-                class="bg-blue-500 text-white rounded-full p-1 shadow-lg hover:bg-blue-600 transition-colors transform hover:scale-110"
-                :class="{
-                  'ring-2 ring-white':
-                    game.filename === cardMenuGameId && cardMenuBtnIndex === 1,
-                }"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <!-- delete -->
-            <div
-              class="absolute -bottom-2 -right-2 z-20"
-              :class="{
-                'scale-125':
-                  game.filename === cardMenuGameId && cardMenuBtnIndex === 2,
-              }"
-              v-if="nonFavorites.length > 0 || game.filename === cardMenuGameId"
-            >
-              <button
-                @click.stop="handleDelete(game, $event)"
-                class="bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors transform hover:scale-110"
-                :class="{
-                  'ring-2 ring-white':
-                    game.filename === cardMenuGameId && cardMenuBtnIndex === 2,
-                }"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          </template>
-
-          <!-- card content -->
-          <div
-            class="absolute inset-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-lg z-0"
-          >
-            <img
-              v-if="game.cover"
-              :src="game.cover"
-              alt="Cover"
-              class="w-full h-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-110"
-            />
-            <div
-              v-else
-              class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-transparent"
-            >
-              <svg
-                class="w-12 h-12 opacity-20 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1.5"
-                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1.5"
-                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-
-            <!-- title band -->
-            <div
-              class="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-6"
-            >
-              <h3
-                class="text-white font-medium text-xs truncate drop-shadow-md transform transition-transform translate-y-1 group-hover:translate-y-0"
-              >
-                {{ formatName(game.name) }}
-              </h3>
-            </div>
-          </div>
-        </div>
+          :game="game"
+          :index="favorites.length + index"
+          :is-focused="focusedIndex === favorites.length + index"
+          :delete-mode="deleteMode"
+          :card-menu-open="game.filename === cardMenuGameId"
+          :card-menu-btn-index="cardMenuBtnIndex"
+          :is-favorite="false"
+          @click="openGame"
+          @long-press-start="startLongPress"
+          @long-press-cancel="cancelLongPress"
+          @mousedown="handleMouseDown"
+          @favorite="handleFavorite"
+          @rename="openRenameModal"
+          @delete="handleDelete"
+        />
       </transition-group>
     </div>
 
@@ -875,11 +340,14 @@ import { ImpactStyle } from "@capacitor/haptics";
 import { libraryManager } from "../services/LibraryManager";
 import { Capacitor } from "@capacitor/core";
 import { useFocusable } from "../composables/useFocusable";
+import { useLibraryNavigation } from "../composables/useLibraryNavigation";
 import { FilePicker } from "@capawesome/capacitor-file-picker";
 import { inputManager } from "../services/InputManager";
 import { ScopedStorage } from "@daniele-rolli/capacitor-scoped-storage";
 import { Browser } from "@capacitor/browser";
 import packageJson from "../../package.json";
+import GameCard from "../components/GameCard.vue";
+import LibraryHeader from "../components/LibraryHeader.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -988,15 +456,45 @@ const displayGames = computed(() => [
 
 // card menu
 const cardMenuGameId = ref(null); // filename of the game with open menu
-const cardMenuBtnIndex = ref(0); // 0: fav, 1: rename, 2: delete
 
-// header
-const headerFocusIndex = ref(-1); // -1 = inactive
-const headerEntryTime = ref(0);
-const isTransitioning = ref(false); // lock for preventing double-inputs
+// Sort options for LibraryHeader
+const sortOptions = [
+  { label: "Recently Played", value: "lastPlayed" },
+  { label: "Name (A-Z)", value: "name" },
+  { label: "Newest", value: "newest" },
+  { label: "Oldest", value: "oldest" },
+  { label: "Play Count", value: "playCount" },
+];
 
-// 0: search, 1: sort, 2: import, 3: bbs, 4: settings, 5: bbsexplorer
-const headerOrder = ["search", "sort", "import", "bbs", "settings", "bbsexplorer"];
+// Initialize navigation composable
+const {
+  headerFocusIndex,
+  cardMenuBtnIndex,
+  isTransitioning,
+  headerEntryTime,
+  menuCloseTimestamp,
+  navigateHeader,
+  enterHeader,
+  exitHeader,
+  openCardMenu,
+  closeCardMenu,
+  navigateCardMenu,
+  handleSortNav,
+  handleInputKeyboard,
+  handleCardMenuKeyboard,
+  routeGamepadInput,
+} = useLibraryNavigation({
+  sortOptions,
+  sortBy,
+  sortDropdownOpen,
+  searchQuery,
+  games,
+  displayGames,
+  focusedIndex: ref(0), // Will be replaced by useFocusable
+  cardMenuGameId,
+  showRenameModal,
+  deleteMode,
+});
 
 const gridInputEnabled = computed(
   () =>
@@ -1021,12 +519,8 @@ const { focusedIndex, setItemRef } = useFocusable({
   },
 
   onUpOut: () => {
-    // enter header (focus search or close element)
-    focusedIndex.value = -1;
-    headerFocusIndex.value = 0; // default to search
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    isTransitioning.value = true;
-    setTimeout(() => (isTransitioning.value = false), 250);
+    // enter header (focus search by default)
+    enterHeader(0);
   },
   enabled: computed(
     () =>
@@ -1040,221 +534,23 @@ const { focusedIndex, setItemRef } = useFocusable({
 // card menu navigation logic
 const sortDropdownOpen = ref(false);
 
-const handleSortNav = (action) => {
-  if (isTransitioning.value) return;
-
-  if (action === "nav-down" || action === "ArrowDown") {
-    // cycle next
-    const idx = sortOptions.findIndex((o) => o.value === sortBy.value);
-    const next = (idx + 1) % sortOptions.length;
-    sortBy.value = sortOptions[next].value;
-  } else if (action === "nav-up" || action === "ArrowUp") {
-    // cycle prev
-    const idx = sortOptions.findIndex((o) => o.value === sortBy.value);
-    const prev = (idx - 1 + sortOptions.length) % sortOptions.length;
-    sortBy.value = sortOptions[prev].value;
-  } else if (action === "confirm" || action === "Enter") {
-    // confirm selection
-    sortDropdownOpen.value = false;
-    window.scrollTo({ top: 0, behavior: "smooth" });
-
-    // unfocus and return to grid immediately
-    headerFocusIndex.value = -1;
-    focusedIndex.value = 0;
-
-    // lock to prevent immediate re-trigger
-    isTransitioning.value = true;
-    setTimeout(() => (isTransitioning.value = false), 350);
-  } else if (
-    action === "back" ||
-    action === "Escape" ||
-    action === "menu" ||
-    action === "wiggle"
-  ) {
-    // cancel / close
-    sortDropdownOpen.value = false;
-
-    // unfocus and return to grid immediately
-    headerFocusIndex.value = -1;
-    focusedIndex.value = 0;
-
-    if (document.activeElement) document.activeElement.blur();
-
-    // prevent re-trigger
-    isTransitioning.value = true;
-    setTimeout(() => (isTransitioning.value = false), 350);
-  }
-};
-
-// header navigation logic
+// Header keyboard navigation - use composable
 const handleHeaderNav = (e) => {
-  if (headerFocusIndex.value === -1) return;
-  if (isTransitioning.value) return;
-
-  // input escape logic
-  const isInput = document.activeElement?.tagName === "INPUT";
-  if (!isInput) return;
-
-  // if sort dropdown is open, input manager handles it
-  if (sortDropdownOpen.value) {
-    if (["ArrowUp", "ArrowDown", "Enter", "Escape"].includes(e.key)) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-    }
-    return;
-  }
-
-  // debounce check
-  if (Date.now() - headerEntryTime.value < 250) {
-    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      return;
-    }
-  }
-
-  // allow typing keys
-  if (
-    e.key !== "Escape" &&
-    e.key !== "Enter" &&
-    !["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)
-  )
-    return;
-
-  if (e.key === "Escape") {
-    document.activeElement.blur();
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    return;
-  }
-
-  let didTransition = false;
-
-  if (e.key === "ArrowDown") {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    // search -> grid
-    focusedIndex.value = 0;
-    headerFocusIndex.value = -1;
-    e.target.blur();
-    didTransition = true;
-  }
-
-  if (e.key === "ArrowUp") {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    // search -> import
-    headerFocusIndex.value = 2;
-    e.target.blur();
-    didTransition = true;
-  }
-
-  if (e.key === "ArrowRight") {
-    // escape logic
-    if (e.target.selectionStart < e.target.value.length) return;
-
-    e.preventDefault();
-    e.stopImmediatePropagation();
-
-    // search -> sort
-    headerFocusIndex.value = 1;
-    e.target.blur();
-    didTransition = true;
-  }
-
-  if (e.key === "ArrowLeft") {
-    // escape logic
-    if (e.target.selectionStart > 0) return;
-
-    e.preventDefault();
-    e.stopImmediatePropagation();
-
-    // search -> loop to sort
-    headerFocusIndex.value = 1;
-    e.target.blur();
-    didTransition = true;
-  }
-
-  if (didTransition) {
-    isTransitioning.value = true;
-    setTimeout(() => (isTransitioning.value = false), 250);
-  }
-
-  // enter triggers action
-  if (e.key === "Enter") {
-    triggerHeaderAction(headerFocusIndex.value);
-  }
+  handleInputKeyboard(e);
 };
 
+// Trigger header action based on index
 const triggerHeaderAction = (idx) => {
   if (idx === 0) {
     // search: focus input
     const input = document.querySelector('input[type="text"]');
     input?.focus();
   } else if (idx === 1) {
+    // sort: handled by dropdown
   } else if (idx === 2) triggerImport();
   else if (idx === 3) openOfficialBBS();
   else if (idx === 4) router.push("/settings");
   else if (idx === 5) openBBSExplorer();
-};
-
-const handleCardMenuNav = (e) => {
-  if (!cardMenuGameId.value || showRenameModal.value) return;
-
-  if (e.key === "ArrowLeft") {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    if (cardMenuBtnIndex.value === 0) cardMenuBtnIndex.value = 1; // fav -> rename
-  }
-  if (e.key === "ArrowRight") {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    if (cardMenuBtnIndex.value === 1) cardMenuBtnIndex.value = 0; // rename -> fav
-  }
-  if (e.key === "ArrowDown") {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    if (cardMenuBtnIndex.value !== 2) cardMenuBtnIndex.value = 2; // any -> delete
-  }
-  if (e.key === "ArrowUp") {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    if (cardMenuBtnIndex.value === 2) cardMenuBtnIndex.value = 0; // delete -> fav
-  }
-
-  // actions
-  if (["Enter", " ", "z", "Z", "x", "X"].includes(e.key)) {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    const game = games.value.find((g) => g.filename === cardMenuGameId.value);
-    if (!game) return;
-
-    if (cardMenuBtnIndex.value === 0) {
-      handleFavorite(game);
-    } else if (cardMenuBtnIndex.value === 1) {
-      openRenameModal(game);
-    } else if (cardMenuBtnIndex.value === 2) {
-      handleDelete(game);
-    }
-  }
-
-  // back / close
-  if (["Escape", "Backspace", "b", "B"].includes(e.key)) {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    closeCardMenu();
-  }
-};
-
-const openCardMenu = (game) => {
-  cardMenuGameId.value = game.filename;
-  cardMenuBtnIndex.value = 0; // Reset to Fav
-};
-
-const closeCardMenu = () => {
-  cardMenuGameId.value = null;
-  cardMenuBtnIndex.value = 0;
-  menuCloseTimestamp.value = Date.now();
 };
 
 const isAndroid = computed(() => Capacitor.getPlatform() === "android");
@@ -1305,14 +601,6 @@ const deleteMode = ref(false);
 const importProgress = ref("");
 let longPressTimer = null;
 
-const sortOptions = [
-  { label: "Recently Played", value: "lastPlayed" },
-  { label: "Name (A-Z)", value: "name" },
-  { label: "Newest", value: "newest" },
-  { label: "Oldest", value: "oldest" },
-  { label: "Play Count", value: "playCount" },
-];
-
 onMounted(async () => {
   console.log("[library] mounting...");
   try {
@@ -1349,13 +637,6 @@ function openBBSExplorer() {
   router.push("/bbs");
 }
 
-function cycleGridSize() {
-  const modes = ['S', 'M', 'L'];
-  const currentIndex = modes.indexOf(gridSize.value);
-  gridSize.value = modes[(currentIndex + 1) % modes.length];
-  haptics.impact(ImpactStyle.Light).catch(() => {});
-}
-
 async function handleFileImport(event) {
   const files = event.target.files;
   if (!files || files.length === 0) return;
@@ -1376,7 +657,7 @@ async function handleFileImport(event) {
     }
   } catch (e) {
     console.error(e);
-    Haptics.notification({ type: "error" }).catch(() => {});
+    haptics.notification({ type: "error" }).catch(() => {});
     alert(e.message); // show specific error
   }
 
@@ -1498,51 +779,44 @@ async function handleDelete(game, event) {
   }
 }
 
-function formatName(filename) {
-  return filename.replace(/\.p8(\.png)?$/, "");
-}
-
 const formatDate = (ms) => new Date(ms).toLocaleDateString();
 
 async function openGame(game) {
   if (deleteMode.value) return;
   haptics.impact(ImpactStyle.Light).catch(() => {});
-
-  // update last played
-  await libraryManager.updateLastPlayed(game.name);
-
-  // memory stream handoff
-  try {
-    const data = await libraryManager.loadCartData(game.filename);
-
-    // stash
-    if (data) {
-      localStorage.setItem("pico_handoff_payload", data);
-      localStorage.setItem("pico_handoff_name", game.filename);
-      console.log(
-        `[library] stashed ${game.filename} for handoff. payload length: ${data.length}`,
-      );
-    } else {
-      console.error(
-        `[library] critical: read file but data is null/undefined! path: carts/${game.filename}`,
-      );
-      alert("error: could not read cartridge data.");
-      return;
-    }
-
-    // navigate
-    window.location.href = `index.html?cart=boot&boot=1&t=${Date.now()}`;
-  } catch (e) {
-    console.error(`[library] pre-load read failed: ${e.message}`);
-    alert(`failed to load ${game.name}: ${e.message}`);
-  }
+  await libraryManager.updateLastPlayed(game.filename);
+  router.push({ name: "player", query: { cart: game.filename } });
 }
 
 const listenerCleanup = ref(null);
 
+// Define handlers for card menu keyboard navigation
+const _handleCardMenuKeyboard = (e) => {
+  if (!cardMenuGameId.value || showRenameModal.value) return;
+
+  // Use composable for navigation
+  handleCardMenuKeyboard(e);
+
+  // Handle confirm actions locally
+  if (["Enter", " ", "z", "Z", "x", "X"].includes(e.key)) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    const game = games.value.find((g) => g.filename === cardMenuGameId.value);
+    if (!game) return;
+
+    if (cardMenuBtnIndex.value === 0) {
+      handleFavorite(game);
+    } else if (cardMenuBtnIndex.value === 1) {
+      openRenameModal(game);
+    } else if (cardMenuBtnIndex.value === 2) {
+      handleDelete(game);
+    }
+  }
+};
+
 onMounted(() => {
   window.addEventListener("keydown", handleHeaderNav);
-  window.addEventListener("keydown", handleCardMenuNav);
+  window.addEventListener("keydown", _handleCardMenuKeyboard);
   listenerCleanup.value = inputManager.addListener(handleGamepadInput);
 });
 
@@ -1567,193 +841,31 @@ watch(
   },
 );
 
+// Use composable for gamepad input routing
 const handleGamepadInput = (action) => {
-  if (showRenameModal.value) return;
-
-  const isTyping = document.activeElement?.tagName === "INPUT";
-
-  // trap sort globally
-  if (sortDropdownOpen.value) {
-    handleSortNav(action);
-    return;
-  }
-
-  if (isTyping) {
-    if (action === "nav-down") {
-      handleHeaderAction(action);
-    } else if (action === "wiggle" || action === "back") {
-      // allow exiting input via back/wiggle
-      document.activeElement.blur();
-    }
-    return;
-  }
-
-  // GLOBAL SHORTCUTS
-  if (action === "wiggle") {
-    if (cardMenuGameId.value) {
-      closeCardMenu();
-    } else {
-      // toggle wiggle mode and lock focus
-      if (headerFocusIndex.value === -1) {
-        const game = displayGames.value[focusedIndex.value];
-        if (game) openCardMenu(game);
+  routeGamepadInput(action, {
+    onHeaderAction: (idx) => triggerHeaderAction(idx),
+    onCardMenuConfirm: (game, btnIndex) => {
+      if (btnIndex === 0) {
+        handleFavorite(game);
+      } else if (btnIndex === 1) {
+        openRenameModal(game);
+        closeCardMenu();
+      } else if (btnIndex === 2) {
+        handleDelete(game);
       }
-    }
-    return;
-  }
-
-  if (action === "back") {
-    // Priority Stack
-    if (cardMenuGameId.value) {
-      closeCardMenu();
-      return;
-    }
-    if (headerFocusIndex.value !== -1) {
-      headerFocusIndex.value = -1;
-      focusedIndex.value = 0; // return to grid
-      return;
-    }
-    if (deleteMode.value) {
-      deleteMode.value = false;
-      return;
-    }
-    return;
-  }
-
-  // DELEGATION
-  if (cardMenuGameId.value) {
-    handleCardMenuAction(action);
-    return;
-  }
-
-  if (headerFocusIndex.value !== -1) {
-    handleHeaderAction(action);
-    return;
-  }
-
-  // trigger folder picker - empty state
-  if (
-    action === "confirm" &&
-    needsDirectorySetup.value &&
-    displayGames.value.length === 0
-  ) {
-    pickAndroidDirectory();
-    return;
-  }
+    },
+    onEmptyStateConfirm: () => {
+      if (needsDirectorySetup.value) {
+        pickAndroidDirectory();
+      }
+    },
+  });
 };
-
-const menuCloseTimestamp = ref(0);
 
 const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
-
-const handleHeaderAction = (action) => {
-  if (isTransitioning.value) return;
-
-  // trap sort
-  if (sortDropdownOpen.value) {
-    handleSortNav(action);
-    return;
-  }
-
-  // debounce check for entering header
-  // allow confirm immediately, but debounce navigation to prevent accidental double-jumps
-  if (Date.now() - headerEntryTime.value < 250) {
-    if (
-      !["confirm"].includes(action) &&
-      ["nav-up", "nav-down", "nav-left", "nav-right"].includes(action)
-    ) {
-      return;
-    }
-  }
-
-  const current = headerFocusIndex.value;
-  let didTransition = false;
-
-  if (action === "nav-down") {
-    if (current === 0 || current === 1) {
-      // bottom -> grid
-      focusedIndex.value = 0;
-      headerFocusIndex.value = -1;
-      didTransition = true;
-    } else {
-      // top row -> bottom row (always search)
-      headerFocusIndex.value = 0;
-      didTransition = true;
-    }
-  } else if (action === "nav-up") {
-    // bottom row -> top row
-    if (current === 0) headerFocusIndex.value = 2; // search -> import
-    else if (current === 1) headerFocusIndex.value = 4; // sort -> settings
-    didTransition = true;
-  } else if (action === "nav-right") {
-    // bottom: search(0) -> sort(1) -> loop(0)
-    if (current === 0) headerFocusIndex.value = 1;
-    else if (current === 1) headerFocusIndex.value = 0;
-    // Top (Standard: 2->3->5->4)
-    else if (current === 2) headerFocusIndex.value = 3;
-    else if (current === 3) headerFocusIndex.value = 5;
-    else if (current === 5) headerFocusIndex.value = 4;
-    else if (current === 4) headerFocusIndex.value = 2;
-    didTransition = true;
-  } else if (action === "nav-left") {
-    // bottom: sort(1) -> search(0) -> loop(1)
-    if (current === 1) headerFocusIndex.value = 0;
-    else if (current === 0) headerFocusIndex.value = 1;
-    // top (standard: 4->5->3->2)
-    else if (current === 2) headerFocusIndex.value = 4;
-    else if (current === 3) headerFocusIndex.value = 2;
-    else if (current === 5) headerFocusIndex.value = 3;
-    else if (current === 4) headerFocusIndex.value = 5;
-    didTransition = true;
-  } else if (action === "confirm" || action === "menu") {
-    if (headerFocusIndex.value === 1) {
-      sortDropdownOpen.value = !sortDropdownOpen.value;
-    } else {
-      triggerHeaderAction(headerFocusIndex.value);
-    }
-  }
-
-  if (didTransition) {
-    isTransitioning.value = true;
-    setTimeout(() => (isTransitioning.value = false), 150);
-  }
-};
-
-const handleCardMenuAction = (action) => {
-  if (showRenameModal.value) return;
-
-  if (action === "nav-left") {
-    if (cardMenuBtnIndex.value === 0) cardMenuBtnIndex.value = 1;
-  } else if (action === "nav-right") {
-    if (cardMenuBtnIndex.value === 1) cardMenuBtnIndex.value = 0;
-  } else if (action === "nav-down") {
-    if (cardMenuBtnIndex.value !== 2) cardMenuBtnIndex.value = 2;
-  } else if (action === "nav-up") {
-    if (cardMenuBtnIndex.value === 2) cardMenuBtnIndex.value = 0;
-  } else if (action === "confirm") {
-    const game = games.value.find((g) => g.filename === cardMenuGameId.value);
-    if (!game) return;
-    if (cardMenuBtnIndex.value === 0) {
-      handleFavorite(game);
-    } else if (cardMenuBtnIndex.value === 1) {
-      openRenameModal(game);
-      closeCardMenu();
-    } else if (cardMenuBtnIndex.value === 2) {
-      handleDelete(game);
-    }
-  } else if (action === "wiggle") {
-    closeCardMenu();
-  }
-};
-
-// auto-scroll when header is focused
-watch(headerFocusIndex, (newVal) => {
-  if (newVal !== -1) {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-});
 </script>
 
 <style scoped>
