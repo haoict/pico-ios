@@ -84,7 +84,7 @@ class InputManagerService {
           this._swapCooldown = 5; // protect for 20ms
         }
       },
-      { flush: "sync" }
+      { flush: "sync" },
     );
 
     // attach keyboard listeners
@@ -414,8 +414,9 @@ class InputManagerService {
     // UI MODE
     else {
       // nav
-      const isTyping = document.activeElement?.tagName === "INPUT" ||
-                       document.activeElement?.tagName === "TEXTAREA";
+      const isTyping =
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "TEXTAREA";
 
       this.handleNavInput("nav-up", buf.up);
       this.handleNavInput("nav-down", buf.down);
@@ -447,7 +448,8 @@ class InputManagerService {
           this.keys[" "]
         )
           confirm = true;
-        if (this.keys["x"] || this.keys["X"] || this.keys["Escape"]) back = true;
+        if (this.keys["x"] || this.keys["X"] || this.keys["Escape"])
+          back = true;
       }
 
       this.emitChange("confirm", confirm);

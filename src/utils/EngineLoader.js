@@ -135,6 +135,8 @@ export const EngineLoader = {
       encoding: Encoding.UTF8,
     });
 
-    console.log("[EngineLoader] Successfully installed BIOS to BIOS/pico8_bios.js");
+    console.log(
+      "[EngineLoader] Successfully installed BIOS to BIOS/pico8_bios.js",
+    );
   },
 };

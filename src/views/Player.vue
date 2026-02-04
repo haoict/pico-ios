@@ -1,98 +1,62 @@
 <template>
   <!-- main layout: flex column for portrait, overlay for landscape -->
   <div
-    class="relative h-screen w-screen overflow-hidden bg-black select-none flex flex-col landscape:flex-row landscape:items-stretch portrait:pt-[max(env(safe-area-inset-top),30px)] touch-none overscroll-none"
-  >
+    class="relative h-screen w-screen overflow-hidden bg-black select-none flex flex-col landscape:flex-row landscape:items-stretch portrait:pt-[max(env(safe-area-inset-top),30px)] touch-none overscroll-none">
     <!-- game zone -->
     <div
       class="game-zone flex-none w-full aspect-square relative flex items-center justify-center overflow-hidden landscape:flex-1 landscape:aspect-[4/3] landscape:h-full landscape:w-auto landscape:max-w-full pointer-events-none z-10"
-      :class="{ '!h-full !w-full !aspect-auto': fullscreen }"
-    >
-      <div
-        id="canvas-container"
-        ref="canvasContainer"
+      :class="{ '!h-full !w-full !aspect-auto': fullscreen }">
+      <div id="canvas-container" ref="canvasContainer"
         class="relative flex items-center justify-center p-1 w-full h-full aspect-square pointer-events-auto"
-        :class="{ '!p-0': fullscreen }"
-      >
-        <canvas
-          class="aspect-square w-full h-full object-contain image-pixelated rounded-sm shadow-2xl bg-black"
-          :class="{ 'shadow-black/50': isMenuOpen }"
-          style="will-change: transform"
-          id="canvas"
-          oncontextmenu="event.preventDefault()"
-          tabindex="-1"
-          width="128"
-          height="128"
-        ></canvas>
+        :class="{ '!p-0': fullscreen }">
+        <canvas class="aspect-square w-full h-full object-contain image-pixelated rounded-sm shadow-2xl bg-black"
+          :class="{ 'shadow-black/50': isMenuOpen }" style="will-change: transform" id="canvas"
+          oncontextmenu="event.preventDefault()" tabindex="-1" width="128" height="128"></canvas>
 
         <!-- pause menu overlay -->
-        <div
-          v-if="isMenuOpen"
-          class="absolute inset-0 bg-black/60 backdrop-blur-xl z-[60] flex items-center justify-center"
-        >
+        <div v-if="isMenuOpen"
+          class="absolute inset-0 bg-black/60 backdrop-blur-xl z-[60] flex items-center justify-center">
           <!-- menu content -->
           <div
-            class="flex flex-col gap-4 text-center p-8 landscape:p-4 landscape:gap-2 w-full max-w-xs max-h-screen overflow-y-auto"
-          >
+            class="flex flex-col gap-4 text-center p-8 landscape:p-4 landscape:gap-2 w-full max-w-xs max-h-screen overflow-y-auto">
             <h2
-              class="text-[clamp(1.5rem,5vw,2.5rem)] font-bold text-white mb-4 landscape:mb-2 tracking-widest drop-shadow-md font-pico"
-            >
+              class="text-[clamp(1.5rem,5vw,2.5rem)] font-bold text-white mb-4 landscape:mb-2 tracking-widest drop-shadow-md font-pico">
               PAUSE
             </h2>
 
             <!-- dynamic menu buttons -->
-            <button
-              v-for="(btn, idx) in menuButtons"
-              :key="btn.label"
-              :id="'btn-' + idx"
-              @click="triggerMenuAction(btn.action)"
-              @touchend.prevent="triggerMenuAction(btn.action)"
+            <button v-for="(btn, idx) in menuButtons" :key="btn.label" :id="'btn-' + idx"
+              @click="triggerMenuAction(btn.action)" @touchend.prevent="triggerMenuAction(btn.action)"
               class="px-8 py-3 landscape:py-1 landscape:px-4 landscape:text-sm rounded-xl font-medium tracking-wider transition-colors w-full backdrop-blur-md focus:ring-4 focus:ring-white/50 outline-none font-pico uppercase text-[clamp(0.8rem,4vw,1rem)]"
               :class="[
                 focusIndex === idx
                   ? 'bg-white text-black scale-105 shadow-lg'
                   : 'bg-white/10 text-white hover:bg-white/20',
                 btn.action === 'exit' ? 'border border-red-500/30' : '',
-              ]"
-            >
+              ]">
               {{ btn.label }}
             </button>
 
             <!-- hidden file picker -->
-            <input
-              type="file"
-              ref="filePicker"
-              class="hidden"
-              accept=".p8d,.txt,.p8"
-              @change="handleFileImport"
-            />
+            <input type="file" ref="filePicker" class="hidden" accept=".p8d,.txt,.p8" @change="handleFileImport" />
           </div>
         </div>
       </div>
     </div>
 
     <!-- exit overlay -->
-    <div
-      v-if="isExiting"
-      class="absolute inset-0 bg-black z-[100] transition-opacity duration-100 ease-out"
-    ></div>
+    <div v-if="isExiting" class="absolute inset-0 bg-black z-[100] transition-opacity duration-100 ease-out"></div>
 
     <!-- controller zone -->
-    <div
-      v-if="!fullscreen"
-      class="controller-zone flex-1 relative w-full bg-black/90 backdrop-blur-xl landscape:absolute landscape:inset-0 landscape:bg-transparent landscape:backdrop-blur-none landscape:pointer-events-none z-20"
-    >
+    <div v-if="!fullscreen"
+      class="controller-zone flex-1 relative w-full bg-black/90 backdrop-blur-xl landscape:absolute landscape:inset-0 landscape:bg-transparent landscape:backdrop-blur-none landscape:pointer-events-none z-20">
       <VirtualController @menu="toggleMenu" />
     </div>
 
     <!-- global toast usage -->
     <!-- saves drawer -->
-    <SavesDrawer
-      :isOpen="isSavesDrawerOpen"
-      :cartName="activeCartName"
-      @close="isSavesDrawerOpen = false"
-      @load="handleStateLoad"
-    />
+    <SavesDrawer :isOpen="isSavesDrawerOpen" :cartName="activeCartName" @close="isSavesDrawerOpen = false"
+      @load="handleStateLoad" />
   </div>
 </template>
 
@@ -301,7 +265,7 @@ const toggleMenu = async () => {
 
 const triggerMenuAction = (action) => {
   console.log("[player] menu action triggered:", action);
-  haptics.impact(ImpactStyle.Light).catch(() => {});
+  haptics.impact(ImpactStyle.Light).catch(() => { });
   if (action === "resume") toggleMenu();
   if (action === "manualsave") triggerManualSave();
   if (action === "managesaves") isSavesDrawerOpen.value = true;
@@ -456,7 +420,7 @@ function hookPicoQuit() {
       console.log("[player] pico-8 quit detected (internal)");
       try {
         if (originalQuit) originalQuit(status, toThrow);
-      } catch (e) {}
+      } catch (e) { }
 
       picoBridge.shutdown();
 

@@ -283,7 +283,9 @@ export class LibraryManager {
 
       return {
         ...game,
-        name: prev?.name || game.filename.replace(/\.p8\.png$/i, "").replace(/\.p8$/i, ""),
+        name:
+          prev?.name ||
+          game.filename.replace(/\.p8\.png$/i, "").replace(/\.p8$/i, ""),
         lastPlayed: prev?.lastPlayed || 0,
         playCount: prev?.playCount || 0,
         isFavorite: prev?.isFavorite ?? false,
@@ -332,12 +334,16 @@ export class LibraryManager {
       // Handle v2.0 unified schema
       if (data.version === "2.0") {
         this.syncSources = data.syncSources || [];
-        console.log(`[LibraryManager] Loaded ${data.games.length} games from unified index v2.0.`);
+        console.log(
+          `[LibraryManager] Loaded ${data.games.length} games from unified index v2.0.`,
+        );
         return data.games;
       }
 
       // Legacy format (v1.0 - array of games)
-      console.log(`[LibraryManager] Loaded ${data.length} games from legacy index v1.0.`);
+      console.log(
+        `[LibraryManager] Loaded ${data.length} games from legacy index v1.0.`,
+      );
       return data;
     } catch (e) {
       console.log("[LibraryManager] No index found, will scan.");
@@ -415,7 +421,9 @@ export class LibraryManager {
         encoding: Encoding.UTF8,
       });
 
-      console.log(`[LibraryManager] Saved unified index v2.0 with ${games.length} games.`);
+      console.log(
+        `[LibraryManager] Saved unified index v2.0 with ${games.length} games.`,
+      );
     } catch (e) {
       console.warn("[LibraryManager] Failed to save unified index:", e);
     }
@@ -430,7 +438,9 @@ export class LibraryManager {
         syncSources: this.syncSources,
       });
 
-      console.log(`[LibraryManager] Cache updated: ${this.games.length} games synced.`);
+      console.log(
+        `[LibraryManager] Cache updated: ${this.games.length} games synced.`,
+      );
     } catch (e) {
       console.error("[LibraryManager] Cache update failed:", e);
     }
@@ -833,7 +843,9 @@ export class LibraryManager {
       // check if file.name is .png but not .p8.png, rename it to .p8.png
       if (file.name.endsWith(".png") && !file.name.endsWith(".p8.png")) {
         const newName = file.name.replace(/\.png$/i, ".p8.png");
-        console.log(`[library_manager] renaming image file "${file.name}" to "${newName}"`);
+        console.log(
+          `[library_manager] renaming image file "${file.name}" to "${newName}"`,
+        );
         file.name = newName;
       }
 
@@ -973,7 +985,9 @@ export class LibraryManager {
       // re-sort games by lastPlayed to maintain proper ordering
       this.games.sort((a, b) => (b.lastPlayed || 0) - (a.lastPlayed || 0));
     } else {
-      console.warn(`[LibraryManager] updateLastPlayed: game not found: ${filename}`);
+      console.warn(
+        `[LibraryManager] updateLastPlayed: game not found: ${filename}`,
+      );
     }
 
     await this._updateCache();
@@ -995,7 +1009,9 @@ export class LibraryManager {
       await this._updateCache();
       return this.games[gameIdx].isFavorite;
     } else {
-      console.warn(`[LibraryManager] toggleFavorite: game not found: ${filename}`);
+      console.warn(
+        `[LibraryManager] toggleFavorite: game not found: ${filename}`,
+      );
     }
     return false;
   }
@@ -1099,7 +1115,9 @@ export class LibraryManager {
       throw new Error("Invalid game data");
     }
 
-    console.log(`[LibraryManager] Downloading ${game.title}... URL: ${game.cart_url}`);
+    console.log(
+      `[LibraryManager] Downloading ${game.title}... URL: ${game.cart_url}`,
+    );
 
     try {
       let downloadUrl = game.cart_url;
@@ -1107,11 +1125,13 @@ export class LibraryManager {
 
       // If cart_url is missing, try to find it on the forum post page
       if (!downloadUrl) {
-        console.log(`[LibraryManager] cart_url missing, trying to find cartridge link on forum post page ${game.source_page_url}...`);
+        console.log(
+          `[LibraryManager] cart_url missing, trying to find cartridge link on forum post page ${game.source_page_url}...`,
+        );
         const pageRes = await fetch(game.source_page_url);
         const pageHtml = await pageRes.text();
         const cart_found = pageHtml.match(
-          /Module\.arguments\s*=\s*\[\s*["']([^"']+)["']/i
+          /Module\.arguments\s*=\s*\[\s*["']([^"']+)["']/i,
         );
         if (!cart_found) {
           throw new Error("Could not find cartridge link on BBS page.");
@@ -1162,7 +1182,11 @@ export class LibraryManager {
     // check if it exists
     try {
       const cartData = await this.loadCartData(targetFilename);
-      return { exists: true, filename: targetFilename, cartData: cartData.data };
+      return {
+        exists: true,
+        filename: targetFilename,
+        cartData: cartData.data,
+      };
     } catch (e) {
       console.warn(`[library_manager] local cart load failed: ${e.message}`);
     }
@@ -1170,7 +1194,10 @@ export class LibraryManager {
     // else download
     try {
       console.log(`[library_manager] downloading deep link: ${targetFilename}`);
-      const game = { title: cartId, cart_url: `https://carts.lexaloffle.com/${targetFilename}`};
+      const game = {
+        title: cartId,
+        cart_url: `https://carts.lexaloffle.com/${targetFilename}`,
+      };
       await this.downloadCart(game);
       return { exists: false, downloaded: true, filename: targetFilename };
     } catch (err) {

@@ -1,11 +1,8 @@
 <template>
-  <div
-    class="fixed inset-0 z-[999] bg-black flex flex-col items-center justify-center p-6 text-center select-none"
-  >
+  <div class="fixed inset-0 z-[999] bg-black flex flex-col items-center justify-center p-6 text-center select-none">
     <!-- background gradient -->
-    <div
-      class="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-black to-blue-900/20 pointer-events-none"
-    ></div>
+    <div class="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-black to-blue-900/20 pointer-events-none">
+    </div>
 
     <div class="relative z-10 max-w-md w-full animate-fade-in-up">
       <!-- header -->
@@ -21,19 +18,15 @@
         <label class="block text-xs font-medium text-gray-400 mb-2">
           Download URL
         </label>
-        <textarea
-          v-model="downloadUrl"
-          rows="2"
+        <textarea v-model="downloadUrl" rows="2"
           class="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all font-mono resize-none"
-          placeholder="https://www.lexaloffle.com/play/pico8_xxxx.js"
-        ></textarea>
+          placeholder="https://www.lexaloffle.com/play/pico8_xxxx.js"></textarea>
       </div>
 
       <!-- input area -->
       <div v-if="!isSuccess"
         class="group relative rounded-2xl border-2 border-white/20 bg-white/10 p-8 transition-all hover:border-purple-500/50 hover:bg-white/20"
-        @click="triggerDownloadBios"
-      >
+        @click="triggerDownloadBios">
         <div class="flex flex-col items-center gap-4">
           <p class="text-sm font-medium text-gray-300 group-hover:text-white">
             Tap to download <span class="text-purple-400">pico8_xxxx.js</span>
@@ -43,50 +36,32 @@
 
       <div v-if="false"
         class="group relative rounded-2xl border-2 border-dashed border-white/20 bg-white/5 p-8 transition-all hover:border-purple-500/50 hover:bg-white/10"
-        @click="triggerFilePicker"
-        @dragover.prevent
-        @drop.prevent="handleDrop"
-      >
+        @click="triggerFilePicker" @dragover.prevent @drop.prevent="handleDrop">
         <div class="flex flex-col items-center gap-4">
           <p class="text-sm font-medium text-gray-300 group-hover:text-white">
             Tap to upload <span class="text-purple-400">bios.js</span>
           </p>
         </div>
 
-        <input
-          ref="fileInput"
-          type="file"
-          accept=".js"
-          class="hidden"
-          @change="handleFileSelect"
-        />
+        <input ref="fileInput" type="file" accept=".js" class="hidden" @change="handleFileSelect" />
       </div>
 
       <!-- status/error message -->
       <div v-if="statusMessage" class="mt-6 flex flex-col items-center gap-2">
-        <div
-          class="px-4 py-2 rounded-lg text-sm font-medium backdrop-blur-md border"
-          :class="
-            isError
-              ? 'bg-red-500/10 border-red-500/30 text-red-400'
-              : 'bg-green-500/10 border-green-500/30 text-green-400'
-          "
-        >
+        <div class="px-4 py-2 rounded-lg text-sm font-medium backdrop-blur-md border" :class="isError
+            ? 'bg-red-500/10 border-red-500/30 text-red-400'
+            : 'bg-green-500/10 border-green-500/30 text-green-400'
+          ">
           {{ statusMessage }}
         </div>
-        <button
-          v-if="isSuccess"
-          @click="reloadApp"
-          class="mt-4 px-6 py-2 bg-white text-black font-bold rounded-full hover:scale-105 active:scale-95 transition-all text-sm"
-        >
+        <button v-if="isSuccess" @click="reloadApp"
+          class="mt-4 px-6 py-2 bg-white text-black font-bold rounded-full hover:scale-105 active:scale-95 transition-all text-sm">
           Reload App
         </button>
       </div>
 
       <!-- help text -->
-      <div
-        class="mt-8 text-xs text-gray-500 max-w-sm mx-auto text-center leading-relaxed"
-      >
+      <div class="mt-8 text-xs text-gray-500 max-w-sm mx-auto text-center leading-relaxed">
         <p v-if="true">
           Pocket8 stores the <span class="text-gray-300">pico8_xxxx.js</span> file in
           <span class="text-gray-300">Pocket8 > BIOS</span>.
@@ -178,7 +153,7 @@ const processFile = async (file) => {
         directory: Directory.Documents,
         recursive: true,
       });
-    } catch (e) {}
+    } catch (e) { }
 
     // save
     await Filesystem.writeFile({
@@ -222,6 +197,7 @@ const reloadApp = () => {
     opacity: 0;
     transform: translateY(20px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);

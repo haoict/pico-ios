@@ -1,72 +1,33 @@
 <template>
-  <div
-    class="virtual-controller relative w-full h-full select-none"
-    @touchstart.prevent="handleTouch"
-    @touchmove.prevent="handleTouch"
-    @touchend.prevent="handleTouchEnd"
-    @touchcancel.prevent="handleTouchEnd"
-    @mousedown.prevent="handleTouch"
-    @mousemove.prevent="handleTouch"
-    @mouseup.prevent="handleTouchEnd"
-    @mouseleave.prevent="handleTouchEnd"
-  >
+  <div class="virtual-controller relative w-full h-full select-none" @touchstart.prevent="handleTouch"
+    @touchmove.prevent="handleTouch" @touchend.prevent="handleTouchEnd" @touchcancel.prevent="handleTouchEnd"
+    @mousedown.prevent="handleTouch" @mousemove.prevent="handleTouch" @mouseup.prevent="handleTouchEnd"
+    @mouseleave.prevent="handleTouchEnd">
     <div
-      class="portrait-layout absolute inset-0 flex flex-col z-10 pointer-events-none pb-[max(env(safe-area-inset-bottom),20px)]"
-    >
+      class="portrait-layout absolute inset-0 flex flex-col z-10 pointer-events-none pb-[max(env(safe-area-inset-bottom),20px)]">
       <div class="flex-grow"></div>
 
       <div
-        class="flex flex-row items-center justify-between px-6 w-full max-w-[480px] min-[600px]:max-w-none min-[600px]:px-16 mx-auto flex-shrink-0"
-      >
-        <div
-          class="control-group relative w-[42vmin] max-w-[180px] aspect-square pointer-events-auto"
-          ref="dpadRef"
-          @touchstart.prevent="handleDPadTouch"
-          @touchmove.prevent="handleDPadTouch"
-          @touchend.prevent="handleTouchEnd"
-        >
+        class="flex flex-row items-center justify-between px-6 w-full max-w-[480px] min-[600px]:max-w-none min-[600px]:px-16 mx-auto flex-shrink-0">
+        <div class="control-group relative w-[42vmin] max-w-[180px] aspect-square pointer-events-auto" ref="dpadRef"
+          @touchstart.prevent="handleDPadTouch" @touchmove.prevent="handleDPadTouch" @touchend.prevent="handleTouchEnd">
           <template v-if="!useJoystick">
             <div class="relative w-full h-full">
               <!-- D-PAD -->
               <svg viewBox="0 0 110 110" class="w-full h-full drop-shadow-2xl">
                 <defs>
-                  <linearGradient
-                    id="glass-gradient"
-                    x1="0%"
-                    y1="0%"
-                    x2="100%"
-                    y2="100%"
-                  >
+                  <linearGradient id="glass-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stop-color="rgba(255, 255, 255, 0.2)" />
                     <stop offset="50%" stop-color="rgba(255, 255, 255, 0.05)" />
-                    <stop
-                      offset="100%"
-                      stop-color="rgba(255, 255, 255, 0.15)"
-                    />
+                    <stop offset="100%" stop-color="rgba(255, 255, 255, 0.15)" />
                   </linearGradient>
                 </defs>
-                <g
-                  transform="translate(5,5)"
-                  fill="url(#glass-gradient)"
-                  stroke="rgba(255,255,255,0.1)"
-                  stroke-width="0.5"
-                >
-                  <path
-                    d="M36 34 V12 A4 4 0 0 1 64 12 V34 H36"
-                    :class="{ 'fill-white/40': activeKeys.has(38) }"
-                  />
-                  <path
-                    d="M36 66 V88 A4 4 0 0 0 64 88 V66 H36"
-                    :class="{ 'fill-white/40': activeKeys.has(40) }"
-                  />
-                  <path
-                    d="M34 36 H12 A4 4 0 0 0 12 64 H34 V36"
-                    :class="{ 'fill-white/40': activeKeys.has(37) }"
-                  />
-                  <path
-                    d="M66 36 H88 A4 4 0 0 1 88 64 H66 V36"
-                    :class="{ 'fill-white/40': activeKeys.has(39) }"
-                  />
+                <g transform="translate(5,5)" fill="url(#glass-gradient)" stroke="rgba(255,255,255,0.1)"
+                  stroke-width="0.5">
+                  <path d="M36 34 V12 A4 4 0 0 1 64 12 V34 H36" :class="{ 'fill-white/40': activeKeys.has(38) }" />
+                  <path d="M36 66 V88 A4 4 0 0 0 64 88 V66 H36" :class="{ 'fill-white/40': activeKeys.has(40) }" />
+                  <path d="M34 36 H12 A4 4 0 0 0 12 64 H34 V36" :class="{ 'fill-white/40': activeKeys.has(37) }" />
+                  <path d="M66 36 H88 A4 4 0 0 1 88 64 H66 V36" :class="{ 'fill-white/40': activeKeys.has(39) }" />
                   <rect x="36" y="36" width="28" height="28" />
                 </g>
               </svg>
@@ -74,91 +35,60 @@
           </template>
           <template v-else>
             <div
-              class="relative w-full h-full rounded-full border-2 border-white/10 bg-white/5 small:w-full small:h-full"
-            >
-              <div
-                ref="joystickStickRef"
+              class="relative w-full h-full rounded-full border-2 border-white/10 bg-white/5 small:w-full small:h-full">
+              <div ref="joystickStickRef"
                 class="absolute w-1/3 h-1/3 rounded-full bg-white/20 shadow-lg border border-white/10 pointer-events-none"
                 :style="{
                   transform: `translate3d(calc(-50% + ${thumbX}px), calc(-50% + ${thumbY}px), 0)`,
                   top: '50%',
                   left: '50%',
-                }"
-              ></div>
+                }"></div>
             </div>
           </template>
         </div>
 
         <!-- ACTION BUTTONS -->
-        <div
-          class="control-group relative w-[42vmin] max-w-[180px] aspect-square pointer-events-auto"
-          ref="actionZoneRef"
-          @touchstart.prevent="handleActionTouch"
-          @touchmove.prevent="handleActionTouch"
-          @touchend.prevent="handleActionTouch"
-        >
+        <div class="control-group relative w-[42vmin] max-w-[180px] aspect-square pointer-events-auto"
+          ref="actionZoneRef" @touchstart.prevent="handleActionTouch" @touchmove.prevent="handleActionTouch"
+          @touchend.prevent="handleActionTouch">
           <!-- button 1 (top right) -->
-          <div
-            ref="btn1Ref"
-            class="absolute top-[2%] right-[2%] w-[48%] h-[48%] rounded-full shadow-lg border"
-            :class="[
-              btn1.label === 'o'
-                ? 'bg-red-500/20 border-red-500/50'
-                : 'bg-blue-500/20 border-blue-500/50',
-              { '!bg-white/40 !scale-95': activeKeys.has(btn1.code) },
-            ]"
-          >
+          <div ref="btn1Ref" class="absolute top-[2%] right-[2%] w-[48%] h-[48%] rounded-full shadow-lg border" :class="[
+            btn1.label === 'o'
+              ? 'bg-red-500/20 border-red-500/50'
+              : 'bg-blue-500/20 border-blue-500/50',
+            { '!bg-white/40 !scale-95': activeKeys.has(btn1.code) },
+          ]">
             <span
-              class="text-white font-bold font-pico absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[clamp(1.5rem,5vw,2.25rem)]"
-              >{{ btn1.label }}</span
-            >
+              class="text-white font-bold font-pico absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[clamp(1.5rem,5vw,2.25rem)]">{{
+              btn1.label }}</span>
           </div>
           <!-- button 2 (bottom left) -->
-          <div
-            ref="btn2Ref"
-            class="absolute bottom-[2%] left-[2%] w-[48%] h-[48%] rounded-full shadow-lg border"
+          <div ref="btn2Ref" class="absolute bottom-[2%] left-[2%] w-[48%] h-[48%] rounded-full shadow-lg border"
             :class="[
               btn2.label === 'o'
                 ? 'bg-red-500/20 border-red-500/50'
                 : 'bg-blue-500/20 border-blue-500/50',
               { '!bg-white/40 !scale-95': activeKeys.has(btn2.code) },
-            ]"
-          >
+            ]">
             <span
-              class="text-white font-bold font-pico absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[clamp(1.5rem,5vw,2.25rem)]"
-              >{{ btn2.label }}</span
-            >
+              class="text-white font-bold font-pico absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[clamp(1.5rem,5vw,2.25rem)]">{{
+              btn2.label }}</span>
           </div>
         </div>
       </div>
 
       <!-- start / select (bottom center) -->
       <div
-        class="w-full flex justify-center pb-4 mt-12 pointer-events-auto gap-8 min-[850px]:mt-20 transition-[margin] duration-300"
-      >
-        <button
-          class="flex flex-col items-center gap-1"
-          @click="openMenu"
-          @touchstart.stop.prevent="openMenu"
-        >
-          <div
-            class="w-12 h-4 rounded-full bg-white/20 border border-white/10 shadow-sm -rotate-12"
-          ></div>
-          <span class="text-[10px] font-bold text-white/50 tracking-widest"
-            >SELECT</span
-          >
+        class="w-full flex justify-center pb-4 mt-12 pointer-events-auto gap-8 min-[850px]:mt-20 transition-[margin] duration-300">
+        <button class="flex flex-col items-center gap-1" @click="openMenu" @touchstart.stop.prevent="openMenu">
+          <div class="w-12 h-4 rounded-full bg-white/20 border border-white/10 shadow-sm -rotate-12"></div>
+          <span class="text-[10px] font-bold text-white/50 tracking-widest">SELECT</span>
         </button>
-        <button
-          class="flex flex-col items-center gap-1"
+        <button class="flex flex-col items-center gap-1"
           @touchstart.stop.prevent="inputManager.dispatchKey(80, 'keydown')"
-          @touchend.stop.prevent="inputManager.dispatchKey(80, 'keyup')"
-        >
-          <div
-            class="w-12 h-4 rounded-full bg-white/20 border border-white/10 shadow-sm -rotate-12"
-          ></div>
-          <span class="text-[10px] font-bold text-white/50 tracking-widest"
-            >START</span
-          >
+          @touchend.stop.prevent="inputManager.dispatchKey(80, 'keyup')">
+          <div class="w-12 h-4 rounded-full bg-white/20 border border-white/10 shadow-sm -rotate-12"></div>
+          <span class="text-[10px] font-bold text-white/50 tracking-widest">START</span>
         </button>
       </div>
     </div>
@@ -166,141 +96,84 @@
     <!-- landscape layout -->
     <div
       class="landscape-layout absolute inset-0 flex-row justify-between items-end px-[max(env(safe-area-inset-left),30px)] pr-[max(env(safe-area-inset-right),30px)] pb-[max(env(safe-area-inset-bottom),40px)] pointer-events-none z-10"
-      style="display: none"
-    >
+      style="display: none">
       <!-- left: dpad + select -->
-      <div
-        class="flex flex-col items-center justify-end gap-5 min-[850px]:gap-20 pointer-events-auto h-full"
-      >
-        <div
-          ref="dpadRefLS"
-          class="relative w-[min(32vh,38vw)] max-w-[180px] aspect-square"
-        >
+      <div class="flex flex-col items-center justify-end gap-5 min-[850px]:gap-20 pointer-events-auto h-full">
+        <div ref="dpadRefLS" class="relative w-[min(32vh,38vw)] max-w-[180px] aspect-square">
           <template v-if="!useJoystick">
             <svg viewBox="0 0 110 110" class="w-full h-full drop-shadow-2xl">
               <defs>
-                <linearGradient
-                  id="glass-gradient-ls"
-                  x1="0%"
-                  y1="0%"
-                  x2="100%"
-                  y2="100%"
-                >
+                <linearGradient id="glass-gradient-ls" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stop-color="rgba(255, 255, 255, 0.2)" />
                   <stop offset="50%" stop-color="rgba(255, 255, 255, 0.05)" />
                   <stop offset="100%" stop-color="rgba(255, 255, 255, 0.15)" />
                 </linearGradient>
               </defs>
-              <g
-                transform="translate(5,5)"
-                fill="url(#glass-gradient-ls)"
-                stroke="rgba(255,255,255,0.1)"
-                stroke-width="0.5"
-              >
-                <path
-                  d="M36 34 V12 A4 4 0 0 1 64 12 V34 H36"
-                  :class="{ 'fill-white/40': activeKeys.has(38) }"
-                />
-                <path
-                  d="M36 66 V88 A4 4 0 0 0 64 88 V66 H36"
-                  :class="{ 'fill-white/40': activeKeys.has(40) }"
-                />
-                <path
-                  d="M34 36 H12 A4 4 0 0 0 12 64 H34 V36"
-                  :class="{ 'fill-white/40': activeKeys.has(37) }"
-                />
-                <path
-                  d="M66 36 H88 A4 4 0 0 1 88 64 H66 V36"
-                  :class="{ 'fill-white/40': activeKeys.has(39) }"
-                />
+              <g transform="translate(5,5)" fill="url(#glass-gradient-ls)" stroke="rgba(255,255,255,0.1)"
+                stroke-width="0.5">
+                <path d="M36 34 V12 A4 4 0 0 1 64 12 V34 H36" :class="{ 'fill-white/40': activeKeys.has(38) }" />
+                <path d="M36 66 V88 A4 4 0 0 0 64 88 V66 H36" :class="{ 'fill-white/40': activeKeys.has(40) }" />
+                <path d="M34 36 H12 A4 4 0 0 0 12 64 H34 V36" :class="{ 'fill-white/40': activeKeys.has(37) }" />
+                <path d="M66 36 H88 A4 4 0 0 1 88 64 H66 V36" :class="{ 'fill-white/40': activeKeys.has(39) }" />
                 <rect x="36" y="36" width="28" height="28" />
               </g>
             </svg>
           </template>
           <template v-else>
-            <div
-              class="relative w-full h-full rounded-full border-2 border-white/10 bg-white/5"
-            >
+            <div class="relative w-full h-full rounded-full border-2 border-white/10 bg-white/5">
               <div
                 class="absolute w-1/3 h-1/3 top-1/3 left-1/3 rounded-full bg-white/20 shadow-lg border border-white/10 pointer-events-none"
                 :style="{
                   transform: `translate3d(${thumbX}px, ${thumbY}px, 0)`,
-                }"
-              ></div>
+                }"></div>
             </div>
           </template>
         </div>
 
-        <button
-          class="flex flex-col items-center gap-1"
-          @click="openMenu"
-          @touchstart.stop.prevent="openMenu"
-        >
-          <div
-            class="w-12 h-4 rounded-full bg-white/20 border border-white/10 shadow-sm -rotate-12"
-          ></div>
-          <span class="text-[10px] font-bold text-white/50 tracking-widest"
-            >SELECT</span
-          >
+        <button class="flex flex-col items-center gap-1" @click="openMenu" @touchstart.stop.prevent="openMenu">
+          <div class="w-12 h-4 rounded-full bg-white/20 border border-white/10 shadow-sm -rotate-12"></div>
+          <span class="text-[10px] font-bold text-white/50 tracking-widest">SELECT</span>
         </button>
       </div>
 
       <!-- right: buttons + start -->
-      <div
-        class="flex flex-col items-center gap-6 min-[850px]:gap-16 pointer-events-auto"
-      >
-        <div
-          ref="actionZoneRefLS"
-          class="relative w-[min(32vh,38vw)] max-w-[180px] aspect-square"
-          @touchstart.prevent="handleActionTouch"
-          @touchmove.prevent="handleActionTouch"
-          @touchend.prevent="handleActionTouch"
-        >
+      <div class="flex flex-col items-center gap-6 min-[850px]:gap-16 pointer-events-auto">
+        <div ref="actionZoneRefLS" class="relative w-[min(32vh,38vw)] max-w-[180px] aspect-square"
+          @touchstart.prevent="handleActionTouch" @touchmove.prevent="handleActionTouch"
+          @touchend.prevent="handleActionTouch">
           <!-- button 1 (top right) -->
-          <div
-            ref="btn1RefLS"
+          <div ref="btn1RefLS"
             class="absolute top-[2%] right-[2%] w-[48%] h-[48%] rounded-full shadow-lg border flex items-center justify-center"
             :class="[
               btn1.label === 'o'
                 ? 'bg-red-500/20 border-red-500/50'
                 : 'bg-blue-500/20 border-blue-500/50',
               { '!bg-white/40 !scale-95': activeKeys.has(btn1.code) },
-            ]"
-          >
+            ]">
             <span
-              class="text-white font-bold font-pico select-none text-[min(2.5rem,8vmin)] translate-x-[2px] -translate-y-[2px]"
-              >{{ btn1.label }}</span
-            >
+              class="text-white font-bold font-pico select-none text-[min(2.5rem,8vmin)] translate-x-[2px] -translate-y-[2px]">{{
+              btn1.label }}</span>
           </div>
           <!-- button 2 (bottom left) -->
-          <div
-            ref="btn2RefLS"
+          <div ref="btn2RefLS"
             class="absolute bottom-[2%] left-[2%] w-[48%] h-[48%] rounded-full shadow-lg border flex items-center justify-center"
             :class="[
               btn2.label === 'o'
                 ? 'bg-red-500/20 border-red-500/50'
                 : 'bg-blue-500/20 border-blue-500/50',
               { '!bg-white/40 !scale-95': activeKeys.has(btn2.code) },
-            ]"
-          >
+            ]">
             <span
-              class="text-white font-bold font-pico select-none text-[min(2.5rem,8vmin)] translate-x-[2px] -translate-y-[2px]"
-              >{{ btn2.label }}</span
-            >
+              class="text-white font-bold font-pico select-none text-[min(2.5rem,8vmin)] translate-x-[2px] -translate-y-[2px]">{{
+              btn2.label }}</span>
           </div>
         </div>
 
-        <button
-          class="flex flex-col items-center gap-1"
+        <button class="flex flex-col items-center gap-1"
           @touchstart.stop.prevent="inputManager.dispatchKey(80, 'keydown')"
-          @touchend.stop.prevent="inputManager.dispatchKey(80, 'keyup')"
-        >
-          <div
-            class="w-12 h-4 rounded-full bg-white/20 border border-white/10 shadow-sm -rotate-12"
-          ></div>
-          <span class="text-[10px] font-bold text-white/50 tracking-widest"
-            >START</span
-          >
+          @touchend.stop.prevent="inputManager.dispatchKey(80, 'keyup')">
+          <div class="w-12 h-4 rounded-full bg-white/20 border border-white/10 shadow-sm -rotate-12"></div>
+          <span class="text-[10px] font-bold text-white/50 tracking-widest">START</span>
         </button>
       </div>
     </div>
@@ -612,7 +485,7 @@ const processJoystickCoordinates = (clientX, clientY) => {
 
   if (newDirection !== currentDirection) {
     currentDirection = newDirection;
-    haptics.impact(ImpactStyle.Light).catch(() => {});
+    haptics.impact(ImpactStyle.Light).catch(() => { });
     triggerKeys(getKeysForDirection(newDirection));
   }
 };
@@ -654,7 +527,7 @@ const processDpadCoordinates = (clientX, clientY) => {
 
   if (newDirection !== currentDirection) {
     currentDirection = newDirection;
-    haptics.impact(ImpactStyle.Light).catch(() => {});
+    haptics.impact(ImpactStyle.Light).catch(() => { });
     triggerKeys(getKeysForDirection(newDirection));
   }
 };
@@ -843,16 +716,19 @@ onUnmounted(() => {
   .portrait-layout {
     display: flex !important;
   }
+
   .landscape-layout {
     display: none !important;
   }
 }
 
 /* force landscape layout when width >= height or height <= 570px */
-@media (min-aspect-ratio: 3/4), (max-height: 570px) {
+@media (min-aspect-ratio: 3/4),
+(max-height: 570px) {
   .portrait-layout {
     display: none !important;
   }
+
   .landscape-layout {
     display: flex !important;
   }

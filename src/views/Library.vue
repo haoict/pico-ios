@@ -1,68 +1,29 @@
 <template>
-  <div
-    class="min-h-screen bg-pico-gradient relative no-scrollbar transition-colors overflow-y-auto"
-  >
+  <div class="min-h-screen bg-pico-gradient relative no-scrollbar transition-colors overflow-y-auto">
     <!-- hidden file input -->
-    <input
-      type="file"
-      ref="fileInput"
-      multiple
-      accept=".p8,.p8.png,.png,.lua,.txt"
-      class="hidden"
-      @change="handleFileImport"
-    />
+    <input type="file" ref="fileInput" multiple accept=".p8,.p8.png,.png,.lua,.txt" class="hidden"
+      @change="handleFileImport" />
 
     <!-- content -->
-    <div
-      class="relative z-10 p-6 pt-16 pb-32 max-w-7xl mx-auto w-full min-h-[calc(100vh+1px)]"
-      @click="handleBackgroundClick"
-      @touchstart="handleTouchStart"
-      @touchmove="handleTouchMove"
-      @touchend="handleTouchEnd"
-    >
+    <div class="relative z-10 p-6 pt-16 pb-32 max-w-7xl mx-auto w-full min-h-[calc(100vh+1px)]"
+      @click="handleBackgroundClick" @touchstart="handleTouchStart" @touchmove="handleTouchMove"
+      @touchend="handleTouchEnd">
       <!-- pull refresh indicator -->
       <div
         class="fixed top-20 left-1/2 -translate-x-1/2 z-[200] transition-all duration-300 pointer-events-none flex items-center gap-2 bg-black/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10"
         :style="{
           opacity: pullProgress > 0 ? 1 : 0,
-          transform: `translate(-50%, ${pullProgress * 50}px) scale(${
-            0.8 + pullProgress * 0.2
-          })`,
-        }"
-      >
-        <svg
-          class="w-4 h-4 text-white animate-spin"
-          v-if="isRefreshing"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            class="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            stroke-width="4"
-          ></circle>
-          <path
-            class="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
+          transform: `translate(-50%, ${pullProgress * 50}px) scale(${0.8 + pullProgress * 0.2
+            })`,
+        }">
+        <svg class="w-4 h-4 text-white animate-spin" v-if="isRefreshing" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+          </path>
         </svg>
-        <svg
-          v-else
-          class="w-4 h-4 text-white rotate-180"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M19 14l-7 7m0 0l-7-7m7 7V3"
-          ></path>
+        <svg v-else class="w-4 h-4 text-white rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
         </svg>
         <span class="text-xs font-bold text-white uppercase tracking-widest">{{
           isRefreshing ? "Refreshing..." : "Pull to Scan"
@@ -70,37 +31,20 @@
       </div>
 
       <!-- header -->
-      <LibraryHeader
-        v-model:searchQuery="searchQuery"
-        v-model:sortBy="sortBy"
-        v-model:sortDropdownOpen="sortDropdownOpen"
-        v-model:headerFocusIndex="headerFocusIndex"
-        v-model:gridSize="gridSize"
-        :gamesCount="games.length"
-        @import="triggerImport"
-        @open-bbs="openOfficialBBS"
-        @open-bbs-explorer="openBBSExplorer"
-        @open-settings="$router.push('/settings')"
-        @keydown="handleHeaderNav"
-        @scroll-to-top="scrollToTop"
-      />
+      <LibraryHeader v-model:searchQuery="searchQuery" v-model:sortBy="sortBy"
+        v-model:sortDropdownOpen="sortDropdownOpen" v-model:headerFocusIndex="headerFocusIndex"
+        v-model:gridSize="gridSize" :gamesCount="games.length" @import="triggerImport" @open-bbs="openOfficialBBS"
+        @open-bbs-explorer="openBBSExplorer" @open-settings="$router.push('/settings')" @keydown="handleHeaderNav"
+        @scroll-to-top="scrollToTop" />
 
       <!-- loading state -->
       <transition name="fade">
-        <div
-          v-if="loading"
-          class="flex flex-col items-center justify-center py-20"
-        >
-          <div
-            class="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin mb-4"
-          ></div>
+        <div v-if="loading" class="flex flex-col items-center justify-center py-20">
+          <div class="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin mb-4"></div>
           <span class="text-white/30 text-sm tracking-widest uppercase">
             {{ importProgress || "Scanning" }}
           </span>
-          <span
-            v-if="scanProgress.show"
-            class="text-white/50 text-xs mt-2 font-mono"
-          >
+          <span v-if="scanProgress.show" class="text-white/50 text-xs mt-2 font-mono">
             Processing {{ scanProgress.current }} / {{ scanProgress.total }}
           </span>
         </div>
@@ -108,59 +52,29 @@
 
       <!-- empty state -->
       <transition name="fade">
-        <div
-          v-if="!loading && games.length === 0"
-          class="flex flex-col items-center justify-center py-20 text-center"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="w-12 h-12 mb-4 opacity-50 text-white pixelated"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"
-            />
+        <div v-if="!loading && games.length === 0" class="flex flex-col items-center justify-center py-20 text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-4 opacity-50 text-white pixelated" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
           </svg>
 
           <!-- android setup -->
-          <div
-            v-if="games.length === 0"
-            class="flex flex-col items-center gap-4 px-6"
-          >
+          <div v-if="games.length === 0" class="flex flex-col items-center gap-4 px-6">
             <p class="text-white/60 font-medium">Library Setup</p>
-            <p
-              v-if="isAndroid"
-              class="text-white/30 text-sm max-w-xs leading-relaxed"
-            >
+            <p v-if="isAndroid" class="text-white/30 text-sm max-w-xs leading-relaxed">
               Import a game above or sync with an external folder.
             </p>
             <p v-else class="text-white/30 text-sm max-w-xs leading-relaxed">
               Import a game above to get started.
             </p>
 
-            <button
-              v-if="isAndroid"
-              @click="pickExternalFolder"
-              class="mt-2 px-6 py-3 bg-white/10 rounded-full font-bold text-sm tracking-wide active:bg-white/20 transition-all flex items-center gap-2 border border-white/5"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 opacity-70"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
-                />
+            <button v-if="isAndroid" @click="pickExternalFolder"
+              class="mt-2 px-6 py-3 bg-white/10 rounded-full font-bold text-sm tracking-wide active:bg-white/20 transition-all flex items-center gap-2 border border-white/5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-70" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
               </svg>
               Sync External Folder
             </button>
@@ -169,140 +83,77 @@
       </transition>
 
       <!-- favorites section -->
-      <transition-group
-        name="list"
-        tag="div"
-        class="mb-8"
-        v-if="favorites.length > 0"
-      >
+      <transition-group name="list" tag="div" class="mb-8" v-if="favorites.length > 0">
         <div key="fav-header" class="flex flex-col items-center mb-6">
           <div class="flex items-center gap-2 mb-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4 text-pink-500"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-pink-500" viewBox="0 0 20 20"
+              fill="currentColor">
+              <path fill-rule="evenodd"
                 d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                clip-rule="evenodd"
-              />
+                clip-rule="evenodd" />
             </svg>
-            <span
-              class="text-xs font-bold tracking-[0.2em] text-pink-500 uppercase"
-              >favorites</span
-            >
+            <span class="text-xs font-bold tracking-[0.2em] text-pink-500 uppercase">favorites</span>
           </div>
         </div>
 
-        <div
-          key="fav-grid"
-          class="grid gap-6 justify-center"
-          :class="{
-            'grid-cols-3': gridSize === 'S',
-            'grid-cols-2': gridSize === 'M',
-            'grid-cols-1': gridSize === 'L'
-          }"
-        >
-          <GameCard
-            v-for="(game, index) in favorites"
-            :key="game.filename"
-            :ref="(el) => setItemRef(el, index)"
-            :game="game"
-            :index="index"
-            :is-focused="focusedIndex === index"
-            :delete-mode="deleteMode"
-            :card-menu-open="game.filename === cardMenuGameId"
-            :card-menu-btn-index="cardMenuBtnIndex"
-            :is-favorite="true"
-            @click="openGame"
-            @long-press-start="startLongPress"
-            @long-press-cancel="cancelLongPress"
-            @mousedown="handleMouseDown"
-            @favorite="handleFavorite"
-            @rename="openRenameModal"
-            @delete="handleDelete"
-          />
+        <div key="fav-grid" class="grid gap-6 justify-center" :class="{
+          'grid-cols-3': gridSize === 'S',
+          'grid-cols-2': gridSize === 'M',
+          'grid-cols-1': gridSize === 'L'
+        }">
+          <GameCard v-for="(game, index) in favorites" :key="game.filename" :ref="(el) => setItemRef(el, index)"
+            :game="game" :index="index" :is-focused="focusedIndex === index" :delete-mode="deleteMode"
+            :card-menu-open="game.filename === cardMenuGameId" :card-menu-btn-index="cardMenuBtnIndex"
+            :is-favorite="true" @click="openGame" @long-press-start="startLongPress"
+            @long-press-cancel="cancelLongPress" @mousedown="handleMouseDown" @favorite="handleFavorite"
+            @rename="openRenameModal" @delete="handleDelete" />
         </div>
       </transition-group>
 
       <!-- formatting divider -->
       <div v-if="favorites.length > 0" class="relative py-8 flex items-center">
         <div class="flex-grow border-t border-white/5"></div>
-        <span
-          class="flex-shrink-0 mx-4 text-white/20 text-[10px] uppercase tracking-widest"
-          >all games</span
-        >
+        <span class="flex-shrink-0 mx-4 text-white/20 text-[10px] uppercase tracking-widest">all games</span>
         <div class="flex-grow border-t border-white/5"></div>
       </div>
       <!-- end divider -->
 
       <!-- main library grid -->
-      <transition-group
-        name="list"
-        tag="div"
-        class="grid gap-6"
-        :class="{
-          'grid-cols-3': gridSize === 'S',
-          'grid-cols-2': gridSize === 'M',
-          'grid-cols-1': gridSize === 'L'
-        }"
-      >
-        <GameCard
-          v-for="(game, index) in nonFavorites"
-          :key="game.filename"
-          :ref="(el) => setItemRef(el, favorites.length + index)"
-          :game="game"
-          :index="favorites.length + index"
-          :is-focused="focusedIndex === favorites.length + index"
-          :delete-mode="deleteMode"
-          :card-menu-open="game.filename === cardMenuGameId"
-          :card-menu-btn-index="cardMenuBtnIndex"
-          :is-favorite="false"
-          @click="openGame"
-          @long-press-start="startLongPress"
-          @long-press-cancel="cancelLongPress"
-          @mousedown="handleMouseDown"
-          @favorite="handleFavorite"
-          @rename="openRenameModal"
-          @delete="handleDelete"
-        />
+      <transition-group name="list" tag="div" class="grid gap-6" :class="{
+        'grid-cols-3': gridSize === 'S',
+        'grid-cols-2': gridSize === 'M',
+        'grid-cols-1': gridSize === 'L'
+      }">
+        <GameCard v-for="(game, index) in nonFavorites" :key="game.filename"
+          :ref="(el) => setItemRef(el, favorites.length + index)" :game="game" :index="favorites.length + index"
+          :is-focused="focusedIndex === favorites.length + index" :delete-mode="deleteMode"
+          :card-menu-open="game.filename === cardMenuGameId" :card-menu-btn-index="cardMenuBtnIndex"
+          :is-favorite="false" @click="openGame" @long-press-start="startLongPress" @long-press-cancel="cancelLongPress"
+          @mousedown="handleMouseDown" @favorite="handleFavorite" @rename="openRenameModal" @delete="handleDelete" />
       </transition-group>
     </div>
 
     <!-- rename modal -->
     <transition name="fade">
-      <div
-        v-if="showRenameModal"
+      <div v-if="showRenameModal"
         class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-        @click.self="closeRenameModal"
-      >
+        @click.self="closeRenameModal">
         <div
-          class="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl transform transition-all"
-        >
+          class="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl transform transition-all">
           <h3 class="text-lg font-bold text-white mb-2">Rename Cartridge</h3>
           <p class="text-white/50 text-sm mb-4">
             Enter a new name for this game.
           </p>
-          <input
-            v-model="renameInput"
-            ref="renameInputRef"
-            type="text"
+          <input v-model="renameInput" ref="renameInputRef" type="text"
             class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all mb-6"
-            @keydown.enter.stop.prevent="confirmRename"
-          />
+            @keydown.enter.stop.prevent="confirmRename" />
           <div class="flex justify-end gap-3">
-            <button
-              @click="closeRenameModal"
-              class="px-4 py-2 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-colors font-medium text-sm"
-            >
+            <button @click="closeRenameModal"
+              class="px-4 py-2 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-colors font-medium text-sm">
               Cancel
             </button>
-            <button
-              @click="confirmRename"
-              class="px-4 py-2 rounded-lg bg-white text-black hover:scale-105 active:scale-95 transition-all font-bold text-sm shadow-lg shadow-white/10"
-            >
+            <button @click="confirmRename"
+              class="px-4 py-2 rounded-lg bg-white text-black hover:scale-105 active:scale-95 transition-all font-bold text-sm shadow-lg shadow-white/10">
               Save Changes
             </button>
           </div>
@@ -415,7 +266,7 @@ const handleTouchMove = (e) => {
 const handleTouchEnd = async () => {
   if (pullProgress.value > 0.8 && !isRefreshing.value) {
     isRefreshing.value = true;
-    haptics.impact(ImpactStyle.Medium).catch(() => {});
+    haptics.impact(ImpactStyle.Medium).catch(() => { });
 
     // trigger full refresh
     await libraryStore.loadLibrary(true);
@@ -454,8 +305,11 @@ const displayGames = computed(() => [
   ...nonFavorites.value,
 ]);
 
-// card menu
+// UI state refs
 const cardMenuGameId = ref(null); // filename of the game with open menu
+const sortDropdownOpen = ref(false);
+const showRenameModal = ref(false);
+const deleteMode = ref(false);
 
 // Sort options for LibraryHeader
 const sortOptions = [
@@ -490,7 +344,6 @@ const {
   searchQuery,
   games,
   displayGames,
-  focusedIndex: ref(0), // Will be replaced by useFocusable
   cardMenuGameId,
   showRenameModal,
   deleteMode,
@@ -531,9 +384,6 @@ const { focusedIndex, setItemRef } = useFocusable({
   ),
 });
 
-// card menu navigation logic
-const sortDropdownOpen = ref(false);
-
 // Header keyboard navigation - use composable
 const handleHeaderNav = (e) => {
   handleInputKeyboard(e);
@@ -557,7 +407,7 @@ const isAndroid = computed(() => Capacitor.getPlatform() === "android");
 const needsDirectorySetup = computed(() => isAndroid.value && games.value.length === 0);
 
 async function pickExternalFolder() {
-  haptics.impact(ImpactStyle.Light).catch(() => {});
+  haptics.impact(ImpactStyle.Light).catch(() => { });
 
   // guardrail
   alert(
@@ -591,13 +441,11 @@ async function pickExternalFolder() {
 const hasFavorites = computed(() => favorites.value.length > 0);
 
 const fileInput = ref(null);
-const showRenameModal = ref(false);
 const renameInput = ref("");
 const renameInputRef = ref(null);
 const currentRenamingGame = ref(null);
 
 const showDeleteConfirm = ref(false);
-const deleteMode = ref(false);
 const importProgress = ref("");
 let longPressTimer = null;
 
@@ -613,12 +461,12 @@ onMounted(async () => {
 });
 
 function triggerImport() {
-  haptics.impact(ImpactStyle.Light).catch(() => {});
+  haptics.impact(ImpactStyle.Light).catch(() => { });
   fileInput.value.click();
 }
 
 function openOfficialBBS() {
-  haptics.impact(ImpactStyle.Light).catch(() => {});
+  haptics.impact(ImpactStyle.Light).catch(() => { });
   // the magic url provided by zep to set the cookie
   const url =
     "https://www.lexaloffle.com/bbs/?cat=7#sub=2&mode=carts&orderby=featured&ios_player=pocket8";
@@ -633,7 +481,7 @@ function openOfficialBBS() {
 }
 
 function openBBSExplorer() {
-  haptics.impact(ImpactStyle.Light).catch(() => {});
+  haptics.impact(ImpactStyle.Light).catch(() => { });
   router.push("/bbs");
 }
 
@@ -651,13 +499,13 @@ async function handleFileImport(event) {
   try {
     const success = await addBundle(files);
     if (success) {
-      haptics.success().catch(() => {});
+      haptics.success().catch(() => { });
       alert(`Success! ${total} cartridges loaded.`);
     } else {
     }
   } catch (e) {
     console.error(e);
-    haptics.notification({ type: "error" }).catch(() => {});
+    haptics.notification({ type: "error" }).catch(() => { });
     alert(e.message); // show specific error
   }
 
@@ -678,7 +526,7 @@ function handleMouseDown(game, event) {
 function startLongPress(game) {
   if (deleteMode.value) return;
   longPressTimer = setTimeout(() => {
-    haptics.impact(ImpactStyle.Heavy).catch(() => {});
+    haptics.impact(ImpactStyle.Heavy).catch(() => { });
     deleteMode.value = true;
   }, 500);
 }
@@ -697,13 +545,13 @@ function handleBackgroundClick(e) {
 }
 
 async function startDeleteMode() {
-  haptics.impact(ImpactStyle.Medium).catch(() => {});
+  haptics.impact(ImpactStyle.Medium).catch(() => { });
   deleteMode.value = !deleteMode.value;
 }
 
 async function handleFavorite(game, event) {
   event?.stopPropagation(); // optional chaining in case validation triggers locally
-  haptics.impact(ImpactStyle.Light).catch(() => {});
+  haptics.impact(ImpactStyle.Light).catch(() => { });
   await toggleFavorite(game);
 
   // if card menu was open, close it and follow the game if it moved
@@ -753,7 +601,7 @@ async function confirmRename() {
 
   const success = await renameCartridge(game, newName);
   if (success) {
-    haptics.success().catch(() => {});
+    haptics.success().catch(() => { });
     console.log(`[library] renamed via modal -> ${newName}`);
     // find new index
     const reFound = displayGames.value.find(
@@ -774,7 +622,7 @@ async function handleDelete(game, event) {
     // action
     const success = await removeCartridge(game.filename);
     // feedback
-    haptics.success().catch(() => {});
+    haptics.success().catch(() => { });
     if (success) closeCardMenu();
   }
 }
@@ -783,7 +631,7 @@ const formatDate = (ms) => new Date(ms).toLocaleDateString();
 
 async function openGame(game) {
   if (deleteMode.value) return;
-  haptics.impact(ImpactStyle.Light).catch(() => {});
+  haptics.impact(ImpactStyle.Light).catch(() => { });
   await libraryManager.updateLastPlayed(game.filename);
   router.push({ name: "player", query: { cart: game.filename } });
 }
@@ -860,6 +708,10 @@ const handleGamepadInput = (action) => {
         pickAndroidDirectory();
       }
     },
+    onWiggleInGrid: () => {
+      const game = displayGames.value[focusedIndex.value];
+      if (game) openCardMenu(game);
+    },
   });
 };
 
@@ -890,6 +742,7 @@ const scrollToTop = () => {
   transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
   transition-delay: calc(var(--index) * 50ms);
 }
+
 .staggered-fade-leave-active {
   transition: all 0.3s ease;
 }
@@ -906,11 +759,13 @@ const scrollToTop = () => {
 .list-leave-active {
   transition: all 0.3s ease;
 }
+
 .list-enter-from,
 .list-leave-to {
   opacity: 0;
   transform: scale(0.9);
 }
+
 .list-leave-active {
   position: absolute;
 }
@@ -919,6 +774,7 @@ const scrollToTop = () => {
 ::-webkit-scrollbar {
   width: 6px;
 }
+
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
@@ -929,12 +785,15 @@ const scrollToTop = () => {
   0% {
     transform: rotate(0deg);
   }
+
   25% {
     transform: rotate(-0.5deg);
   }
+
   75% {
     transform: rotate(0.5deg);
   }
+
   100% {
     transform: rotate(0deg);
   }

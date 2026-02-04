@@ -23,9 +23,16 @@ export function useFocusable({
   };
 
   const scrollToFocused = () => {
-    const el = itemRefs.value[focusedIndex.value];
+    let el = itemRefs.value[focusedIndex.value];
     if (el) {
-      el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      // If el is a component instance, get the root element
+      if (el.$el) {
+        el = el.$el;
+      }
+      // Check if scrollIntoView exists before calling
+      if (el && el.scrollIntoView) {
+        el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
     }
   };
 
@@ -122,7 +129,7 @@ export function useFocusable({
       if (focusedIndex.value >= newLen) {
         focusedIndex.value = Math.max(-1, newLen - 1);
       }
-    }
+    },
   );
 
   return {

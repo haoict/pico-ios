@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch } from "vue";
 
 /**
  * Unified navigation composable for Library view
@@ -11,7 +11,6 @@ export function useLibraryNavigation({
   searchQuery,
   games,
   displayGames,
-  focusedIndex,
   cardMenuGameId,
   showRenameModal,
   deleteMode,
@@ -29,13 +28,13 @@ export function useLibraryNavigation({
     // Bottom row (search and sort)
     0: {
       up: 2,
-      down: 'grid',
+      down: "grid",
       left: 1,
       right: 1,
     },
     1: {
       up: 4,
-      down: 'grid',
+      down: "grid",
       left: 0,
       right: 0,
     },
@@ -80,7 +79,7 @@ export function useLibraryNavigation({
 
     // Debounce check for entering header
     if (Date.now() - headerEntryTime.value < 250) {
-      if (['nav-up', 'nav-down', 'nav-left', 'nav-right'].includes(direction)) {
+      if (["nav-up", "nav-down", "nav-left", "nav-right"].includes(direction)) {
         return false;
       }
     }
@@ -92,12 +91,11 @@ export function useLibraryNavigation({
     if (!mapping) return false;
 
     let didTransition = false;
-    const targetDir = direction.replace('nav-', '');
+    const targetDir = direction.replace("nav-", "");
 
     if (mapping[targetDir]) {
-      if (mapping[targetDir] === 'grid') {
-        // Transition to grid
-        focusedIndex.value = 0;
+      if (mapping[targetDir] === "grid") {
+        // Transition to grid - caller should set focusedIndex
         headerFocusIndex.value = -1;
       } else {
         // Move within header
@@ -120,15 +118,15 @@ export function useLibraryNavigation({
     headerFocusIndex.value = index;
     headerEntryTime.value = Date.now();
     lockTransition(250);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   /**
    * Exit header and return to grid
+   * Caller should set focusedIndex to 0
    */
   const exitHeader = () => {
     headerFocusIndex.value = -1;
-    focusedIndex.value = 0;
     lockTransition(250);
   };
 
@@ -138,20 +136,20 @@ export function useLibraryNavigation({
   const handleSortNav = (action) => {
     if (isTransitioning.value) return;
 
-    if (action === 'nav-down' || action === 'ArrowDown') {
+    if (action === "nav-down" || action === "ArrowDown") {
       const idx = sortOptions.findIndex((o) => o.value === sortBy.value);
       const next = (idx + 1) % sortOptions.length;
       sortBy.value = sortOptions[next].value;
-    } else if (action === 'nav-up' || action === 'ArrowUp') {
+    } else if (action === "nav-up" || action === "ArrowUp") {
       const idx = sortOptions.findIndex((o) => o.value === sortBy.value);
       const prev = (idx - 1 + sortOptions.length) % sortOptions.length;
       sortBy.value = sortOptions[prev].value;
-    } else if (action === 'confirm' || action === 'Enter') {
+    } else if (action === "confirm" || action === "Enter") {
       sortDropdownOpen.value = false;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       exitHeader();
       lockTransition(350);
-    } else if (['back', 'Escape', 'menu', 'wiggle'].includes(action)) {
+    } else if (["back", "Escape", "menu", "wiggle"].includes(action)) {
       sortDropdownOpen.value = false;
       exitHeader();
       if (document.activeElement) document.activeElement.blur();
@@ -163,13 +161,13 @@ export function useLibraryNavigation({
    * Handle card menu navigation
    */
   const navigateCardMenu = (action) => {
-    if (action === 'nav-left') {
+    if (action === "nav-left") {
       if (cardMenuBtnIndex.value === 0) cardMenuBtnIndex.value = 1;
-    } else if (action === 'nav-right') {
+    } else if (action === "nav-right") {
       if (cardMenuBtnIndex.value === 1) cardMenuBtnIndex.value = 0;
-    } else if (action === 'nav-down') {
+    } else if (action === "nav-down") {
       if (cardMenuBtnIndex.value !== 2) cardMenuBtnIndex.value = 2;
-    } else if (action === 'nav-up') {
+    } else if (action === "nav-up") {
       if (cardMenuBtnIndex.value === 2) cardMenuBtnIndex.value = 0;
     }
   };
@@ -198,12 +196,12 @@ export function useLibraryNavigation({
     if (headerFocusIndex.value === -1) return false;
     if (isTransitioning.value) return false;
 
-    const isInput = document.activeElement?.tagName === 'INPUT';
+    const isInput = document.activeElement?.tagName === "INPUT";
     if (!isInput) return false;
 
     // If sort dropdown is open, input manager handles it
     if (sortDropdownOpen.value) {
-      if (['ArrowUp', 'ArrowDown', 'Enter', 'Escape'].includes(e.key)) {
+      if (["ArrowUp", "ArrowDown", "Enter", "Escape"].includes(e.key)) {
         e.preventDefault();
         e.stopImmediatePropagation();
       }
@@ -212,7 +210,7 @@ export function useLibraryNavigation({
 
     // Debounce check
     if (Date.now() - headerEntryTime.value < 250) {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
         e.preventDefault();
         e.stopImmediatePropagation();
         return true;
@@ -221,14 +219,14 @@ export function useLibraryNavigation({
 
     // Allow typing keys
     if (
-      e.key !== 'Escape' &&
-      e.key !== 'Enter' &&
-      !['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)
+      e.key !== "Escape" &&
+      e.key !== "Enter" &&
+      !["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)
     ) {
       return false;
     }
 
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       document.activeElement.blur();
       e.preventDefault();
       e.stopImmediatePropagation();
@@ -237,20 +235,20 @@ export function useLibraryNavigation({
 
     let didHandle = false;
 
-    if (e.key === 'ArrowDown') {
+    if (e.key === "ArrowDown") {
       e.preventDefault();
       e.stopImmediatePropagation();
       exitHeader();
       e.target.blur();
       didHandle = true;
-    } else if (e.key === 'ArrowUp') {
+    } else if (e.key === "ArrowUp") {
       e.preventDefault();
       e.stopImmediatePropagation();
       headerFocusIndex.value = 2; // search -> import
       e.target.blur();
       lockTransition(250);
       didHandle = true;
-    } else if (e.key === 'ArrowRight') {
+    } else if (e.key === "ArrowRight") {
       if (e.target.selectionStart < e.target.value.length) return false;
       e.preventDefault();
       e.stopImmediatePropagation();
@@ -258,7 +256,7 @@ export function useLibraryNavigation({
       e.target.blur();
       lockTransition(250);
       didHandle = true;
-    } else if (e.key === 'ArrowLeft') {
+    } else if (e.key === "ArrowLeft") {
       if (e.target.selectionStart > 0) return false;
       e.preventDefault();
       e.stopImmediatePropagation();
@@ -279,27 +277,27 @@ export function useLibraryNavigation({
 
     let handled = false;
 
-    if (e.key === 'ArrowLeft') {
+    if (e.key === "ArrowLeft") {
       e.preventDefault();
       e.stopImmediatePropagation();
       if (cardMenuBtnIndex.value === 0) cardMenuBtnIndex.value = 1;
       handled = true;
-    } else if (e.key === 'ArrowRight') {
+    } else if (e.key === "ArrowRight") {
       e.preventDefault();
       e.stopImmediatePropagation();
       if (cardMenuBtnIndex.value === 1) cardMenuBtnIndex.value = 0;
       handled = true;
-    } else if (e.key === 'ArrowDown') {
+    } else if (e.key === "ArrowDown") {
       e.preventDefault();
       e.stopImmediatePropagation();
       if (cardMenuBtnIndex.value !== 2) cardMenuBtnIndex.value = 2;
       handled = true;
-    } else if (e.key === 'ArrowUp') {
+    } else if (e.key === "ArrowUp") {
       e.preventDefault();
       e.stopImmediatePropagation();
       if (cardMenuBtnIndex.value === 2) cardMenuBtnIndex.value = 0;
       handled = true;
-    } else if (['Escape', 'Backspace', 'b', 'B'].includes(e.key)) {
+    } else if (["Escape", "Backspace", "b", "B"].includes(e.key)) {
       e.preventDefault();
       e.stopImmediatePropagation();
       closeCardMenu();
@@ -315,7 +313,7 @@ export function useLibraryNavigation({
   const routeGamepadInput = (action, callbacks) => {
     if (showRenameModal.value) return;
 
-    const isTyping = document.activeElement?.tagName === 'INPUT';
+    const isTyping = document.activeElement?.tagName === "INPUT";
 
     // Global: trap sort dropdown
     if (sortDropdownOpen.value) {
@@ -325,28 +323,27 @@ export function useLibraryNavigation({
 
     // Handle typing mode
     if (isTyping) {
-      if (action === 'nav-down') {
+      if (action === "nav-down") {
         if (headerFocusIndex.value !== -1) {
           navigateHeader(action);
         }
-      } else if (action === 'wiggle' || action === 'back') {
+      } else if (action === "wiggle" || action === "back") {
         document.activeElement.blur();
       }
       return;
     }
 
     // Global shortcuts
-    if (action === 'wiggle') {
+    if (action === "wiggle") {
       if (cardMenuGameId.value) {
         closeCardMenu();
-      } else if (headerFocusIndex.value === -1) {
-        const game = displayGames.value[focusedIndex.value];
-        if (game) openCardMenu(game);
+      } else if (headerFocusIndex.value === -1 && callbacks.onWiggleInGrid) {
+        callbacks.onWiggleInGrid();
       }
       return;
     }
 
-    if (action === 'back') {
+    if (action === "back") {
       // Priority stack
       if (cardMenuGameId.value) {
         closeCardMenu();
@@ -366,8 +363,10 @@ export function useLibraryNavigation({
     // Delegate to active layer
     if (cardMenuGameId.value) {
       navigateCardMenu(action);
-      if (action === 'confirm' && callbacks.onCardMenuConfirm) {
-        const game = games.value.find((g) => g.filename === cardMenuGameId.value);
+      if (action === "confirm" && callbacks.onCardMenuConfirm) {
+        const game = games.value.find(
+          (g) => g.filename === cardMenuGameId.value,
+        );
         if (game) {
           callbacks.onCardMenuConfirm(game, cardMenuBtnIndex.value);
         }
@@ -377,9 +376,9 @@ export function useLibraryNavigation({
 
     if (headerFocusIndex.value !== -1) {
       // Header navigation
-      if (['nav-up', 'nav-down', 'nav-left', 'nav-right'].includes(action)) {
+      if (["nav-up", "nav-down", "nav-left", "nav-right"].includes(action)) {
         navigateHeader(action);
-      } else if (action === 'confirm' || action === 'menu') {
+      } else if (action === "confirm" || action === "menu") {
         if (headerFocusIndex.value === 1) {
           sortDropdownOpen.value = !sortDropdownOpen.value;
         } else if (callbacks.onHeaderAction) {
@@ -391,7 +390,7 @@ export function useLibraryNavigation({
 
     // Grid layer - handled by useFocusable
     // But we need to handle empty state
-    if (action === 'confirm' && callbacks.onEmptyStateConfirm) {
+    if (action === "confirm" && callbacks.onEmptyStateConfirm) {
       if (displayGames.value.length === 0) {
         callbacks.onEmptyStateConfirm();
       }
@@ -403,7 +402,7 @@ export function useLibraryNavigation({
    */
   watch(headerFocusIndex, (newVal) => {
     if (newVal !== -1) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   });
 

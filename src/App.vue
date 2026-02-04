@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="antialiased min-h-screen bg-oled-dark text-white selection:bg-purple-500 selection:text-white"
-  >
+  <div class="antialiased min-h-screen bg-oled-dark text-white selection:bg-purple-500 selection:text-white">
     <!-- global background effects -->
     <div v-if="isCheckingEngine" class="fixed inset-0 bg-black z-50"></div>
 
@@ -15,10 +13,8 @@
 
     <!-- global dynamic island toast -->
     <Transition name="slide-down">
-      <div
-        v-if="toast.isVisible.value"
-        class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-8 py-3 min-w-[280px] rounded-full shadow-2xl backdrop-blur-md bg-neutral-900/90 border border-white/10 !pointer-events-none text-center"
-      >
+      <div v-if="toast.isVisible.value"
+        class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-8 py-3 min-w-[280px] rounded-full shadow-2xl backdrop-blur-md bg-neutral-900/90 border border-white/10 !pointer-events-none text-center">
         <span class="text-white font-medium text-sm tracking-wide">{{
           toast.message.value
         }}</span>
@@ -223,6 +219,7 @@ onUnmounted(() => {
   opacity: 0;
   transform: translate(-50%, -150%);
 }
+
 .app-root {
   min-height: 100vh;
 }

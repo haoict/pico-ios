@@ -1,73 +1,49 @@
 <template>
-  <div
-    v-if="isOpen"
-    class="fixed inset-0 z-[80] flex justify-end pointer-events-none"
-  >
+  <div v-if="isOpen" class="fixed inset-0 z-[80] flex justify-end pointer-events-none">
     <!-- drawer container -->
     <div
-      class="pointer-events-auto w-screen h-screen md:w-full md:max-w-sm md:h-full bg-[#111]/90 backdrop-blur-3xl saturate-150 border-l border-white/10 flex flex-col shadow-2xl transition-transform duration-300 transform slide-in-right"
-    >
+      class="pointer-events-auto w-screen h-screen md:w-full md:max-w-sm md:h-full bg-[#111]/90 backdrop-blur-3xl saturate-150 border-l border-white/10 flex flex-col shadow-2xl transition-transform duration-300 transform slide-in-right">
       <!-- header -->
       <div
-        class="flex items-center justify-between px-6 pb-4 border-b border-white/10 bg-white/5 pt-[calc(env(safe-area-inset-top)+1rem)]"
-      >
+        class="flex items-center justify-between px-6 pb-4 border-b border-white/10 bg-white/5 pt-[calc(env(safe-area-inset-top)+1rem)]">
         <h2 class="text-white font-pico-crisp text-lg drop-shadow-md">SAVES</h2>
-        <button
-          @click="closeDrawer"
-          class="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 active:bg-white/20 text-white/60 hover:text-white transition-colors"
-        >
+        <button @click="closeDrawer"
+          class="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 active:bg-white/20 text-white/60 hover:text-white transition-colors">
           ✕
         </button>
       </div>
 
       <!-- content -->
       <div class="flex-1 overflow-y-auto overscroll-contain p-4 safe-pb">
-        <div
-          v-if="loading"
-          class="flex flex-col items-center justify-center py-12 gap-3"
-        >
-          <div
-            class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"
-          ></div>
+        <div v-if="loading" class="flex flex-col items-center justify-center py-12 gap-3">
+          <div class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
           <span class="text-xs text-white/40 tracking-widest">SCANNING...</span>
         </div>
 
-        <div
-          v-else-if="saves.length === 0"
-          class="flex flex-col items-center justify-center py-12 gap-3 text-white/30"
-        >
+        <div v-else-if="saves.length === 0" class="flex flex-col items-center justify-center py-12 gap-3 text-white/30">
           <span class="text-4xl">💾</span>
           <span class="text-xs font-mono">NO SAVE FILES</span>
         </div>
 
         <div v-else class="flex flex-col gap-2">
-          <div
-            v-for="(save, index) in saves"
-            :key="save.name"
-            :ref="(el) => (saveItemsRef[index] = el)"
+          <div v-for="(save, index) in saves" :key="save.name" :ref="(el) => (saveItemsRef[index] = el)"
             @click="loadSave(save.name)"
             class="group relative bg-white/5 hover:bg-white/10 active:scale-[0.98] transition-all rounded-xl p-3 border border-white/5 hover:border-white/20 cursor-pointer overflow-hidden"
             :class="{
               '!bg-white/20 !border-white/40 ring-2 ring-white/50':
                 focusedIndex === index,
-            }"
-          >
+            }">
             <!-- save icon & info -->
             <div class="flex items-start gap-3">
               <div
-                class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-white/10 shrink-0"
-              >
+                class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-white/10 shrink-0">
                 <span class="text-xl">💾</span>
               </div>
               <div class="flex-1 min-w-0">
-                <h3
-                  class="text-white font-medium text-sm truncate font-pico leading-tight mb-1"
-                >
+                <h3 class="text-white font-medium text-sm truncate font-pico leading-tight mb-1">
                   {{ save.name.replace(".state", "").replace(/_/g, " ") }}
                 </h3>
-                <div
-                  class="flex items-center gap-2 text-[10px] text-white/40 font-mono"
-                >
+                <div class="flex items-center gap-2 text-[10px] text-white/40 font-mono">
                   <span>{{ formatSize(save.size) }}</span>
                   <span>•</span>
                   <span>{{ formatDate(save.mtime) }}</span>
@@ -77,8 +53,7 @@
 
             <!-- chevron -->
             <div
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 group-hover:text-white/40 group-hover:translate-x-1 transition-all"
-            >
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 group-hover:text-white/40 group-hover:translate-x-1 transition-all">
               ›
             </div>
           </div>
@@ -89,11 +64,7 @@
 
   <!-- overlay backdrop -->
   <Transition name="fade">
-    <div
-      v-if="isOpen"
-      @click="closeDrawer"
-      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-    ></div>
+    <div v-if="isOpen" @click="closeDrawer" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"></div>
   </Transition>
 </template>
 
@@ -111,7 +82,7 @@ const loading = ref(false);
 
 const closeDrawer = () => {
   emit("close");
-  haptics.impact(ImpactStyle.Light).catch(() => {});
+  haptics.impact(ImpactStyle.Light).catch(() => { });
 };
 
 const refreshSaves = async () => {
@@ -166,7 +137,7 @@ const saveItemsRef = ref([]);
 const inputCleanup = ref(null);
 
 const loadSave = (filename) => {
-  haptics.impact(ImpactStyle.Medium).catch(() => {});
+  haptics.impact(ImpactStyle.Medium).catch(() => { });
   console.log("⚡️ [Drawer] Selected:", filename);
   emit("load", filename);
   emit("close");
@@ -187,12 +158,12 @@ const handleInput = (action) => {
   if (action === "nav-down") {
     focusedIndex.value = (focusedIndex.value + 1) % saves.value.length;
     scrollToFocused();
-    haptics.impact(ImpactStyle.Light).catch(() => {});
+    haptics.impact(ImpactStyle.Light).catch(() => { });
   } else if (action === "nav-up") {
     focusedIndex.value =
       (focusedIndex.value - 1 + saves.value.length) % saves.value.length;
     scrollToFocused();
-    haptics.impact(ImpactStyle.Light).catch(() => {});
+    haptics.impact(ImpactStyle.Light).catch(() => { });
   } else if (action === "confirm") {
     if (focusedIndex.value >= 0 && saves.value[focusedIndex.value]) {
       loadSave(saves.value[focusedIndex.value].name);
@@ -269,6 +240,7 @@ const formatDate = (ms) =>
   from {
     transform: translateX(100%);
   }
+
   to {
     transform: translateX(0);
   }
