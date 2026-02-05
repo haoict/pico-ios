@@ -5,7 +5,7 @@
     @mouseleave.prevent="handleTouchEnd">
     <div
       class="portrait-layout absolute inset-0 flex flex-col z-10 pointer-events-none pb-[max(env(safe-area-inset-bottom),20px)]">
-      <div class="flex-grow"></div>
+      <div :class="isWeb ? 'mt-4' : 'flex-grow'"></div>
 
       <div
         class="flex flex-row items-center justify-between px-6 w-full max-w-[480px] min-[600px]:max-w-none min-[600px]:px-16 mx-auto flex-shrink-0">
@@ -60,7 +60,7 @@
           ]">
             <span
               class="text-white font-bold font-pico absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[clamp(1.5rem,5vw,2.25rem)]">{{
-              btn1.label }}</span>
+                btn1.label }}</span>
           </div>
           <!-- button 2 (bottom left) -->
           <div ref="btn2Ref" class="absolute bottom-[2%] left-[2%] w-[48%] h-[48%] rounded-full shadow-lg border"
@@ -72,14 +72,15 @@
             ]">
             <span
               class="text-white font-bold font-pico absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[clamp(1.5rem,5vw,2.25rem)]">{{
-              btn2.label }}</span>
+                btn2.label }}</span>
           </div>
         </div>
       </div>
 
       <!-- start / select (bottom center) -->
       <div
-        class="w-full flex justify-center pb-4 mt-12 pointer-events-auto gap-8 min-[850px]:mt-20 transition-[margin] duration-300">
+        class="w-full flex justify-center pb-4 mt-12 pointer-events-auto gap-8 min-[850px]:mt-20 transition-[margin] duration-300"
+        :class="{ 'mt-4': isWeb }">
         <button class="flex flex-col items-center gap-1" @click="openMenu" @touchstart.stop.prevent="openMenu">
           <div class="w-12 h-4 rounded-full bg-white/20 border border-white/10 shadow-sm -rotate-12"></div>
           <span class="text-[10px] font-bold text-white/50 tracking-widest">SELECT</span>
@@ -152,7 +153,7 @@
             ]">
             <span
               class="text-white font-bold font-pico select-none text-[min(2.5rem,8vmin)] translate-x-[2px] -translate-y-[2px]">{{
-              btn1.label }}</span>
+                btn1.label }}</span>
           </div>
           <!-- button 2 (bottom left) -->
           <div ref="btn2RefLS"
@@ -165,7 +166,7 @@
             ]">
             <span
               class="text-white font-bold font-pico select-none text-[min(2.5rem,8vmin)] translate-x-[2px] -translate-y-[2px]">{{
-              btn2.label }}</span>
+                btn2.label }}</span>
           </div>
         </div>
 
@@ -188,6 +189,9 @@ import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
 import { useLibraryStore } from "../stores/library";
 import { storeToRefs } from "pinia";
 
+const isWeb = computed(() => {
+  return window.Capacitor.getPlatform() === "web";
+});
 // # store access
 const libraryStore = useLibraryStore();
 const { swapButtons, useJoystick } = storeToRefs(libraryStore);

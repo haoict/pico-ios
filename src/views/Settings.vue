@@ -230,9 +230,21 @@ const dangerItems = computed(() => {
     action: async () => {
       if (confirm("DANGER: This will delete ALL internal cartridges and reset everything. Are you sure?")) {
         await libraryStore.resetLibrary(true);
-        showToast("Factory Reset Complete");
+        localStorage.clear();
+        if ('serviceWorker' in navigator) {
+          caches.keys().then(function(cacheNames) {
+            cacheNames.forEach(function(cacheName) {
+              caches.delete(cacheName);
+            });
+          });
+        }
+        showToast("Factory Reset Complete. Restarting...");
         haptics.success();
         router.push("/");
+        // reload page
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
       }
     },
   });

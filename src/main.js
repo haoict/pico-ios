@@ -19,3 +19,17 @@ if (window.location.search.includes("boot")) {
     query: Object.fromEntries(new URLSearchParams(window.location.search)),
   });
 }
+
+// Register service worker for PWA on web platform
+if ('serviceWorker' in navigator && window.Capacitor && window.Capacitor.getPlatform() === 'web') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/service-worker.js')
+      .then(registration => {
+        console.log('[PWA] Service Worker registered:', registration.scope);
+      })
+      .catch(error => {
+        console.log('[PWA] Service Worker registration failed:', error);
+      });
+  });
+}

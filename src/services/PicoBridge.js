@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { haptics } from "../utils/haptics";
 import { EngineLoader } from "../utils/EngineLoader";
@@ -69,6 +70,8 @@ class Pico8Bridge {
     // regardless of what the user called it (e.g. "My Game.p8.png")
     const safeCartName = "cart.png";
     window._cartname = [safeCartName];
+
+    window.pico8_is_web = Capacitor.getPlatform() === "web";
 
     // configure emscripten module
     window.Module = {
@@ -626,6 +629,7 @@ class Pico8Bridge {
         path: finalPath,
         data: b64,
         directory: dir,
+        encoding: platform === "web" ? Encoding.Base64 : undefined,
         recursive: true,
       });
 

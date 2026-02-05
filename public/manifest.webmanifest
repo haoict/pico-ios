@@ -1,4 +1,13 @@
 {
+  "name": "Pocket8 - PICO-8 Companion",
+  "short_name": "Pocket8",
+  "description": "Play PICO-8 games in your browser. Import cartridges, manage save states, and enjoy retro gaming anywhere.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "categories": ["games", "entertainment"],
   "icons": [
     {
       "src": "../icons/icon-48.webp",

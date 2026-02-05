@@ -501,9 +501,18 @@ export class LibraryManager {
           if (game.cover) return; // already has a URI
 
           try {
+            if (Capacitor.getPlatform() === "web") {
+              // read file from IndexedDB and convert to base64 data URI
+              const r = await Filesystem.readFile({
+                path: `${CARTS_DIR}/${game.filename}`,
+                directory: getAppDataDir(),
+                encoding: Encoding.Base64,
+              });
+              game.cover = `data:image/png;base64,${r.data}`;
+              return;
+            }
             // ios: cart itself is the image
-            const isIOS = Capacitor.getPlatform() === "ios";
-            if (isIOS) {
+            else if (Capacitor.getPlatform() === "ios") {
               // resolve direct path to cart file
               const cartPath = this.resolvePath(
                 `${CARTS_DIR}/${game.filename}`,
@@ -587,6 +596,7 @@ export class LibraryManager {
                     path: cachePath,
                     data: base64Data,
                     directory: getAppDataDir(),
+                    encoding: Capacitor.getPlatform() === "web" ? Encoding.Base64 : undefined,
                     recursive: true, // ensure cache folder exists if deleted
                   });
                   const stat = await Filesystem.getUri({
@@ -857,6 +867,7 @@ export class LibraryManager {
         path: this.resolvePath(`${CARTS_DIR}/${file.name}`), // use updated file.name
         data: file.data,
         directory: getAppDataDir(),
+        encoding: Capacitor.getPlatform() === "web" ? Encoding.Base64 : undefined,
       });
 
       if (file === leader) {
@@ -953,6 +964,7 @@ export class LibraryManager {
         const res = await Filesystem.readFile({
           path: this.resolvePath(`${CARTS_DIR}/${game.filename}`),
           directory: getAppDataDir(),
+          encoding: Capacitor.getPlatform() === "web" ? Encoding.Base64 : undefined,
         });
         return res.data; // base64
       } catch (e) {
@@ -1128,7 +1140,7 @@ export class LibraryManager {
         console.log(
           `[LibraryManager] cart_url missing, trying to find cartridge link on forum post page ${game.source_page_url}...`,
         );
-        const pageRes = await fetch(game.source_page_url);
+        const pageRes = await fetch(Capacitor.getPlatform() === "web" ? "https://nomorecors.hao.sach.chat/" + game.source_page_url : game.source_page_url);
         const pageHtml = await pageRes.text();
         const cart_found = pageHtml.match(
           /Module\.arguments\s*=\s*\[\s*["']([^"']+)["']/i,
@@ -1148,7 +1160,7 @@ export class LibraryManager {
       }
       fileName = fileName.toLowerCase();
 
-      const response = await fetch(downloadUrl, {
+      const response = await fetch(Capacitor.getPlatform() === "web" ? "https://nomorecors.hao.sach.chat/" + downloadUrl : downloadUrl, {
         headers: {
           Accept: "image/png,image/*;q=0.8",
         },
@@ -1242,6 +1254,18 @@ export class LibraryManager {
         });
         await Filesystem.mkdir({
           path: this.resolvePath(CARTS_DIR),
+          recursive: true,
+          directory: getAppDataDir(),
+        });
+
+        // delete saves content
+        await Filesystem.rmdir({
+          path: this.resolvePath(SAVES_DIR),
+          recursive: true,
+          directory: getAppDataDir(),
+        });
+        await Filesystem.mkdir({
+          path: this.resolvePath(SAVES_DIR),
           recursive: true,
           directory: getAppDataDir(),
         });

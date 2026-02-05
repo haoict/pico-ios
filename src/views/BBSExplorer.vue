@@ -231,6 +231,7 @@ import { Browser } from "@capacitor/browser";
 import { useLibraryStore } from "../stores/library";
 import { useToast } from "../composables/useToast";
 import { libraryManager } from "../services/LibraryManager";
+import { Capacitor } from "@capacitor/core";
 
 const router = useRouter();
 const libraryStore = useLibraryStore();
@@ -438,7 +439,7 @@ async function searchGames(options) {
 
 async function scrapeGames(targetUrl) {
   console.log(`[bbs_explorer] 🔎 [WebScraper] SEARCHING URL: ${targetUrl}`);
-  const response = await fetch(targetUrl);
+  const response = await fetch(Capacitor.getPlatform() === "web" ? "https://nomorecors.hao.sach.chat/" + targetUrl : targetUrl);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const html = await response.text();
   return parseHTML(html);

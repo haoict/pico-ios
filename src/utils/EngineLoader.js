@@ -1,5 +1,6 @@
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { libraryManager } from "../services/LibraryManager";
+import { Capacitor } from "@capacitor/core";
 
 export const DEFAULT_BIOS_URL = "https://www.lexaloffle.com/play/pico8_0207.js";
 
@@ -14,6 +15,9 @@ console.log("⚡️ [PicoBridge] Module.readAsync url: " + url);
 if (url.startsWith("/bbs/")) {
   // Download from BBS server, this case is used for multicart cartridges (for example: adventcalendar2025: https://www.lexaloffle.com/bbs/cposts/ad/advent2025-41.p8.png)
   url = "https://www.lexaloffle.com" + url;
+  if (window.pico8_is_web) {
+    url = "https://nomorecors.hao.sach.chat/" + url;
+  }
 } else if (typeof FS !== "undefined") {
   try {
     var path = url.startsWith("/") ? url : "/" + url;
@@ -88,9 +92,8 @@ export const EngineLoader = {
     }
   },
   downloadAndInstall: async (url = DEFAULT_BIOS_URL) => {
-    // Download the BIOS file from the specified URL
     console.log("[EngineLoader] Downloading BIOS from:", url);
-    const response = await fetch(url);
+    const response = await fetch(Capacitor.getPlatform() === "web" ? "https://nomorecors.hao.sach.chat/" + url : url);
     if (!response.ok) {
       throw new Error("Failed to download BIOS file");
     }
@@ -116,10 +119,9 @@ export const EngineLoader = {
     }
 
     // Ensure BIOS directory exists
-    const biosPath = libraryManager.resolvePath("BIOS");
     try {
       await Filesystem.mkdir({
-        path: biosPath,
+        path: libraryManager.resolvePath("BIOS"),
         directory: Directory.Documents,
         recursive: true,
       });

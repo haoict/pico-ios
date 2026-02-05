@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { libraryManager } from "../services/LibraryManager";
@@ -14,11 +15,11 @@ export const useLibraryStore = defineStore("library", () => {
   const sortBy = ref("lastPlayed"); // 'lastPlayed', 'name'
   const swapButtons = ref(localStorage.getItem("pico_swap_buttons") === "true");
   const useJoystick = ref(
-    localStorage.getItem("pico_use_joystick") !== "false",
-  ); // default true
+    Capacitor.getPlatform() === "web" ? (localStorage.getItem("pico_use_joystick") === true) : (localStorage.getItem("pico_use_joystick") !== "false"),
+  ); // default true if native
   const hapticsEnabled = ref(
-    localStorage.getItem("pico_haptics_enabled") !== "false",
-  ); // default true
+    Capacitor.getPlatform() === "web" ? (localStorage.getItem("pico_haptics_enabled") === true) : (localStorage.getItem("pico_haptics_enabled") !== "false"),
+  ); // default true if native
   const rootDir = ref(localStorage.getItem("pico_root_dir") || "");
 
   const toggleSwapButtons = () => {

@@ -1,7 +1,8 @@
 <template>
   <!-- main layout: flex column for portrait, overlay for landscape -->
   <div
-    class="relative h-screen w-screen overflow-hidden bg-black select-none flex flex-col landscape:flex-row landscape:items-stretch portrait:pt-[max(env(safe-area-inset-top),30px)] touch-none overscroll-none">
+    class="relative h-screen w-screen overflow-hidden bg-black select-none flex flex-col landscape:flex-row landscape:items-stretch touch-none overscroll-none"
+    :class="{ 'portrait:pt-[max(env(safe-area-inset-top),30px)]': !isWeb }">
     <!-- game zone -->
     <div
       class="game-zone flex-none w-full aspect-square relative flex items-center justify-center overflow-hidden landscape:flex-1 landscape:aspect-[4/3] landscape:h-full landscape:w-auto landscape:max-w-full pointer-events-none z-10"
@@ -96,6 +97,9 @@ import { App } from "@capacitor/app";
 
 const { showToast } = useToast();
 const { fullscreen } = storeToRefs(useLibraryStore());
+const isWeb = computed(() => {
+  return window.Capacitor.getPlatform() === "web";
+});
 
 const activeCartName = ref(
   props.cartId === "boot" ? "boot" : props.cartId.replace(".p8.png", ""),
