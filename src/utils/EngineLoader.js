@@ -1,12 +1,12 @@
-import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
-import { libraryManager } from "../services/LibraryManager";
-import { Capacitor } from "@capacitor/core";
+import { Capacitor } from '@capacitor/core';
+import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
+import { libraryManager } from '../services/LibraryManager';
 
-export const DEFAULT_BIOS_URL = "https://www.lexaloffle.com/play/pico8_0207.js";
+export const DEFAULT_BIOS_URL = 'https://www.lexaloffle.com/play/pico8_0207.js';
 
 const BIOS_PATCHES = [
   {
-    name: "VFS Intercept Patch (from 2.0.6)",
+    name: 'VFS Intercept Patch (from 2.0.6)',
     mandatory: true,
     old: `Module["readAsync"]=function readAsync(url,onload,onerror){var xhr=new XMLHttpRequest;`,
     new: `Module["readAsync"]=function readAsync(url,onload,onerror){
@@ -40,62 +40,62 @@ export const EngineLoader = {
   inject: async () => {
     // load pico8_bios.js from BIOS/ directory
     try {
-      const biosPath = libraryManager.resolvePath("BIOS/pico8_bios.js");
+      const biosPath = libraryManager.resolvePath('BIOS/pico8_bios.js');
       const result = await Filesystem.readFile({
         path: biosPath,
         directory: Directory.Documents,
         encoding: Encoding.UTF8,
       });
 
-      const existing = document.getElementById("pico8-engine-script");
+      const existing = document.getElementById('pico8-engine-script');
       if (existing) existing.remove();
 
       // create blob URL from the bios content
-      const blob = new Blob([result.data], { type: "application/javascript" });
+      const blob = new Blob([result.data], { type: 'application/javascript' });
       const blobUrl = URL.createObjectURL(blob);
 
-      const script = document.createElement("script");
-      script.id = "pico8-engine-script";
+      const script = document.createElement('script');
+      script.id = 'pico8-engine-script';
       script.src = blobUrl;
       script.async = true;
       document.body.appendChild(script);
-      console.log("[EngineLoader] injected BIOS/pico8_bios.js from filesystem");
+      console.log('[EngineLoader] injected BIOS/pico8_bios.js from filesystem');
     } catch (e) {
-      console.error("[EngineLoader] Failed to load BIOS file:", e);
+      console.error('[EngineLoader] Failed to load BIOS file:', e);
       throw e;
     }
   },
   check: async () => {
     try {
-      const biosPath = libraryManager.resolvePath("BIOS/pico8_bios.js");
+      const biosPath = libraryManager.resolvePath('BIOS/pico8_bios.js');
       await Filesystem.stat({
         path: biosPath,
         directory: Directory.Documents,
       });
       return true;
     } catch (e) {
-      console.warn("[EngineLoader] Engine check failed:", e);
+      console.warn('[EngineLoader] Engine check failed:', e);
       return false;
     }
   },
   delete: async () => {
     try {
-      const biosPath = libraryManager.resolvePath("BIOS/pico8_bios.js");
+      const biosPath = libraryManager.resolvePath('BIOS/pico8_bios.js');
       await Filesystem.deleteFile({
         path: biosPath,
         directory: Directory.Documents,
       });
-      console.log("[EngineLoader] Removed BIOS/pico8_bios.js from filesystem");
+      console.log('[EngineLoader] Removed BIOS/pico8_bios.js from filesystem');
     } catch (e) {
-      console.error("[EngineLoader] Failed to remove BIOS file:", e.message);
+      console.error('[EngineLoader] Failed to remove BIOS file:', e.message);
       throw e;
     }
   },
   downloadAndInstall: async (url = DEFAULT_BIOS_URL) => {
-    console.log("[EngineLoader] Downloading BIOS from:", url);
-    const response = await fetch(Capacitor.getPlatform() === "web" ? "https://nomorecors.hao.sach.chat/" + url : url);
+    console.log('[EngineLoader] Downloading BIOS from:', url);
+    const response = await fetch(Capacitor.getPlatform() === 'web' ? 'https://nomorecors.hao.sach.chat/' + url : url);
     if (!response.ok) {
-      throw new Error("Failed to download BIOS file");
+      throw new Error('Failed to download BIOS file');
     }
 
     let text = await response.text();
@@ -105,9 +105,7 @@ export const EngineLoader = {
       const patternFound = text.includes(patch.old);
 
       if (patch.mandatory && !patternFound) {
-        throw new Error(
-          `[EngineLoader] Mandatory patch "${patch.name}" pattern not found. The BIOS file may be incompatible.`,
-        );
+        throw new Error(`[EngineLoader] Mandatory patch "${patch.name}" pattern not found. The BIOS file may be incompatible.`);
       }
 
       if (patternFound) {
@@ -121,7 +119,7 @@ export const EngineLoader = {
     // Ensure BIOS directory exists
     try {
       await Filesystem.mkdir({
-        path: libraryManager.resolvePath("BIOS"),
+        path: libraryManager.resolvePath('BIOS'),
         directory: Directory.Documents,
         recursive: true,
       });
@@ -131,14 +129,12 @@ export const EngineLoader = {
 
     // Save the patched BIOS file
     await Filesystem.writeFile({
-      path: libraryManager.resolvePath("BIOS/pico8_bios.js"),
+      path: libraryManager.resolvePath('BIOS/pico8_bios.js'),
       data: text,
       directory: Directory.Documents,
       encoding: Encoding.UTF8,
     });
 
-    console.log(
-      "[EngineLoader] Successfully installed BIOS to BIOS/pico8_bios.js",
-    );
+    console.log('[EngineLoader] Successfully installed BIOS to BIOS/pico8_bios.js');
   },
 };

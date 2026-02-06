@@ -1,11 +1,11 @@
-import { reactive, watch } from "vue";
-import { useLibraryStore } from "../stores/library";
-import { Capacitor } from "@capacitor/core";
+import { Capacitor } from '@capacitor/core';
+import { reactive, watch } from 'vue';
+import { useLibraryStore } from '../stores/library';
 
 class InputManagerService {
   constructor() {
     this.state = reactive({
-      inputMode: "UI", // 'UI' | 'GAME'
+      inputMode: 'UI', // 'UI' | 'GAME'
       active: false,
     });
 
@@ -47,7 +47,7 @@ class InputManagerService {
     // loop control
     this.pollInterval = null; // for setInterval
     this.swapButtons = false;
-    this.isAndroid = Capacitor.getPlatform() === "android";
+    this.isAndroid = Capacitor.getPlatform() === 'android';
     this._swapCooldown = 0;
 
     // keyboard state
@@ -55,7 +55,7 @@ class InputManagerService {
     this.boundKeyHandler = this.handleKey.bind(this);
 
     // pico-8 layout default (left=1, right=2, up=4, down=8, o=16, x=32)
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.pico8_buttons = window.pico8_buttons || [0, 0, 0, 0, 0, 0, 0, 0];
       // JIT Hook
       window.inputManager = this;
@@ -73,23 +73,23 @@ class InputManagerService {
     // watch store for swap changes (avoids polling store in loop)
     watch(
       () => store.swapButtons,
-      (newVal) => {
+      newVal => {
         const oldVal = this.swapButtons;
         this.swapButtons = newVal;
         console.log(`[input-manager] cached swapButtons updated: ${newVal}`);
 
-        if (this.state.inputMode === "UI" && newVal !== oldVal) {
-          this.lastButtonState["back"] = true;
-          this.lastButtonState["confirm"] = true;
+        if (this.state.inputMode === 'UI' && newVal !== oldVal) {
+          this.lastButtonState['back'] = true;
+          this.lastButtonState['confirm'] = true;
           this._swapCooldown = 5; // protect for 20ms
         }
       },
-      { flush: "sync" },
+      { flush: 'sync' },
     );
 
     // attach keyboard listeners
-    window.addEventListener("keydown", this.boundKeyHandler);
-    window.addEventListener("keyup", this.boundKeyHandler);
+    window.addEventListener('keydown', this.boundKeyHandler);
+    window.addEventListener('keyup', this.boundKeyHandler);
 
     if (this.pollInterval) clearInterval(this.pollInterval);
     this.pollInterval = setInterval(() => this.poll(), 4);
@@ -99,7 +99,7 @@ class InputManagerService {
     // JIT injection
     this.injectFrameHook();
 
-    console.log("[input-manager] initialized (JIT + Dual Loop mode)");
+    console.log('[input-manager] initialized (JIT + Dual Loop mode)');
   }
 
   // RAF Loop for general frame-based updates (if any)
@@ -129,7 +129,7 @@ class InputManagerService {
           return;
         }
 
-        console.log("[input-manager] Injecting JIT Frame Hook...");
+        console.log('[input-manager] Injecting JIT Frame Hook...');
         const originalDraw = window.Module.pico8draw;
 
         // monkey patch
@@ -144,7 +144,7 @@ class InputManagerService {
 
         window.Module._isHooked = true;
         clearInterval(hookInterval);
-        console.log("[input-manager] JIT Frame Hook ACTIVE");
+        console.log('[input-manager] JIT Frame Hook ACTIVE');
       }
 
       if (attempts > maxAttempts) {
@@ -167,35 +167,31 @@ class InputManagerService {
     if (!e.isTrusted) return;
 
     // prevent scrolling with arrows/space in game mode
-    const isInput =
-      document.activeElement?.tagName === "INPUT" ||
-      document.activeElement?.tagName === "TEXTAREA";
+    const isInput = document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA';
 
     // update key state tracking immediately
-    this.keys[e.key] = e.type === "keydown";
-    this.keys[e.code] = e.type === "keydown";
+    this.keys[e.key] = e.type === 'keydown';
+    this.keys[e.code] = e.type === 'keydown';
 
     // prevent escape (global)
-    if (e.code === "Escape") {
+    if (e.code === 'Escape') {
       e.preventDefault();
       e.stopImmediatePropagation();
     }
 
     // prevent backspace navigation (outside inputs)
-    if (e.code === "Backspace" && !isInput) {
+    if (e.code === 'Backspace' && !isInput) {
       e.preventDefault();
       e.stopImmediatePropagation();
     }
 
     // prevent space scrolling (outside inputs)
-    if (e.code === "Space" && !isInput) {
+    if (e.code === 'Space' && !isInput) {
       e.preventDefault();
     }
 
-    if (this.state.inputMode === "GAME" && !isInput) {
-      if (
-        ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)
-      ) {
+    if (this.state.inputMode === 'GAME' && !isInput) {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
         e.preventDefault();
       }
     }
@@ -206,35 +202,35 @@ class InputManagerService {
 
     // map keys to PICO-8 bits
     switch (e.code) {
-      case "ArrowLeft":
+      case 'ArrowLeft':
         bit = 1;
         break;
-      case "ArrowRight":
+      case 'ArrowRight':
         bit = 2;
         break;
-      case "ArrowUp":
+      case 'ArrowUp':
         bit = 4;
         break;
-      case "ArrowDown":
+      case 'ArrowDown':
         bit = 8;
         break;
-      case "KeyZ":
-      case "KeyC":
-      case "KeyN":
+      case 'KeyZ':
+      case 'KeyC':
+      case 'KeyN':
         bit = 16;
         break; // O
-      case "KeyX":
-      case "KeyV":
-      case "KeyM":
+      case 'KeyX':
+      case 'KeyV':
+      case 'KeyM':
         bit = 32;
         break; // X
-      case "Enter":
+      case 'Enter':
         bit = 64;
         break; // pause
     }
 
     if (bit > 0) {
-      if (e.type === "keydown") this._keyMask |= bit;
+      if (e.type === 'keydown') this._keyMask |= bit;
       else this._keyMask &= ~bit;
 
       // instant write: don't wait for poll loop
@@ -248,21 +244,21 @@ class InputManagerService {
       this.loopId = null;
     }
     if (this.pollInterval) clearInterval(this.pollInterval);
-    window.removeEventListener("keydown", this.boundKeyHandler);
-    window.removeEventListener("keyup", this.boundKeyHandler);
+    window.removeEventListener('keydown', this.boundKeyHandler);
+    window.removeEventListener('keyup', this.boundKeyHandler);
     this.state.active = false;
   }
 
   setVirtualKey(keyCode, pressed) {
     const map = {
-      37: "ArrowLeft",
-      38: "ArrowUp",
-      39: "ArrowRight",
-      40: "ArrowDown",
-      88: "x",
-      90: "z",
-      13: "Enter",
-      80: "p", // start
+      37: 'ArrowLeft',
+      38: 'ArrowUp',
+      39: 'ArrowRight',
+      40: 'ArrowDown',
+      88: 'x',
+      90: 'z',
+      13: 'Enter',
+      80: 'p', // start
     };
 
     const key = map[keyCode];
@@ -270,7 +266,7 @@ class InputManagerService {
       this.keys[key] = pressed;
     }
 
-    if (this.state.inputMode === "GAME") {
+    if (this.state.inputMode === 'GAME') {
       const bit = {
         37: 1, // left
         39: 2, // right
@@ -299,7 +295,7 @@ class InputManagerService {
   }
 
   setMode(mode) {
-    if (!["UI", "GAME"].includes(mode)) return;
+    if (!['UI', 'GAME'].includes(mode)) return;
 
     this.state.inputMode = mode;
 
@@ -316,7 +312,7 @@ class InputManagerService {
     };
 
     // reset virtual gamepad bits
-    if (mode === "UI") {
+    if (mode === 'UI') {
       if (window.pico8_buttons) window.pico8_buttons[0] = 0;
     }
   }
@@ -370,13 +366,13 @@ class InputManagerService {
     }
 
     // kb
-    if (this.keys["ArrowUp"]) buf.up = true;
-    if (this.keys["ArrowDown"]) buf.down = true;
-    if (this.keys["ArrowLeft"]) buf.left = true;
-    if (this.keys["ArrowRight"]) buf.right = true;
+    if (this.keys['ArrowUp']) buf.up = true;
+    if (this.keys['ArrowDown']) buf.down = true;
+    if (this.keys['ArrowLeft']) buf.left = true;
+    if (this.keys['ArrowRight']) buf.right = true;
 
     // GAME MODE
-    if (this.state.inputMode === "GAME") {
+    if (this.state.inputMode === 'GAME') {
       let gpMask = 0;
 
       // gamepad direction
@@ -403,27 +399,24 @@ class InputManagerService {
       this._gamepadMask = gpMask;
       this.syncState();
 
-      this.emitChange("menu", buf.select);
+      this.emitChange('menu', buf.select);
 
       if (window.pico8_gpio) {
-        const picoMenuRequested =
-          buf.start || this.keys["Enter"] || this.keys["p"] || this.keys["P"];
+        const picoMenuRequested = buf.start || this.keys['Enter'] || this.keys['p'] || this.keys['P'];
         window.pico8_gpio[0] = picoMenuRequested ? 1 : 0;
       }
     }
     // UI MODE
     else {
       // nav
-      const isTyping =
-        document.activeElement?.tagName === "INPUT" ||
-        document.activeElement?.tagName === "TEXTAREA";
+      const isTyping = document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA';
 
-      this.handleNavInput("nav-up", buf.up);
-      this.handleNavInput("nav-down", buf.down);
+      this.handleNavInput('nav-up', buf.up);
+      this.handleNavInput('nav-down', buf.down);
 
       if (!isTyping) {
-        this.handleNavInput("nav-left", buf.left);
-        this.handleNavInput("nav-right", buf.right);
+        this.handleNavInput('nav-left', buf.left);
+        this.handleNavInput('nav-right', buf.right);
       }
 
       // confirm / back
@@ -441,27 +434,20 @@ class InputManagerService {
 
       // keyboard (only when not typing)
       if (!isTyping) {
-        if (
-          this.keys["z"] ||
-          this.keys["Z"] ||
-          this.keys["Enter"] ||
-          this.keys[" "]
-        )
-          confirm = true;
-        if (this.keys["x"] || this.keys["X"] || this.keys["Escape"])
-          back = true;
+        if (this.keys['z'] || this.keys['Z'] || this.keys['Enter'] || this.keys[' ']) confirm = true;
+        if (this.keys['x'] || this.keys['X'] || this.keys['Escape']) back = true;
       }
 
-      this.emitChange("confirm", confirm);
-      this.emitChange("back", back);
+      this.emitChange('confirm', confirm);
+      this.emitChange('back', back);
 
       // edit mode (only when not typing)
       let wiggle = false;
       if (!isTyping) {
         if (buf.y) wiggle = true;
-        if (this.keys["e"] || this.keys["E"]) wiggle = true;
+        if (this.keys['e'] || this.keys['E']) wiggle = true;
       }
-      this.emitChange("wiggle", wiggle);
+      this.emitChange('wiggle', wiggle);
     }
   }
 
@@ -515,7 +501,7 @@ class InputManagerService {
       }
     } else {
       // protect against clearing state if we just swapped buttons in this frame
-      if (this._swapCooldown > 0 && (event === "back" || event === "confirm")) {
+      if (this._swapCooldown > 0 && (event === 'back' || event === 'confirm')) {
         return;
       }
       this.lastButtonState[event] = false;
@@ -523,15 +509,15 @@ class InputManagerService {
   }
 
   emit(eventName, data = null) {
-    this.listeners.forEach((listener) => listener(eventName, data));
+    this.listeners.forEach(listener => listener(eventName, data));
   }
 
   dispatchKey(keyCode, type) {
-    const keyMap = { 13: "Enter", 80: "p" };
-    const codeMap = { 13: "Enter", 80: "KeyP" };
+    const keyMap = { 13: 'Enter', 80: 'p' };
+    const codeMap = { 13: 'Enter', 80: 'KeyP' };
 
-    const key = keyMap[keyCode] || "";
-    const code = codeMap[keyCode] || "";
+    const key = keyMap[keyCode] || '';
+    const code = codeMap[keyCode] || '';
 
     const event = new KeyboardEvent(type, {
       key: key,
@@ -542,11 +528,11 @@ class InputManagerService {
     });
 
     // emscripten: define property for read-only fields
-    Object.defineProperty(event, "keyCode", { get: () => keyCode });
-    Object.defineProperty(event, "which", { get: () => keyCode });
-    Object.defineProperty(event, "charCode", { get: () => keyCode });
+    Object.defineProperty(event, 'keyCode', { get: () => keyCode });
+    Object.defineProperty(event, 'which', { get: () => keyCode });
+    Object.defineProperty(event, 'charCode', { get: () => keyCode });
 
-    const target = document.getElementById("canvas") || document;
+    const target = document.getElementById('canvas') || document;
     target.dispatchEvent(event);
   }
 

@@ -1,9 +1,9 @@
-import { Capacitor } from "@capacitor/core";
-import { defineStore } from "pinia";
-import { ref, computed } from "vue";
-import { libraryManager } from "../services/LibraryManager";
+import { Capacitor } from '@capacitor/core';
+import { defineStore } from 'pinia';
+import { computed, ref } from 'vue';
+import { libraryManager } from '../services/LibraryManager';
 
-export const useLibraryStore = defineStore("library", () => {
+export const useLibraryStore = defineStore('library', () => {
   // state
   const rawGames = ref([]);
   const loading = ref(false);
@@ -11,37 +11,37 @@ export const useLibraryStore = defineStore("library", () => {
   const scanProgress = ref({ current: 0, total: 0, show: false });
 
   // ui state
-  const searchQuery = ref("");
-  const sortBy = ref("lastPlayed"); // 'lastPlayed', 'name'
-  const swapButtons = ref(localStorage.getItem("pico_swap_buttons") === "true");
+  const searchQuery = ref('');
+  const sortBy = ref('lastPlayed'); // 'lastPlayed', 'name'
+  const swapButtons = ref(localStorage.getItem('pico_swap_buttons') === 'true');
   const useJoystick = ref(
-    Capacitor.getPlatform() === "web" ? (localStorage.getItem("pico_use_joystick") === true) : (localStorage.getItem("pico_use_joystick") !== "false"),
+    Capacitor.getPlatform() === 'web' ? localStorage.getItem('pico_use_joystick') === true : localStorage.getItem('pico_use_joystick') !== 'false',
   ); // default true if native
   const hapticsEnabled = ref(
-    Capacitor.getPlatform() === "web" ? (localStorage.getItem("pico_haptics_enabled") === true) : (localStorage.getItem("pico_haptics_enabled") !== "false"),
+    Capacitor.getPlatform() === 'web' ? localStorage.getItem('pico_haptics_enabled') === true : localStorage.getItem('pico_haptics_enabled') !== 'false',
   ); // default true if native
-  const rootDir = ref(localStorage.getItem("pico_root_dir") || "");
+  const rootDir = ref(localStorage.getItem('pico_root_dir') || '');
 
   const toggleSwapButtons = () => {
     swapButtons.value = !swapButtons.value;
-    localStorage.setItem("pico_swap_buttons", swapButtons.value);
+    localStorage.setItem('pico_swap_buttons', swapButtons.value);
   };
 
   const toggleJoystick = () => {
     useJoystick.value = !useJoystick.value;
-    localStorage.setItem("pico_use_joystick", useJoystick.value);
+    localStorage.setItem('pico_use_joystick', useJoystick.value);
   };
 
   const toggleHaptics = () => {
     hapticsEnabled.value = !hapticsEnabled.value;
-    localStorage.setItem("pico_haptics_enabled", hapticsEnabled.value);
+    localStorage.setItem('pico_haptics_enabled', hapticsEnabled.value);
   };
 
-  const fullscreen = ref(localStorage.getItem("pico_fullscreen") === "true");
+  const fullscreen = ref(localStorage.getItem('pico_fullscreen') === 'true');
 
   const toggleFullscreen = () => {
     fullscreen.value = !fullscreen.value;
-    localStorage.setItem("pico_fullscreen", fullscreen.value);
+    localStorage.setItem('pico_fullscreen', fullscreen.value);
   };
 
   const filteredGames = computed(() => {
@@ -50,7 +50,7 @@ export const useLibraryStore = defineStore("library", () => {
     // filter
     if (searchQuery.value.trim()) {
       const q = searchQuery.value.toLowerCase();
-      result = result.filter((g) => g.name.toLowerCase().includes(q));
+      result = result.filter(g => g.name.toLowerCase().includes(q));
     }
 
     // sort
@@ -60,13 +60,13 @@ export const useLibraryStore = defineStore("library", () => {
       if (!a.isFavorite && b.isFavorite) return 1;
 
       // selected sort strategy
-      if (sortBy.value === "name") {
+      if (sortBy.value === 'name') {
         return a.name.localeCompare(b.name);
-      } else if (sortBy.value === "lastPlayed") {
+      } else if (sortBy.value === 'lastPlayed') {
         return (b.lastPlayed || 0) - (a.lastPlayed || 0);
-      } else if (sortBy.value === "newest") {
+      } else if (sortBy.value === 'newest') {
         return (b.mtime || 0) - (a.mtime || 0);
-      } else if (sortBy.value === "oldest") {
+      } else if (sortBy.value === 'oldest') {
         return (a.mtime || 0) - (b.mtime || 0);
       }
       return 0;
@@ -91,16 +91,12 @@ export const useLibraryStore = defineStore("library", () => {
 
       // cache first
       if (libraryManager.games.length > 0 && !forceRefresh) {
-        console.log(
-          `[useLibraryStore] Using ${libraryManager.games.length} cached games. Skipping scan.`,
-        );
+        console.log(`[useLibraryStore] Using ${libraryManager.games.length} cached games. Skipping scan.`);
         rawGames.value = libraryManager.games;
         // trigger background image load
         libraryManager.loadCovers(rawGames.value);
       } else {
-        console.log(
-          "[useLibraryStore] Cache empty or force refresh. Scanning...",
-        );
+        console.log('[useLibraryStore] Cache empty or force refresh. Scanning...');
         rawGames.value = await libraryManager.scan();
         libraryManager.loadCovers(rawGames.value);
       }
@@ -153,13 +149,10 @@ export const useLibraryStore = defineStore("library", () => {
 
   async function removeCartridge(filename, deleteExternalFile = false) {
     // backend uses filename
-    const success = await libraryManager.deleteCartridge(
-      filename,
-      deleteExternalFile,
-    );
+    const success = await libraryManager.deleteCartridge(filename, deleteExternalFile);
     if (success) {
       // optimistic update
-      rawGames.value = rawGames.value.filter((g) => g.filename !== filename);
+      rawGames.value = rawGames.value.filter(g => g.filename !== filename);
     }
     return success;
   }
@@ -172,13 +165,10 @@ export const useLibraryStore = defineStore("library", () => {
 
   async function renameCartridge(game, newName) {
     // use filename for metadata lookup
-    const success = await libraryManager.renameCartridge(
-      game.filename,
-      newName,
-    );
+    const success = await libraryManager.renameCartridge(game.filename, newName);
     if (success) {
       // update local state
-      const idx = rawGames.value.findIndex((g) => g.filename === game.filename);
+      const idx = rawGames.value.findIndex(g => g.filename === game.filename);
       if (idx !== -1) {
         rawGames.value[idx].name = newName;
       }
@@ -192,7 +182,7 @@ export const useLibraryStore = defineStore("library", () => {
       current: 0,
       total: 0,
       show: true,
-      label: "Syncing...",
+      label: 'Syncing...',
     };
 
     try {
@@ -234,7 +224,7 @@ export const useLibraryStore = defineStore("library", () => {
     };
 
     try {
-      console.log("[useLibraryStore] Force rescan requested.");
+      console.log('[useLibraryStore] Force rescan requested.');
       rawGames.value = await libraryManager.scan();
       libraryManager.loadCovers(rawGames.value);
       return true;
@@ -291,7 +281,7 @@ export const useLibraryStore = defineStore("library", () => {
     downloadCart,
     toggleFullscreen,
     fullscreen: computed(() => fullscreen.value),
-    resetLibrary: async (fullWipe) => {
+    resetLibrary: async fullWipe => {
       const res = await libraryManager.resetLibrary(fullWipe);
       rawGames.value = libraryManager.games;
       return res;

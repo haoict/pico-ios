@@ -4,10 +4,10 @@
     <div
       class="pointer-events-auto w-screen h-screen md:w-full md:max-w-sm md:h-full bg-[#111]/90 backdrop-blur-3xl saturate-150 border-l border-white/10 flex flex-col shadow-2xl transition-transform duration-300 transform slide-in-right">
       <!-- header -->
-      <div
-        class="flex items-center justify-between px-6 pb-4 border-b border-white/10 bg-white/5 pt-[calc(env(safe-area-inset-top)+1rem)]">
+      <div class="flex items-center justify-between px-6 pb-4 border-b border-white/10 bg-white/5 pt-[calc(env(safe-area-inset-top)+1rem)]">
         <h2 class="text-white font-pico-crisp text-lg drop-shadow-md">SAVES</h2>
-        <button @click="closeDrawer"
+        <button
+          @click="closeDrawer"
           class="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 active:bg-white/20 text-white/60 hover:text-white transition-colors">
           ✕
         </button>
@@ -26,13 +26,13 @@
         </div>
 
         <div v-else class="flex flex-col gap-2">
-          <div v-for="(save, index) in saves" :key="save.name" :ref="(el) => (saveItemsRef[index] = el)"
+          <div
+            v-for="(save, index) in saves"
+            :key="save.name"
+            :ref="el => (saveItemsRef[index] = el)"
             @click="loadSave(save.name)"
             class="group relative bg-white/5 hover:bg-white/10 active:scale-[0.98] transition-all rounded-xl p-3 border border-white/5 hover:border-white/20 cursor-pointer overflow-hidden"
-            :class="{
-              '!bg-white/20 !border-white/40 ring-2 ring-white/50':
-                focusedIndex === index,
-            }">
+            :class="{ '!bg-white/20 !border-white/40 ring-2 ring-white/50': focusedIndex === index }">
             <!-- save icon & info -->
             <div class="flex items-start gap-3">
               <div
@@ -41,7 +41,7 @@
               </div>
               <div class="flex-1 min-w-0">
                 <h3 class="text-white font-medium text-sm truncate font-pico leading-tight mb-1">
-                  {{ save.name.replace(".state", "").replace(/_/g, " ") }}
+                  {{ save.name.replace('.state', '').replace(/_/g, ' ') }}
                 </h3>
                 <div class="flex items-center gap-2 text-[10px] text-white/40 font-mono">
                   <span>{{ formatSize(save.size) }}</span>
@@ -52,10 +52,7 @@
             </div>
 
             <!-- chevron -->
-            <div
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 group-hover:text-white/40 group-hover:translate-x-1 transition-all">
-              ›
-            </div>
+            <div class="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 group-hover:text-white/40 group-hover:translate-x-1 transition-all">›</div>
           </div>
         </div>
       </div>
@@ -69,20 +66,20 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from "vue";
-import { Filesystem, Directory } from "@capacitor/filesystem";
-import { Capacitor } from "@capacitor/core";
-import { haptics } from "../utils/haptics";
-import { ImpactStyle } from "@capacitor/haptics";
+import { Capacitor } from '@capacitor/core';
+import { Directory, Filesystem } from '@capacitor/filesystem';
+import { ImpactStyle } from '@capacitor/haptics';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { haptics } from '../utils/haptics';
 
-const props = defineProps(["isOpen", "cartName"]);
-const emit = defineEmits(["close", "load"]);
+const props = defineProps(['isOpen', 'cartName']);
+const emit = defineEmits(['close', 'load']);
 const saves = ref([]);
 const loading = ref(false);
 
 const closeDrawer = () => {
-  emit("close");
-  haptics.impact(ImpactStyle.Light).catch(() => { });
+  emit('close');
+  haptics.impact(ImpactStyle.Light).catch(() => {});
 };
 
 const refreshSaves = async () => {
@@ -95,8 +92,8 @@ const refreshSaves = async () => {
 
     // get platform
     const platform = Capacitor.getPlatform();
-    let path = "Saves";
-    if (platform === "android") path = "Pocket8/Saves";
+    let path = 'Saves';
+    if (platform === 'android') path = 'Pocket8/Saves';
 
     const ret = await Filesystem.readdir({
       path: path,
@@ -104,21 +101,12 @@ const refreshSaves = async () => {
     });
 
     // normalize name for filtering
-    const targetName = (props.cartName || "")
-      .toLowerCase()
-      .replace(".p8.png", "")
-      .replace(".p8", "");
+    const targetName = (props.cartName || '').toLowerCase().replace('.p8.png', '').replace('.p8', '');
 
     // filter relevant saves
-    saves.value = ret.files
-      .filter(
-        (f) =>
-          f.name.endsWith(".state") &&
-          f.name.toLowerCase().includes(targetName),
-      )
-      .sort((a, b) => (b.mtime || 0) - (a.mtime || 0)); // newest first
+    saves.value = ret.files.filter(f => f.name.endsWith('.state') && f.name.toLowerCase().includes(targetName)).sort((a, b) => (b.mtime || 0) - (a.mtime || 0)); // newest first
   } catch (e) {
-    console.error("📂 [Drawer] Read Failed:", e);
+    console.error('📂 [Drawer] Read Failed:', e);
   } finally {
     loading.value = false;
   }
@@ -127,7 +115,7 @@ const refreshSaves = async () => {
 const scrollToFocused = () => {
   const el = saveItemsRef.value[focusedIndex.value];
   if (el) {
-    el.scrollIntoView({ block: "start", behavior: "smooth" });
+    el.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
 };
 
@@ -136,35 +124,34 @@ const focusedIndex = ref(-1);
 const saveItemsRef = ref([]);
 const inputCleanup = ref(null);
 
-const loadSave = (filename) => {
-  haptics.impact(ImpactStyle.Medium).catch(() => { });
-  console.log("⚡️ [Drawer] Selected:", filename);
-  emit("load", filename);
-  emit("close");
+const loadSave = filename => {
+  haptics.impact(ImpactStyle.Medium).catch(() => {});
+  console.log('⚡️ [Drawer] Selected:', filename);
+  emit('load', filename);
+  emit('close');
 };
 
-import { inputManager } from "../services/InputManager";
+import { inputManager } from '../services/InputManager';
 
-const handleInput = (action) => {
+const handleInput = action => {
   if (!props.isOpen || loading.value) return;
 
-  if (action === "back") {
+  if (action === 'back') {
     closeDrawer();
     return;
   }
 
   if (saves.value.length === 0) return;
 
-  if (action === "nav-down") {
+  if (action === 'nav-down') {
     focusedIndex.value = (focusedIndex.value + 1) % saves.value.length;
     scrollToFocused();
-    haptics.impact(ImpactStyle.Light).catch(() => { });
-  } else if (action === "nav-up") {
-    focusedIndex.value =
-      (focusedIndex.value - 1 + saves.value.length) % saves.value.length;
+    haptics.impact(ImpactStyle.Light).catch(() => {});
+  } else if (action === 'nav-up') {
+    focusedIndex.value = (focusedIndex.value - 1 + saves.value.length) % saves.value.length;
     scrollToFocused();
-    haptics.impact(ImpactStyle.Light).catch(() => { });
-  } else if (action === "confirm") {
+    haptics.impact(ImpactStyle.Light).catch(() => {});
+  } else if (action === 'confirm') {
     if (focusedIndex.value >= 0 && saves.value[focusedIndex.value]) {
       loadSave(saves.value[focusedIndex.value].name);
     }
@@ -196,7 +183,7 @@ onUnmounted(() => {
 
 watch(
   () => props.isOpen,
-  (newVal) => {
+  newVal => {
     if (newVal) {
       refreshSaves();
       focusedIndex.value = -1;
@@ -207,19 +194,19 @@ watch(
   },
 );
 
-const formatSize = (bytes) => {
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+const formatSize = bytes => {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
-const formatDate = (ms) =>
-  new Date(ms).toLocaleString("en-US", {
-    month: "numeric",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    second: "numeric",
+const formatDate = ms =>
+  new Date(ms).toLocaleString('en-US', {
+    month: 'numeric',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
     hour12: true,
   });
 </script>

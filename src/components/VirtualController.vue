@@ -1,16 +1,24 @@
 <template>
-  <div class="virtual-controller relative w-full h-full select-none" @touchstart.prevent="handleTouch"
-    @touchmove.prevent="handleTouch" @touchend.prevent="handleTouchEnd" @touchcancel.prevent="handleTouchEnd"
-    @mousedown.prevent="handleTouch" @mousemove.prevent="handleTouch" @mouseup.prevent="handleTouchEnd"
+  <div
+    class="virtual-controller relative w-full h-full select-none"
+    @touchstart.prevent="handleTouch"
+    @touchmove.prevent="handleTouch"
+    @touchend.prevent="handleTouchEnd"
+    @touchcancel.prevent="handleTouchEnd"
+    @mousedown.prevent="handleTouch"
+    @mousemove.prevent="handleTouch"
+    @mouseup.prevent="handleTouchEnd"
     @mouseleave.prevent="handleTouchEnd">
-    <div
-      class="portrait-layout absolute inset-0 flex flex-col z-10 pointer-events-none pb-[max(env(safe-area-inset-bottom),20px)]">
+    <div class="portrait-layout absolute inset-0 flex flex-col z-10 pointer-events-none pb-[max(env(safe-area-inset-bottom),20px)]">
       <div :class="isWeb ? 'mt-4' : 'flex-grow'"></div>
 
-      <div
-        class="flex flex-row items-center justify-between px-6 w-full max-w-[480px] min-[600px]:max-w-none min-[600px]:px-16 mx-auto flex-shrink-0">
-        <div class="control-group relative w-[42vmin] max-w-[180px] aspect-square pointer-events-auto" ref="dpadRef"
-          @touchstart.prevent="handleDPadTouch" @touchmove.prevent="handleDPadTouch" @touchend.prevent="handleTouchEnd">
+      <div class="flex flex-row items-center justify-between px-6 w-full max-w-[480px] min-[600px]:max-w-none min-[600px]:px-16 mx-auto flex-shrink-0">
+        <div
+          class="control-group relative w-[42vmin] max-w-[180px] aspect-square pointer-events-auto"
+          ref="dpadRef"
+          @touchstart.prevent="handleDPadTouch"
+          @touchmove.prevent="handleDPadTouch"
+          @touchend.prevent="handleTouchEnd">
           <template v-if="!useJoystick">
             <div class="relative w-full h-full">
               <!-- D-PAD -->
@@ -22,8 +30,7 @@
                     <stop offset="100%" stop-color="rgba(255, 255, 255, 0.15)" />
                   </linearGradient>
                 </defs>
-                <g transform="translate(5,5)" fill="url(#glass-gradient)" stroke="rgba(255,255,255,0.1)"
-                  stroke-width="0.5">
+                <g transform="translate(5,5)" fill="url(#glass-gradient)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5">
                   <path d="M36 34 V12 A4 4 0 0 1 64 12 V34 H36" :class="{ 'fill-white/40': activeKeys.has(38) }" />
                   <path d="M36 66 V88 A4 4 0 0 0 64 88 V66 H36" :class="{ 'fill-white/40': activeKeys.has(40) }" />
                   <path d="M34 36 H12 A4 4 0 0 0 12 64 H34 V36" :class="{ 'fill-white/40': activeKeys.has(37) }" />
@@ -34,9 +41,9 @@
             </div>
           </template>
           <template v-else>
-            <div
-              class="relative w-full h-full rounded-full border-2 border-white/10 bg-white/5 small:w-full small:h-full">
-              <div ref="joystickStickRef"
+            <div class="relative w-full h-full rounded-full border-2 border-white/10 bg-white/5 small:w-full small:h-full">
+              <div
+                ref="joystickStickRef"
                 class="absolute w-1/3 h-1/3 rounded-full bg-white/20 shadow-lg border border-white/10 pointer-events-none"
                 :style="{
                   transform: `translate3d(calc(-50% + ${thumbX}px), calc(-50% + ${thumbY}px), 0)`,
@@ -48,31 +55,35 @@
         </div>
 
         <!-- ACTION BUTTONS -->
-        <div class="control-group relative w-[42vmin] max-w-[180px] aspect-square pointer-events-auto"
-          ref="actionZoneRef" @touchstart.prevent="handleActionTouch" @touchmove.prevent="handleActionTouch"
+        <div
+          class="control-group relative w-[42vmin] max-w-[180px] aspect-square pointer-events-auto"
+          ref="actionZoneRef"
+          @touchstart.prevent="handleActionTouch"
+          @touchmove.prevent="handleActionTouch"
           @touchend.prevent="handleActionTouch">
           <!-- button 1 (top right) -->
-          <div ref="btn1Ref" class="absolute top-[2%] right-[2%] w-[48%] h-[48%] rounded-full shadow-lg border" :class="[
-            btn1.label === 'o'
-              ? 'bg-red-500/20 border-red-500/50'
-              : 'bg-blue-500/20 border-blue-500/50',
-            { '!bg-white/40 !scale-95': activeKeys.has(btn1.code) },
-          ]">
-            <span
-              class="text-white font-bold font-pico absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[clamp(1.5rem,5vw,2.25rem)]">{{
-                btn1.label }}</span>
+          <div
+            ref="btn1Ref"
+            class="absolute top-[2%] right-[2%] w-[48%] h-[48%] rounded-full shadow-lg border"
+            :class="[
+              btn1.label === 'o' ? 'bg-red-500/20 border-red-500/50' : 'bg-blue-500/20 border-blue-500/50',
+              { '!bg-white/40 !scale-95': activeKeys.has(btn1.code) },
+            ]">
+            <span class="text-white font-bold font-pico absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[clamp(1.5rem,5vw,2.25rem)]">{{
+              btn1.label
+            }}</span>
           </div>
           <!-- button 2 (bottom left) -->
-          <div ref="btn2Ref" class="absolute bottom-[2%] left-[2%] w-[48%] h-[48%] rounded-full shadow-lg border"
+          <div
+            ref="btn2Ref"
+            class="absolute bottom-[2%] left-[2%] w-[48%] h-[48%] rounded-full shadow-lg border"
             :class="[
-              btn2.label === 'o'
-                ? 'bg-red-500/20 border-red-500/50'
-                : 'bg-blue-500/20 border-blue-500/50',
+              btn2.label === 'o' ? 'bg-red-500/20 border-red-500/50' : 'bg-blue-500/20 border-blue-500/50',
               { '!bg-white/40 !scale-95': activeKeys.has(btn2.code) },
             ]">
-            <span
-              class="text-white font-bold font-pico absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[clamp(1.5rem,5vw,2.25rem)]">{{
-                btn2.label }}</span>
+            <span class="text-white font-bold font-pico absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[clamp(1.5rem,5vw,2.25rem)]">{{
+              btn2.label
+            }}</span>
           </div>
         </div>
       </div>
@@ -85,7 +96,8 @@
           <div class="w-12 h-4 rounded-full bg-white/20 border border-white/10 shadow-sm -rotate-12"></div>
           <span class="text-[10px] font-bold text-white/50 tracking-widest">SELECT</span>
         </button>
-        <button class="flex flex-col items-center gap-1"
+        <button
+          class="flex flex-col items-center gap-1"
           @touchstart.stop.prevent="inputManager.dispatchKey(80, 'keydown')"
           @touchend.stop.prevent="inputManager.dispatchKey(80, 'keyup')">
           <div class="w-12 h-4 rounded-full bg-white/20 border border-white/10 shadow-sm -rotate-12"></div>
@@ -110,8 +122,7 @@
                   <stop offset="100%" stop-color="rgba(255, 255, 255, 0.15)" />
                 </linearGradient>
               </defs>
-              <g transform="translate(5,5)" fill="url(#glass-gradient-ls)" stroke="rgba(255,255,255,0.1)"
-                stroke-width="0.5">
+              <g transform="translate(5,5)" fill="url(#glass-gradient-ls)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5">
                 <path d="M36 34 V12 A4 4 0 0 1 64 12 V34 H36" :class="{ 'fill-white/40': activeKeys.has(38) }" />
                 <path d="M36 66 V88 A4 4 0 0 0 64 88 V66 H36" :class="{ 'fill-white/40': activeKeys.has(40) }" />
                 <path d="M34 36 H12 A4 4 0 0 0 12 64 H34 V36" :class="{ 'fill-white/40': activeKeys.has(37) }" />
@@ -139,38 +150,36 @@
 
       <!-- right: buttons + start -->
       <div class="flex flex-col items-center gap-6 min-[850px]:gap-16 pointer-events-auto">
-        <div ref="actionZoneRefLS" class="relative w-[min(32vh,38vw)] max-w-[180px] aspect-square"
-          @touchstart.prevent="handleActionTouch" @touchmove.prevent="handleActionTouch"
+        <div
+          ref="actionZoneRefLS"
+          class="relative w-[min(32vh,38vw)] max-w-[180px] aspect-square"
+          @touchstart.prevent="handleActionTouch"
+          @touchmove.prevent="handleActionTouch"
           @touchend.prevent="handleActionTouch">
           <!-- button 1 (top right) -->
-          <div ref="btn1RefLS"
+          <div
+            ref="btn1RefLS"
             class="absolute top-[2%] right-[2%] w-[48%] h-[48%] rounded-full shadow-lg border flex items-center justify-center"
             :class="[
-              btn1.label === 'o'
-                ? 'bg-red-500/20 border-red-500/50'
-                : 'bg-blue-500/20 border-blue-500/50',
+              btn1.label === 'o' ? 'bg-red-500/20 border-red-500/50' : 'bg-blue-500/20 border-blue-500/50',
               { '!bg-white/40 !scale-95': activeKeys.has(btn1.code) },
             ]">
-            <span
-              class="text-white font-bold font-pico select-none text-[min(2.5rem,8vmin)] translate-x-[2px] -translate-y-[2px]">{{
-                btn1.label }}</span>
+            <span class="text-white font-bold font-pico select-none text-[min(2.5rem,8vmin)] translate-x-[2px] -translate-y-[2px]">{{ btn1.label }}</span>
           </div>
           <!-- button 2 (bottom left) -->
-          <div ref="btn2RefLS"
+          <div
+            ref="btn2RefLS"
             class="absolute bottom-[2%] left-[2%] w-[48%] h-[48%] rounded-full shadow-lg border flex items-center justify-center"
             :class="[
-              btn2.label === 'o'
-                ? 'bg-red-500/20 border-red-500/50'
-                : 'bg-blue-500/20 border-blue-500/50',
+              btn2.label === 'o' ? 'bg-red-500/20 border-red-500/50' : 'bg-blue-500/20 border-blue-500/50',
               { '!bg-white/40 !scale-95': activeKeys.has(btn2.code) },
             ]">
-            <span
-              class="text-white font-bold font-pico select-none text-[min(2.5rem,8vmin)] translate-x-[2px] -translate-y-[2px]">{{
-                btn2.label }}</span>
+            <span class="text-white font-bold font-pico select-none text-[min(2.5rem,8vmin)] translate-x-[2px] -translate-y-[2px]">{{ btn2.label }}</span>
           </div>
         </div>
 
-        <button class="flex flex-col items-center gap-1"
+        <button
+          class="flex flex-col items-center gap-1"
           @touchstart.stop.prevent="inputManager.dispatchKey(80, 'keydown')"
           @touchend.stop.prevent="inputManager.dispatchKey(80, 'keyup')">
           <div class="w-12 h-4 rounded-full bg-white/20 border border-white/10 shadow-sm -rotate-12"></div>
@@ -182,15 +191,15 @@
 </template>
 
 <script setup>
-import { haptics } from "../utils/haptics";
-import { ImpactStyle } from "@capacitor/haptics";
-import { inputManager } from "../services/InputManager";
-import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
-import { useLibraryStore } from "../stores/library";
-import { storeToRefs } from "pinia";
+import { ImpactStyle } from '@capacitor/haptics';
+import { storeToRefs } from 'pinia';
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { inputManager } from '../services/InputManager';
+import { useLibraryStore } from '../stores/library';
+import { haptics } from '../utils/haptics';
 
 const isWeb = computed(() => {
-  return window.Capacitor.getPlatform() === "web";
+  return window.Capacitor.getPlatform() === 'web';
 });
 // # store access
 const libraryStore = useLibraryStore();
@@ -208,17 +217,9 @@ const thumbY = ref(0);
 const activeKeys = reactive(new Set());
 
 // # button mapping
-const btn1 = computed(() =>
-  swapButtons.value
-    ? { label: "x", code: 88, color: "#29ADFF" }
-    : { label: "o", code: 90, color: "#FF004D" }
-);
+const btn1 = computed(() => (swapButtons.value ? { label: 'x', code: 88, color: '#29ADFF' } : { label: 'o', code: 90, color: '#FF004D' }));
 
-const btn2 = computed(() =>
-  swapButtons.value
-    ? { label: "o", code: 90, color: "#FF004D" }
-    : { label: "x", code: 88, color: "#29ADFF" }
-);
+const btn2 = computed(() => (swapButtons.value ? { label: 'o', code: 90, color: '#FF004D' } : { label: 'x', code: 88, color: '#29ADFF' }));
 
 // Portrait refs
 const dpadRef = ref(null);
@@ -256,18 +257,16 @@ let actionState = {
   btn2Rect: null,
 };
 
-const emit = defineEmits(["menu"]);
+const emit = defineEmits(['menu']);
 
 const openMenu = () => {
   haptics.impact(ImpactStyle.Heavy);
-  emit("menu");
+  emit('menu');
 };
 
 const cacheDpadMetrics = () => {
   // determine active refs based on visibility (offsetParent check)
-  const activeDpadRef = dpadRefLS.value?.offsetParent
-    ? dpadRefLS.value
-    : dpadRef.value;
+  const activeDpadRef = dpadRefLS.value?.offsetParent ? dpadRefLS.value : dpadRef.value;
 
   if (activeDpadRef) {
     const rect = activeDpadRef.getBoundingClientRect();
@@ -280,8 +279,8 @@ const cacheDpadMetrics = () => {
 
 // # touch handling
 
-const handleTouch = (e) => {
-  if (e.type.startsWith("mouse")) {
+const handleTouch = e => {
+  if (e.type.startsWith('mouse')) {
     handleMouseInput(e);
     return;
   }
@@ -313,12 +312,7 @@ const handleTouch = (e) => {
 
         // dpad mode
         // hybrid logic: absolute vs relative start
-        const distFromVisualSq = getDistSq(
-          t.clientX,
-          t.clientY,
-          dpadState.visualX,
-          dpadState.visualY
-        );
+        const distFromVisualSq = getDistSq(t.clientX, t.clientY, dpadState.visualX, dpadState.visualY);
 
         if (distFromVisualSq > 400) {
           dpadState.x = dpadState.visualX;
@@ -353,8 +347,8 @@ const handleTouch = (e) => {
   }
 };
 
-const handleMouseInput = (e) => {
-  if (e.type === "mousedown") {
+const handleMouseInput = e => {
+  if (e.type === 'mousedown') {
     isMouseDown = true;
     cacheDpadMetrics();
     dpadState.lastInputTime = Date.now();
@@ -364,12 +358,7 @@ const handleMouseInput = (e) => {
     dpadState.lastTouchX = e.clientX;
     dpadState.lastTouchY = e.clientY;
 
-    const distSq = getDistSq(
-      e.clientX,
-      e.clientY,
-      dpadState.visualX,
-      dpadState.visualY
-    );
+    const distSq = getDistSq(e.clientX, e.clientY, dpadState.visualX, dpadState.visualY);
     if (distSq > 400) {
       dpadState.x = dpadState.visualX;
       dpadState.y = dpadState.visualY;
@@ -383,7 +372,7 @@ const handleMouseInput = (e) => {
     } else {
       processDpadCoordinates(e.clientX, e.clientY);
     }
-  } else if (e.type === "mouseup") {
+  } else if (e.type === 'mouseup') {
     clearDpadState();
   } else if (isMouseDown) {
     dpadState.lastInputTime = Date.now();
@@ -397,7 +386,7 @@ const handleMouseInput = (e) => {
   }
 };
 
-const handleTouchEnd = (e) => {
+const handleTouchEnd = e => {
   if (e.changedTouches) {
     for (let i = 0; i < e.changedTouches.length; i++) {
       if (e.changedTouches[i].identifier === dpadTouchId) {
@@ -432,12 +421,7 @@ const isInsideDpad = (x, y) => {
   const r = dpadState.rect;
   if (!r) return false;
   const PAD = 10;
-  return (
-    x >= r.left - PAD &&
-    x <= r.right + PAD &&
-    y >= r.top - PAD &&
-    y <= r.bottom + PAD
-  );
+  return x >= r.left - PAD && x <= r.right + PAD && y >= r.top - PAD && y <= r.bottom + PAD;
 };
 
 const getDistSq = (x1, y1, x2, y2) => {
@@ -489,7 +473,7 @@ const processJoystickCoordinates = (clientX, clientY) => {
 
   if (newDirection !== currentDirection) {
     currentDirection = newDirection;
-    haptics.impact(ImpactStyle.Light).catch(() => { });
+    haptics.impact(ImpactStyle.Light).catch(() => {});
     triggerKeys(getKeysForDirection(newDirection));
   }
 };
@@ -531,7 +515,7 @@ const processDpadCoordinates = (clientX, clientY) => {
 
   if (newDirection !== currentDirection) {
     currentDirection = newDirection;
-    haptics.impact(ImpactStyle.Light).catch(() => { });
+    haptics.impact(ImpactStyle.Light).catch(() => {});
     triggerKeys(getKeysForDirection(newDirection));
   }
 };
@@ -547,7 +531,7 @@ const getDirectionFromAngle = (angle, currentDir) => {
   const buffer = 5;
 
   // sticky diagonal
-  const isDiag = currentDir && currentDir.includes("_");
+  const isDiag = currentDir && currentDir.includes('_');
   const stickyPenalty = isDiag ? 5 : 0;
 
   const checkSector = (ang, center, hwLeft, hwRight) => {
@@ -572,29 +556,29 @@ const getDirectionFromAngle = (angle, currentDir) => {
   };
 
   // right (0) - standard
-  if (checkSector(angle, 0, stdHW, stdHW)) return "RIGHT";
+  if (checkSector(angle, 0, stdHW, stdHW)) return 'RIGHT';
 
   // down (90) - standard
-  if (checkSector(angle, 90, stdHW, stdHW)) return "DOWN";
+  if (checkSector(angle, 90, stdHW, stdHW)) return 'DOWN';
 
   // left (180) - asymmetric upper side
-  if (checkSector(angle, 180, stdHW, reducedHW)) return "LEFT";
+  if (checkSector(angle, 180, stdHW, reducedHW)) return 'LEFT';
 
   // up (270) - asymmetric left side
-  if (checkSector(angle, 270, reducedHW, stdHW)) return "UP";
+  if (checkSector(angle, 270, reducedHW, stdHW)) return 'UP';
 
   // diagonals (fallback)
-  if (angle < 90) return "DOWN_RIGHT";
-  if (angle < 180) return "DOWN_LEFT";
-  if (angle < 270) return "UP_LEFT";
-  return "UP_RIGHT";
+  if (angle < 90) return 'DOWN_RIGHT';
+  if (angle < 180) return 'DOWN_LEFT';
+  if (angle < 270) return 'UP_LEFT';
+  return 'UP_RIGHT';
 };
 
-const getCardinalName = (deg) => {
-  if (deg === 0) return "RIGHT";
-  if (deg === 90) return "DOWN";
-  if (deg === 180) return "LEFT";
-  if (deg === 270) return "UP";
+const getCardinalName = deg => {
+  if (deg === 0) return 'RIGHT';
+  if (deg === 90) return 'DOWN';
+  if (deg === 180) return 'LEFT';
+  if (deg === 270) return 'UP';
   return null;
 };
 
@@ -612,31 +596,31 @@ const KEYS_DOWN_LEFT = [40, 37];
 const KEYS_DOWN_RIGHT = [40, 39];
 const KEYS_EMPTY = [];
 
-const getKeysForDirection = (dir) => {
+const getKeysForDirection = dir => {
   if (!dir) return KEYS_EMPTY;
   switch (dir) {
-    case "UP":
+    case 'UP':
       return KEYS_UP;
-    case "DOWN":
+    case 'DOWN':
       return KEYS_DOWN;
-    case "LEFT":
+    case 'LEFT':
       return KEYS_LEFT;
-    case "RIGHT":
+    case 'RIGHT':
       return KEYS_RIGHT;
-    case "UP_LEFT":
+    case 'UP_LEFT':
       return KEYS_UP_LEFT;
-    case "UP_RIGHT":
+    case 'UP_RIGHT':
       return KEYS_UP_RIGHT;
-    case "DOWN_LEFT":
+    case 'DOWN_LEFT':
       return KEYS_DOWN_LEFT;
-    case "DOWN_RIGHT":
+    case 'DOWN_RIGHT':
       return KEYS_DOWN_RIGHT;
     default:
       return KEYS_EMPTY;
   }
 };
 
-const triggerKeys = (keyCodes) => {
+const triggerKeys = keyCodes => {
   // release D-pad keys not in new set
   for (const k of activeKeys) {
     if (DPAD_CODES.has(k) && !keyCodes.includes(k)) {
@@ -651,12 +635,10 @@ const triggerKeys = (keyCodes) => {
   }
 };
 
-const handleActionTouch = (e) => {
+const handleActionTouch = e => {
   const touches = e.touches ? Array.from(e.touches) : [e];
 
-  const activeZone = actionZoneRefLS.value?.offsetParent
-    ? actionZoneRefLS.value
-    : actionZoneRef.value;
+  const activeZone = actionZoneRefLS.value?.offsetParent ? actionZoneRefLS.value : actionZoneRef.value;
   if (!activeZone) return;
 
   // determine button refs based on orientation (offsetParent)
@@ -669,13 +651,8 @@ const handleActionTouch = (e) => {
     const rect = btnEl.getBoundingClientRect();
     const hitSlop = 10;
 
-    return touches.some((t) => {
-      return (
-        t.clientX >= rect.left - hitSlop &&
-        t.clientX <= rect.right + hitSlop &&
-        t.clientY >= rect.top - hitSlop &&
-        t.clientY <= rect.bottom + hitSlop
-      );
+    return touches.some(t => {
+      return t.clientX >= rect.left - hitSlop && t.clientX <= rect.right + hitSlop && t.clientY >= rect.top - hitSlop && t.clientY <= rect.bottom + hitSlop;
     });
   };
 
@@ -686,7 +663,7 @@ const handleActionTouch = (e) => {
   else releaseKey(btn2.value.code);
 };
 
-const pressKey = (code) => {
+const pressKey = code => {
   if (!activeKeys.has(code)) {
     activeKeys.add(code);
     haptics.impact(ImpactStyle.Light);
@@ -694,7 +671,7 @@ const pressKey = (code) => {
   }
 };
 
-const releaseKey = (code) => {
+const releaseKey = code => {
   if (activeKeys.has(code)) {
     activeKeys.delete(code);
     inputManager.setVirtualKey(code, false);
@@ -702,15 +679,13 @@ const releaseKey = (code) => {
 };
 
 onMounted(() => {
-  window.addEventListener("resize", cacheDpadMetrics);
-  window.addEventListener("orientationchange", () =>
-    setTimeout(cacheDpadMetrics, 300)
-  );
+  window.addEventListener('resize', cacheDpadMetrics);
+  window.addEventListener('orientationchange', () => setTimeout(cacheDpadMetrics, 300));
   setTimeout(cacheDpadMetrics, 200);
 });
 
 onUnmounted(() => {
-  window.removeEventListener("resize", cacheDpadMetrics);
+  window.removeEventListener('resize', cacheDpadMetrics);
 });
 </script>
 
@@ -727,8 +702,7 @@ onUnmounted(() => {
 }
 
 /* force landscape layout when width >= height or height <= 570px */
-@media (min-aspect-ratio: 3/4),
-(max-height: 570px) {
+@media (min-aspect-ratio: 3/4), (max-height: 570px) {
   .portrait-layout {
     display: none !important;
   }

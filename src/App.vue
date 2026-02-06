@@ -13,32 +13,31 @@
 
     <!-- global dynamic island toast -->
     <Transition name="slide-down">
-      <div v-if="toast.isVisible.value"
+      <div
+        v-if="toast.isVisible.value"
         class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-8 py-3 min-w-[280px] rounded-full shadow-2xl backdrop-blur-md bg-neutral-900/90 border border-white/10 !pointer-events-none text-center">
-        <span class="text-white font-medium text-sm tracking-wide">{{
-          toast.message.value
-        }}</span>
+        <span class="text-white font-medium text-sm tracking-wide">{{ toast.message.value }}</span>
       </div>
     </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
-import { App } from "@capacitor/app";
-import { Fullscreen } from "@boengli/capacitor-fullscreen";
-import { Capacitor, registerPlugin } from "@capacitor/core";
-import { Dialog } from "@capacitor/dialog";
-import { RouterView, useRouter } from "vue-router";
+import { Fullscreen } from '@boengli/capacitor-fullscreen';
+import { App } from '@capacitor/app';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+import { Dialog } from '@capacitor/dialog';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { RouterView, useRouter } from 'vue-router';
+import BiosImporter from './components/BiosImporter.vue';
+import { useToast } from './composables/useToast';
+import { inputManager } from './services/InputManager';
+import { libraryManager } from './services/LibraryManager';
+import { useLibraryStore } from './stores/library';
+import { EngineLoader } from './utils/EngineLoader';
 
 // native permission plugin
-const Permission = registerPlugin("Permission");
-import { useToast } from "./composables/useToast";
-import BiosImporter from "./components/BiosImporter.vue";
-import { EngineLoader } from "./utils/EngineLoader";
-import { libraryManager } from "./services/LibraryManager";
-import { inputManager } from "./services/InputManager";
-import { useLibraryStore } from "./stores/library";
+const Permission = registerPlugin('Permission');
 
 const toast = useToast();
 const router = useRouter();
@@ -49,25 +48,24 @@ onMounted(async () => {
   inputManager.init();
 
   // android immersive mode
-  if (Capacitor.getPlatform() === "android") {
+  if (Capacitor.getPlatform() === 'android') {
     try {
       await Fullscreen.activateImmersiveMode();
 
       // check file access
       const status = await Permission.check();
-      console.log("[App] File Permission Status:", status.granted);
+      console.log('[App] File Permission Status:', status.granted);
 
       if (!status.granted) {
         await Dialog.alert({
-          title: "Setup Required",
-          message:
-            "Pocket8 needs 'All files access' to save cartridges to your Documents folder. Please grant this permission in the next screen.",
-          buttonTitle: "Open Settings",
+          title: 'Setup Required',
+          message: "Pocket8 needs 'All files access' to save cartridges to your Documents folder. Please grant this permission in the next screen.",
+          buttonTitle: 'Open Settings',
         });
         await Permission.request();
       }
     } catch (e) {
-      console.warn("[App] Android setup error:", e);
+      console.warn('[App] Android setup error:', e);
     }
   }
 
@@ -76,59 +74,59 @@ onMounted(async () => {
   isCheckingEngine.value = false;
 
   if (!isEngineReady.value) {
-    console.warn("[App.vue] Bios missing. Prompting import.");
+    console.warn('[App.vue] Bios missing. Prompting import.');
   } else {
-    console.log("[App.vue] Engine ready. Waiting for Player to inject.");
+    console.log('[App.vue] Engine ready. Waiting for Player to inject.');
   }
 
   // helper: process deep link url
-  const processDeepLink = async (urlString) => {
-    console.log("[App] Processing deep link:", urlString);
+  const processDeepLink = async urlString => {
+    console.log('[App] Processing deep link:', urlString);
     const url = new URL(urlString);
     // handle example: pocket8://play?id=sphero_a1-0
-    if (url.protocol.includes("pocket8") && url.host === "play" && url.searchParams.get("id")) {
+    if (url.protocol.includes('pocket8') && url.host === 'play' && url.searchParams.get('id')) {
       try {
-        if (Capacitor.getPlatform() !== "android") {
-          toast.showToast("Loading Cartridge...", "info");
+        if (Capacitor.getPlatform() !== 'android') {
+          toast.showToast('Loading Cartridge...', 'info');
         }
 
         // create the Carts/Images/Saves directories if they don't exist
         await libraryManager.init();
 
         // use centralized handler
-        const result = await libraryManager.handleDeepLink(url.searchParams.get("id"));
+        const result = await libraryManager.handleDeepLink(url.searchParams.get('id'));
 
         if (result.exists) {
-          console.log("[App] Cart exists locally.");
+          console.log('[App] Cart exists locally.');
         } else if (result.downloaded) {
-          console.log("[App] Downloaded successfully.");
-          toast.showToast("Saved Cart to Library", "success");
+          console.log('[App] Downloaded successfully.');
+          toast.showToast('Saved Cart to Library', 'success');
         }
 
         // android kickback
-        if (Capacitor.getPlatform() === "android") {
+        if (Capacitor.getPlatform() === 'android') {
           // refresh ui
           const libraryStore = useLibraryStore();
           await libraryStore.rescanLibrary();
-          toast.showToast("Cart Loaded", "success");
+          toast.showToast('Cart Loaded', 'success');
         }
 
         // unify launch logic
         await router.push({
-          name: "player",
+          name: 'player',
           query: { cart: result.filename, t: Date.now() },
         });
       } catch (err) {
-        console.error("[App] handleDeepLink failed:", err.message);
-        toast.showToast("Failed to handle deep link: " + err.message, "error");
+        console.error('[App] handleDeepLink failed:', err.message);
+        toast.showToast('Failed to handle deep link: ' + err.message, 'error');
       }
     }
   };
 
   // deep link listener
   try {
-    App.addListener("appUrlOpen", async (event) => {
-      console.log("[App] appUrlOpen event received:", event.url);
+    App.addListener('appUrlOpen', async event => {
+      console.log('[App] appUrlOpen event received:', event.url);
       // debounce handler
       if (window.handleOpenUrl) {
         window.handleOpenUrl(event.url);
@@ -137,20 +135,20 @@ onMounted(async () => {
       }
     });
   } catch (e) {
-    console.warn("[App] Deep links not supported in this environment:", e);
+    console.warn('[App] Deep links not supported in this environment:', e);
   }
 
   // check launch url (cold start)
   try {
     const launchUrl = await App.getLaunchUrl();
-    console.log("[App] getLaunchUrl result:", launchUrl);
+    console.log('[App] getLaunchUrl result:', launchUrl);
 
     if (launchUrl && launchUrl.url) {
       // prevent loop & debounce conflict
-      const lastLaunch = localStorage.getItem("pico_last_launch_url");
+      const lastLaunch = localStorage.getItem('pico_last_launch_url');
       if (lastLaunch !== launchUrl.url) {
-        console.log("[App] Cold start launch url detected:", launchUrl.url);
-        localStorage.setItem("pico_last_launch_url", launchUrl.url);
+        console.log('[App] Cold start launch url detected:', launchUrl.url);
+        localStorage.setItem('pico_last_launch_url', launchUrl.url);
 
         if (window.handleOpenUrl) {
           window.handleOpenUrl(launchUrl.url);
@@ -158,36 +156,36 @@ onMounted(async () => {
           processDeepLink(launchUrl.url);
         }
       } else {
-        console.log("[App] Ignoring duplicate launch URL (already processed).");
+        console.log('[App] Ignoring duplicate launch URL (already processed).');
       }
     }
   } catch (e) {
-    console.error("[App] getLaunchUrl failed:", e);
+    console.error('[App] getLaunchUrl failed:', e);
   }
 
   // test helper
-  window.testDeepLink = (id) => {
+  window.testDeepLink = id => {
     console.log(`[debug] simulating deep link for id: ${id}`);
     const mockUrl = `pocket8://play?id=${id}`;
     if (window.handleOpenUrl) window.handleOpenUrl(mockUrl);
   };
 
-  let lastProcessedUrl = "";
+  let lastProcessedUrl = '';
   let lastProcessedTime = 0;
 
-  window.handleOpenUrl = (url) => {
+  window.handleOpenUrl = url => {
     const now = Date.now();
 
     // debounce: 3s
     if (url === lastProcessedUrl && now - lastProcessedTime < 3000) {
-      console.log("[App] Ignoring duplicate pulse:", url);
+      console.log('[App] Ignoring duplicate pulse:', url);
       return;
     }
 
     lastProcessedUrl = url;
     lastProcessedTime = now;
 
-    console.log("[App] Native Force-Feed received:", url);
+    console.log('[App] Native Force-Feed received:', url);
     processDeepLink(url);
   };
 });

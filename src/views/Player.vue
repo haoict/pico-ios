@@ -7,32 +7,37 @@
     <div
       class="game-zone flex-none w-full aspect-square relative flex items-center justify-center overflow-hidden landscape:flex-1 landscape:aspect-[4/3] landscape:h-full landscape:w-auto landscape:max-w-full pointer-events-none z-10"
       :class="{ '!h-full !w-full !aspect-auto': fullscreen }">
-      <div id="canvas-container" ref="canvasContainer"
+      <div
+        id="canvas-container"
+        ref="canvasContainer"
         class="relative flex items-center justify-center p-1 w-full h-full aspect-square pointer-events-auto"
         :class="{ '!p-0': fullscreen }">
-        <canvas class="aspect-square w-full h-full object-contain image-pixelated rounded-sm shadow-2xl bg-black"
-          :class="{ 'shadow-black/50': isMenuOpen }" style="will-change: transform" id="canvas"
-          oncontextmenu="event.preventDefault()" tabindex="-1" width="128" height="128"></canvas>
+        <canvas
+          class="aspect-square w-full h-full object-contain image-pixelated rounded-sm shadow-2xl bg-black"
+          :class="{ 'shadow-black/50': isMenuOpen }"
+          style="will-change: transform"
+          id="canvas"
+          oncontextmenu="event.preventDefault()"
+          tabindex="-1"
+          width="128"
+          height="128"></canvas>
 
         <!-- pause menu overlay -->
-        <div v-if="isMenuOpen"
-          class="absolute inset-0 bg-black/60 backdrop-blur-xl z-[60] flex items-center justify-center">
+        <div v-if="isMenuOpen" class="absolute inset-0 bg-black/60 backdrop-blur-xl z-[60] flex items-center justify-center">
           <!-- menu content -->
-          <div
-            class="flex flex-col gap-4 text-center p-8 landscape:p-4 landscape:gap-2 w-full max-w-xs max-h-screen overflow-y-auto">
-            <h2
-              class="text-[clamp(1.5rem,5vw,2.5rem)] font-bold text-white mb-4 landscape:mb-2 tracking-widest drop-shadow-md font-pico">
-              PAUSE
-            </h2>
+          <div class="flex flex-col gap-4 text-center p-8 landscape:p-4 landscape:gap-2 w-full max-w-xs max-h-screen overflow-y-auto">
+            <h2 class="text-[clamp(1.5rem,5vw,2.5rem)] font-bold text-white mb-4 landscape:mb-2 tracking-widest drop-shadow-md font-pico">PAUSE</h2>
 
             <!-- dynamic menu buttons -->
-            <button v-for="(btn, idx) in menuButtons" :key="btn.label" :id="'btn-' + idx"
-              @click="triggerMenuAction(btn.action)" @touchend.prevent="triggerMenuAction(btn.action)"
+            <button
+              v-for="(btn, idx) in menuButtons"
+              :key="btn.label"
+              :id="'btn-' + idx"
+              @click="triggerMenuAction(btn.action)"
+              @touchend.prevent="triggerMenuAction(btn.action)"
               class="px-8 py-3 landscape:py-1 landscape:px-4 landscape:text-sm rounded-xl font-medium tracking-wider transition-colors w-full backdrop-blur-md focus:ring-4 focus:ring-white/50 outline-none font-pico uppercase text-[clamp(0.8rem,4vw,1rem)]"
               :class="[
-                focusIndex === idx
-                  ? 'bg-white text-black scale-105 shadow-lg'
-                  : 'bg-white/10 text-white hover:bg-white/20',
+                focusIndex === idx ? 'bg-white text-black scale-105 shadow-lg' : 'bg-white/10 text-white hover:bg-white/20',
                 btn.action === 'exit' ? 'border border-red-500/30' : '',
               ]">
               {{ btn.label }}
@@ -49,29 +54,31 @@
     <div v-if="isExiting" class="absolute inset-0 bg-black z-[100] transition-opacity duration-100 ease-out"></div>
 
     <!-- controller zone -->
-    <div v-if="!fullscreen"
+    <div
+      v-if="!fullscreen"
       class="controller-zone flex-1 relative w-full bg-black/90 backdrop-blur-xl landscape:absolute landscape:inset-0 landscape:bg-transparent landscape:backdrop-blur-none landscape:pointer-events-none z-20">
       <VirtualController @menu="toggleMenu" />
     </div>
 
     <!-- global toast usage -->
     <!-- saves drawer -->
-    <SavesDrawer :isOpen="isSavesDrawerOpen" :cartName="activeCartName" @close="isSavesDrawerOpen = false"
-      @load="handleStateLoad" />
+    <SavesDrawer :isOpen="isSavesDrawerOpen" :cartName="activeCartName" @close="isSavesDrawerOpen = false" @load="handleStateLoad" />
   </div>
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref, watch, computed } from "vue";
-import { storeToRefs } from "pinia";
-import { haptics } from "../utils/haptics";
-import { ImpactStyle } from "@capacitor/haptics";
-import { useRouter, useRoute } from "vue-router";
-import { Filesystem, Directory } from "@capacitor/filesystem";
-import { picoBridge } from "../services/PicoBridge";
-import VirtualController from "../components/VirtualController.vue";
-import SavesDrawer from "../components/SavesDrawer.vue";
-import { inputManager } from "../services/InputManager";
+import { ImpactStyle } from '@capacitor/haptics';
+import { storeToRefs } from 'pinia';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import SavesDrawer from '../components/SavesDrawer.vue';
+import VirtualController from '../components/VirtualController.vue';
+import { useToast } from '../composables/useToast';
+import { inputManager } from '../services/InputManager';
+import { libraryManager } from '../services/LibraryManager';
+import { picoBridge } from '../services/PicoBridge';
+import { useLibraryStore } from '../stores/library';
+import { haptics } from '../utils/haptics';
 
 const props = defineProps({
   cartId: {
@@ -85,48 +92,35 @@ const route = useRoute();
 const loading = ref(true);
 const isMenuOpen = ref(false);
 const isExiting = ref(false);
-const canvasRef = ref(null);
-const filePicker = ref(null);
 const focusIndex = ref(0);
 const isSavesDrawerOpen = ref(false);
-import { libraryManager } from "../services/LibraryManager";
-import { useToast } from "../composables/useToast";
-import { useLibraryStore } from "../stores/library";
 
-import { App } from "@capacitor/app";
+import { App } from '@capacitor/app';
 
 const { showToast } = useToast();
 const { fullscreen } = storeToRefs(useLibraryStore());
 const isWeb = computed(() => {
-  return window.Capacitor.getPlatform() === "web";
+  return window.Capacitor.getPlatform() === 'web';
 });
 
-const activeCartName = ref(
-  props.cartId === "boot" ? "boot" : props.cartId.replace(".p8.png", ""),
-);
+const activeCartName = ref(props.cartId === 'boot' ? 'boot' : props.cartId.replace('.p8.png', ''));
 
 onMounted(async () => {
   // helper: verify binary injection
-  const base64ToUint8Array = (base64) => {
+  const base64ToUint8Array = base64 => {
     try {
       const binaryString = window.atob(base64);
       const len = binaryString.length;
-      console.log(
-        `[player] atob decoded len: ${len}. first byte charcode: ${binaryString.charCodeAt(
-          0,
-        )}`,
-      );
+      console.log(`[player] atob decoded len: ${len}. first byte charcode: ${binaryString.charCodeAt(0)}`);
 
       const bytes = new Uint8Array(len);
       for (let i = 0; i < len; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
-      console.log(
-        `[player] converted uint8array [0]: ${bytes[0]}, [1]: ${bytes[1]}`,
-      );
+      console.log(`[player] converted uint8array [0]: ${bytes[0]}, [1]: ${bytes[1]}`);
       return bytes;
     } catch (e) {
-      console.error("[player] base64toUint8array crash", e);
+      console.error('[player] base64toUint8array crash', e);
       throw e;
     }
   };
@@ -136,13 +130,13 @@ onMounted(async () => {
   const targetQuery = route.query.cart;
 
   if (!props.cartId || !targetQuery) {
-    console.warn("[player] missing cart id, returning to library");
-    router.push("/");
+    console.warn('[player] missing cart id, returning to library');
+    router.push('/');
     return;
   }
 
   if (window.Module && window.Module.ccall && window.p8_is_running) {
-    console.log("[player] engine running, forcing reload for new cart");
+    console.log('[player] engine running, forcing reload for new cart');
     window.location.reload();
     return;
   }
@@ -162,7 +156,7 @@ onMounted(async () => {
     }
 
     if (!cartData) {
-      throw new Error("No cart data found.");
+      throw new Error('No cart data found.');
     }
 
     // initialize payload
@@ -170,17 +164,13 @@ onMounted(async () => {
 
     // universal metadata check (run this for stashed carts too!)
     // if props.cartid is 'boot', we rely on stashedname for metadata lookup
-    const metaKey = props.cartId === "boot" ? stashedName : props.cartId;
-    console.log(
-      `[player] inspecting metadata for: ${metaKey} (universal check)`,
-    );
+    const metaKey = props.cartId === 'boot' ? stashedName : props.cartId;
+    console.log(`[player] inspecting metadata for: ${metaKey} (universal check)`);
 
     const game = libraryManager.getMetadata(metaKey);
 
     if (game && game.subCarts && game.subCarts.length > 0) {
-      console.log(
-        `[player] bundle detected for ${metaKey}! loading ${game.subCarts.length} sub-carts...`,
-      );
+      console.log(`[player] bundle detected for ${metaKey}! loading ${game.subCarts.length} sub-carts...`);
 
       for (const subFile of game.subCarts) {
         console.log(`   -> loading sub-cart: ${subFile}`);
@@ -193,14 +183,12 @@ onMounted(async () => {
         }
       }
     } else {
-      console.log(
-        `[player] no sub-carts found for ${metaKey}. single cart boot.`,
-      );
+      console.log(`[player] no sub-carts found for ${metaKey}. single cart boot.`);
     }
 
     // stagger boot
     setTimeout(async () => {
-      console.log("[player] booting via universal bundle mode.");
+      console.log('[player] booting via universal bundle mode.');
       await picoBridge.boot(props.cartId, payload);
 
       hookPicoQuit();
@@ -208,45 +196,40 @@ onMounted(async () => {
       setTimeout(() => {
         loading.value = false;
         if (route.query.state) {
-          console.log(
-            "[player] deep link: auto-loading state:",
-            route.query.state,
-          );
+          console.log('[player] deep link: auto-loading state:', route.query.state);
           setTimeout(async () => {
-            await picoBridge.loadRAMState("Saves/" + route.query.state);
-            showToast("AUTO-LOADED");
+            await picoBridge.loadRAMState('Saves/' + route.query.state);
+            showToast('AUTO-LOADED');
           }, 500); // grace period
         }
       }, 1500);
     }, 50);
   } catch (e) {
-    console.error("Failed to load cart:", e);
-    alert("Failed to load cartridge: " + e.message);
-    router.push("/");
+    console.error('Failed to load cart:', e);
+    alert('Failed to load cartridge: ' + e.message);
+    router.push('/');
   }
 
   startAutoSaveTimer();
 });
 
 onUnmounted(async () => {
-  window.removeEventListener("keydown", handleGlobalKeydown);
+  window.removeEventListener('keydown', handleGlobalKeydown);
   stopAutoSaveTimer();
   picoBridge.shutdown();
 
   if (inputCleanup.value) inputCleanup.value();
-  inputManager.setMode("UI");
+  inputManager.setMode('UI');
 
-  App.removeAllListeners("backButton");
+  App.removeAllListeners('backButton');
 });
 
-const isMuted = ref(false);
-
 const menuButtons = computed(() => [
-  { label: "resume", action: "resume" },
-  { label: "save state", action: "manualsave" },
-  { label: "load state", action: "managesaves" },
-  { label: "reset", action: "reset" },
-  { label: "exit", action: "exit" },
+  { label: 'resume', action: 'resume' },
+  { label: 'save state', action: 'manualsave' },
+  { label: 'load state', action: 'managesaves' },
+  { label: 'reset', action: 'reset' },
+  { label: 'exit', action: 'exit' },
 ]);
 
 let menuDebounce = false;
@@ -260,21 +243,21 @@ const toggleMenu = async () => {
   isMenuOpen.value = !isMenuOpen.value;
   if (isMenuOpen.value) {
     picoBridge.pause();
-    inputManager.setMode("UI");
+    inputManager.setMode('UI');
   } else {
     picoBridge.resume();
-    inputManager.setMode("GAME");
+    inputManager.setMode('GAME');
   }
 };
 
-const triggerMenuAction = (action) => {
-  console.log("[player] menu action triggered:", action);
-  haptics.impact(ImpactStyle.Light).catch(() => { });
-  if (action === "resume") toggleMenu();
-  if (action === "manualsave") triggerManualSave();
-  if (action === "managesaves") isSavesDrawerOpen.value = true;
-  if (action === "reset") resetGame();
-  if (action === "exit") exitGame();
+const triggerMenuAction = action => {
+  console.log('[player] menu action triggered:', action);
+  haptics.impact(ImpactStyle.Light).catch(() => {});
+  if (action === 'resume') toggleMenu();
+  if (action === 'manualsave') triggerManualSave();
+  if (action === 'managesaves') isSavesDrawerOpen.value = true;
+  if (action === 'reset') resetGame();
+  if (action === 'exit') exitGame();
 };
 
 let autoSaveInterval = null;
@@ -285,7 +268,7 @@ const startAutoSaveTimer = () => {
       triggerAutoSave();
     }
   }, 600000);
-  console.log("[player] auto-save timer started (10m)");
+  console.log('[player] auto-save timer started (10m)');
 };
 
 const stopAutoSaveTimer = () => {
@@ -303,19 +286,19 @@ const triggerAutoSave = async (silent = false) => {
 
   const success = await window.picoBridge.captureFullRAMState(autoName);
   if (success && !silent) {
-    showToast("Auto-Saved");
+    showToast('Auto-Saved');
   }
 };
 
-const handleStateLoad = async (filename) => {
+const handleStateLoad = async filename => {
   if (filename) {
-    console.log("[player] loading state:", filename);
-    await picoBridge.loadRAMState("Saves/" + filename);
-    showToast("State Loaded");
+    console.log('[player] loading state:', filename);
+    await picoBridge.loadRAMState('Saves/' + filename);
+    showToast('State Loaded');
     isMenuOpen.value = false;
     isSavesDrawerOpen.value = false;
     picoBridge.resume();
-    inputManager.setMode("GAME");
+    inputManager.setMode('GAME');
   }
 };
 
@@ -329,7 +312,7 @@ const triggerManualSave = async () => {
     const key = `pico_save_idx_${base}`;
 
     // index from localStorage to avoid readdir
-    let nextIndex = parseInt(localStorage.getItem(key) || "0") + 1;
+    let nextIndex = parseInt(localStorage.getItem(key) || '0') + 1;
 
     // save new index
     localStorage.setItem(key, nextIndex.toString());
@@ -337,44 +320,44 @@ const triggerManualSave = async () => {
     // pattern: cartname_manual_N.state
     const saveName = `Saves/${base}_manual_${nextIndex}.state`;
 
-    showToast("Saving...");
+    showToast('Saving...');
 
     const success = await window.picoBridge.captureFullRAMState(saveName);
 
     if (success) {
       showToast(`Saved Slot #${nextIndex}`);
     } else {
-      showToast("Save Failed");
+      showToast('Save Failed');
     }
   } catch (e) {
-    console.error("Manual save failed", e);
-    showToast("Save Error");
+    console.error('Manual save failed', e);
+    showToast('Save Error');
   }
 };
 
 // # keyboard navigation
-const handleFileImport = async (event) => {
+const handleFileImport = async event => {
   const file = event.target.files[0];
   if (!file) return;
 
   // feedback
-  showToast("Importing...");
+  showToast('Importing...');
 
   const reader = new FileReader();
-  reader.onload = async (e) => {
+  reader.onload = async e => {
     const arrayBuffer = e.target.result;
     const uint8Array = new Uint8Array(arrayBuffer);
     const fileName = file.name;
 
-    if (fileName.endsWith(".state")) {
+    if (fileName.endsWith('.state')) {
       // # ram injection path
-      console.log("[player] detect .state file, triggering ram injection");
+      console.log('[player] detect .state file, triggering ram injection');
       window.picoBridge.injectFullRAMState(uint8Array);
-      showToast("State Loaded");
+      showToast('State Loaded');
       // close menu to return to game
       isMenuOpen.value = false;
       picoBridge.resume();
-      inputManager.setMode("GAME");
+      inputManager.setMode('GAME');
     } else {
       // # standard cart import
       await window.picoBridge.importSaveFile(fileName, uint8Array);
@@ -384,7 +367,7 @@ const handleFileImport = async (event) => {
 };
 
 function resetGame() {
-  console.log("[player] hard resetting...");
+  console.log('[player] hard resetting...');
   window.location.reload();
 }
 
@@ -396,9 +379,9 @@ async function exitGame() {
 
   // save data (async wait)
   if (window.picoSave) {
-    console.log("[player] auto-saving before exit...");
+    console.log('[player] auto-saving before exit...');
     const savePromise = window.picoSave();
-    const timeout = new Promise((resolve) => setTimeout(resolve, 1000));
+    const timeout = new Promise(resolve => setTimeout(resolve, 1000));
     await Promise.race([savePromise, timeout]);
   }
   await picoBridge.syncToNative();
@@ -421,10 +404,10 @@ function hookPicoQuit() {
   if (window.Module) {
     const originalQuit = window.Module.quit;
     window.Module.quit = (status, toThrow) => {
-      console.log("[player] pico-8 quit detected (internal)");
+      console.log('[player] pico-8 quit detected (internal)');
       try {
         if (originalQuit) originalQuit(status, toThrow);
-      } catch (e) { }
+      } catch (e) {}
 
       picoBridge.shutdown();
 
@@ -437,8 +420,8 @@ function hookPicoQuit() {
 
 // keyboard navigation
 function handleGlobalKeydown(e) {
-  if (e.key === "Escape") {
-    console.log("[player] input: escape");
+  if (e.key === 'Escape') {
+    console.log('[player] input: escape');
     toggleMenu();
     return;
   }
@@ -446,23 +429,14 @@ function handleGlobalKeydown(e) {
   if (!isMenuOpen.value) return;
   if (isSavesDrawerOpen.value) return;
 
-  console.log("[player] menu input:", e.key);
+  console.log('[player] menu input:', e.key);
 
-  if (e.key === "ArrowUp") {
-    focusIndex.value =
-      (focusIndex.value - 1 + menuButtons.value.length) %
-      menuButtons.value.length;
-  } else if (e.key === "ArrowDown") {
+  if (e.key === 'ArrowUp') {
+    focusIndex.value = (focusIndex.value - 1 + menuButtons.value.length) % menuButtons.value.length;
+  } else if (e.key === 'ArrowDown') {
     focusIndex.value = (focusIndex.value + 1) % menuButtons.value.length;
-  } else if (
-    e.key === "Enter" ||
-    e.key === " " ||
-    e.key === "z" ||
-    e.key === "x" ||
-    e.key === "Z" ||
-    e.key === "X"
-  ) {
-    console.log("[player] triggering action from key:", e.key);
+  } else if (e.key === 'Enter' || e.key === ' ' || e.key === 'z' || e.key === 'x' || e.key === 'Z' || e.key === 'X') {
+    console.log('[player] triggering action from key:', e.key);
     triggerMenuAction(menuButtons.value[focusIndex.value].action);
   }
 }
@@ -472,33 +446,31 @@ const inputCleanup = ref(null);
 
 onMounted(() => {
   // Switch to GAME mode initially
-  inputManager.setMode("GAME");
+  inputManager.setMode('GAME');
 
   inputCleanup.value = inputManager.addListener((event, data) => {
-    if (event === "menu") {
+    if (event === 'menu') {
       toggleMenu();
       return;
     }
 
     // Only handle UI events if menu is open (UI Mode)
     if (isMenuOpen.value && !isSavesDrawerOpen.value) {
-      if (event === "nav-up") {
-        focusIndex.value =
-          (focusIndex.value - 1 + menuButtons.value.length) %
-          menuButtons.value.length;
-      } else if (event === "nav-down") {
+      if (event === 'nav-up') {
+        focusIndex.value = (focusIndex.value - 1 + menuButtons.value.length) % menuButtons.value.length;
+      } else if (event === 'nav-down') {
         focusIndex.value = (focusIndex.value + 1) % menuButtons.value.length;
-      } else if (event === "confirm") {
+      } else if (event === 'confirm') {
         triggerMenuAction(menuButtons.value[focusIndex.value].action);
-      } else if (event === "back") {
+      } else if (event === 'back') {
         toggleMenu();
       }
     }
   });
 
   // android back button
-  App.addListener("backButton", (data) => {
-    console.log("[player] back button pressed. canGoBack:", data.canGoBack);
+  App.addListener('backButton', data => {
+    console.log('[player] back button pressed. canGoBack:', data.canGoBack);
     if (isMenuOpen.value) {
       // close menu if open
       toggleMenu();

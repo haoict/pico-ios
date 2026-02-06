@@ -1,7 +1,7 @@
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 const isEnabled = () => {
-  return localStorage.getItem("pico_haptics_enabled") !== "false";
+  return localStorage.getItem('pico_haptics_enabled') !== 'false';
 };
 
 export const haptics = {
@@ -17,14 +17,14 @@ export const haptics = {
   success: async () => {
     if (!isEnabled()) return;
     try {
-      await Haptics.notification({ type: "SUCCESS" });
+      await Haptics.notification({ type: 'SUCCESS' });
     } catch (e) {}
   },
 
   error: async () => {
     if (!isEnabled()) return;
     try {
-      await Haptics.notification({ type: "ERROR" });
+      await Haptics.notification({ type: 'ERROR' });
     } catch (e) {}
   },
 };

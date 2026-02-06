@@ -2,12 +2,8 @@
   <div class="min-h-screen bg-[var(--color-oled-black)] relative overflow-y-auto no-scrollbar">
     <!-- mesh gradient background -->
     <div class="fixed inset-0 z-0 pointer-events-none">
-      <div
-        class="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-pink-900/30 rounded-full blur-[120px] mix-blend-screen animate-pulse-slow">
-      </div>
-      <div
-        class="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-900/20 rounded-full blur-[100px] mix-blend-screen">
-      </div>
+      <div class="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-pink-900/30 rounded-full blur-[120px] mix-blend-screen animate-pulse-slow"></div>
+      <div class="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-900/20 rounded-full blur-[100px] mix-blend-screen"></div>
     </div>
 
     <!-- content -->
@@ -17,20 +13,16 @@
         <!-- title & back -->
         <div class="flex justify-between items-center">
           <div class="flex items-center gap-4">
-            <button @click="router.back()"
+            <button
+              @click="router.back()"
               class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white/80" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <div class="flex flex-col">
-              <h1 class="font-pico-crisp text-white drop-shadow-md text-[clamp(1.5rem,5vw,3rem)]">
-                BBS Explorer
-              </h1>
-              <span class="font-pico-crisp text-xs font-medium text-white/40 tracking-wider uppercase mt-1">
-                Lexaloffle PICO-8
-              </span>
+              <h1 class="font-pico-crisp text-white drop-shadow-md text-[clamp(1.5rem,5vw,3rem)]">BBS Explorer</h1>
+              <span class="font-pico-crisp text-xs font-medium text-white/40 tracking-wider uppercase mt-1"> Lexaloffle PICO-8 </span>
             </div>
           </div>
         </div>
@@ -40,25 +32,33 @@
           <!-- main search -->
           <div class="relative flex-1 group">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-4 w-4 text-white/40 group-focus-within:text-pink-400 transition-colors"
-                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd"
+              <svg
+                class="h-4 w-4 text-white/40 group-focus-within:text-pink-400 transition-colors"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor">
+                <path
+                  fill-rule="evenodd"
                   d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
                   clip-rule="evenodd" />
               </svg>
             </div>
-            <input v-model="searchQuery" @keydown.enter="performSearch" type="text"
+            <input
+              v-model="searchQuery"
+              @keydown.enter="performSearch"
+              type="text"
               class="block w-full pl-10 pr-3 py-2.5 border border-white/10 rounded-xl leading-5 bg-white/5 text-white placeholder-white/30 focus:outline-none focus:bg-white/10 focus:border-pink-500/50 focus:ring-1 focus:ring-pink-500/50 sm:text-sm transition-all"
               placeholder="Search BBS..." />
           </div>
 
           <!-- segmented control -->
           <div class="bg-white/5 p-1 rounded-xl flex border border-white/10">
-            <button v-for="tab in ['Featured', 'New', 'Popular', 'Lucky']" :key="tab" @click="switchTab(tab)"
-              class="flex-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all" :class="activeTab === tab
-                ? 'bg-white/10 text-white shadow-sm'
-                : 'text-white/40 hover:text-white/60'
-                ">
+            <button
+              v-for="tab in ['Featured', 'New', 'Popular', 'Lucky']"
+              :key="tab"
+              @click="switchTab(tab)"
+              class="flex-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all"
+              :class="activeTab === tab ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/60'">
               {{ tab }}
             </button>
           </div>
@@ -68,9 +68,7 @@
       <!-- loading state -->
       <div v-if="loading" class="flex flex-col items-center justify-center py-20">
         <div class="w-8 h-8 rounded-full border-2 border-white/20 border-t-pink-500 animate-spin mb-4"></div>
-        <span class="text-white/30 text-sm tracking-widest uppercase">
-          Fetching Cartridges
-        </span>
+        <span class="text-white/30 text-sm tracking-widest uppercase"> Fetching Cartridges </span>
       </div>
 
       <!-- empty state -->
@@ -81,25 +79,34 @@
 
       <!-- pagination top -->
       <div v-if="!loading" class="flex items-center justify-center gap-3 mb-4">
-        <button @click="previousPage" :disabled="currentPage === 1"
+        <button
+          @click="previousPage"
+          :disabled="currentPage === 1"
           class="px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-sm font-medium transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
           ← Prev
         </button>
 
-        <input v-model.number="pageInput" @keydown.enter="goToPage" @blur="goToPage" @focus="$event.target.select()"
-          type="number" min="1"
+        <input
+          v-model.number="pageInput"
+          @keydown.enter="goToPage"
+          @blur="goToPage"
+          @focus="$event.target.select()"
+          type="number"
+          min="1"
           class="w-[70px] px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm font-medium text-center focus:outline-none focus:border-pink-500/50 focus:bg-white/10 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
 
-        <button @click="nextPage" :disabled="games.length <= 0"
+        <button
+          @click="nextPage"
+          :disabled="games.length <= 0"
           class="px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-sm font-medium transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
           Next →
         </button>
 
-        <button @click="cycleGridSize"
+        <button
+          @click="cycleGridSize"
           class="w-10 h-10 rounded-lg bg-white/10 border border-white/10 text-white transition-all active:scale-95 hover:bg-white/20 flex items-center justify-center"
           :title="`Grid: ${gridSize === 'S' ? '3 columns' : gridSize === 'M' ? '2 columns' : '1 column'}`">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect v-if="gridSize === 'S'" x="3" y="8" width="5" height="8" rx="1" />
             <rect v-if="gridSize === 'S'" x="9.5" y="8" width="5" height="8" rx="1" />
             <rect v-if="gridSize === 'S'" x="16" y="8" width="5" height="8" rx="1" />
@@ -111,26 +118,33 @@
       </div>
 
       <!-- grid -->
-      <div class="grid gap-6" :class="{
-        'grid-cols-3': gridSize === 'S',
-        'grid-cols-2': gridSize === 'M',
-        'grid-cols-1': gridSize === 'L'
-      }">
-        <div v-for="(game, index) in games" :key="game.id" @click.stop.prevent="showContextMenu(game, $event)"
-          @touchstart="handleTouchStart(game, $event)" @touchend="handleTouchEnd" @touchmove="handleTouchEnd"
+      <div
+        class="grid gap-6"
+        :class="{
+          'grid-cols-3': gridSize === 'S',
+          'grid-cols-2': gridSize === 'M',
+          'grid-cols-1': gridSize === 'L',
+        }">
+        <div
+          v-for="(game, index) in games"
+          :key="game.id"
+          @click.stop.prevent="showContextMenu(game, $event)"
+          @touchstart="handleTouchStart(game, $event)"
+          @touchend="handleTouchEnd"
+          @touchmove="handleTouchEnd"
           class="group relative aspect-[5/5] rounded-2xl cursor-pointer transition-all duration-300"
           :style="{ '--index': index }">
           <!-- card container -->
-          <div
-            class="absolute inset-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-lg z-0">
+          <div class="absolute inset-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-lg z-0">
             <!-- cover art -->
-            <img :src="game.thumb_url" alt="Cover"
+            <img
+              :src="game.thumb_url"
+              alt="Cover"
               class="w-full h-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-110"
               loading="lazy" />
 
             <!-- title band -->
-            <div
-              class="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-6">
+            <div class="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-6">
               <h3 class="text-white font-medium text-xs truncate drop-shadow-md">
                 {{ game.title }}
               </h3>
@@ -140,8 +154,7 @@
             </div>
 
             <!-- download overlay -->
-            <div v-if="downloadingId === game.id"
-              class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-10">
+            <div v-if="downloadingId === game.id" class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-10">
               <div class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
             </div>
           </div>
@@ -150,25 +163,34 @@
 
       <!-- pagination bottom -->
       <div v-if="!loading && games.length > 0" class="flex items-center justify-center gap-3 mt-8">
-        <button @click="previousPage" :disabled="currentPage === 1"
+        <button
+          @click="previousPage"
+          :disabled="currentPage === 1"
           class="px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-sm font-medium transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
           ← Prev
         </button>
 
-        <input v-model.number="pageInput" @keydown.enter="goToPage" @blur="goToPage" @focus="$event.target.select()"
-          type="number" min="1"
+        <input
+          v-model.number="pageInput"
+          @keydown.enter="goToPage"
+          @blur="goToPage"
+          @focus="$event.target.select()"
+          type="number"
+          min="1"
           class="w-[70px] px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm font-medium text-center focus:outline-none focus:border-pink-500/50 focus:bg-white/10 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
 
-        <button @click="nextPage" :disabled="games.length <= 0"
+        <button
+          @click="nextPage"
+          :disabled="games.length <= 0"
           class="px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-sm font-medium transition-all active:scale-95">
           Next →
         </button>
 
-        <button @click="cycleGridSize"
+        <button
+          @click="cycleGridSize"
           class="w-10 h-10 rounded-lg bg-white/10 border border-white/10 text-white transition-all active:scale-95 hover:bg-white/20 flex items-center justify-center"
           :title="`Grid: ${gridSize === 'S' ? '3 columns' : gridSize === 'M' ? '2 columns' : '1 column'}`">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect v-if="gridSize === 'S'" x="3" y="8" width="5" height="8" rx="1" />
             <rect v-if="gridSize === 'S'" x="9.5" y="8" width="5" height="8" rx="1" />
             <rect v-if="gridSize === 'S'" x="16" y="8" width="5" height="8" rx="1" />
@@ -181,39 +203,37 @@
     </div>
 
     <!-- Context Menu -->
-    <div v-if="contextMenu.visible" @click="closeContextMenu"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div @click.stop
-        class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden shadow-2xl min-w-[200px]">
+    <div v-if="contextMenu.visible" @click="closeContextMenu" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div @click.stop class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden shadow-2xl min-w-[200px]">
         <div class="p-2 bg-gradient-to-b from-white/5 to-transparent border-b border-white/10">
           <p class="text-white/90 font-medium text-sm px-3 py-1 truncate">{{ contextMenu.game?.title }}</p>
         </div>
         <div class="p-2 space-y-1">
-          <button @click="handleContextAction('download', $event)"
+          <button
+            @click="handleContextAction('download', $event)"
             class="w-full px-4 py-3 text-left text-white/90 hover:bg-white/10 rounded-xl transition-all active:scale-95 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
             <span class="text-sm font-medium">Download</span>
           </button>
-          <button @click="handleContextAction('play', $event)"
+          <button
+            @click="handleContextAction('play', $event)"
             class="w-full px-4 py-3 text-left text-white/90 hover:bg-white/10 rounded-xl transition-all active:scale-95 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
                 d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span class="text-sm font-medium">Download and Play</span>
           </button>
-          <button @click="handleContextAction('open-bbs', $event)"
+          <button
+            @click="handleContextAction('open-bbs', $event)"
             class="w-full px-4 py-3 text-left text-white/90 hover:bg-white/10 rounded-xl transition-all active:scale-95 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
             <span class="text-sm font-medium">Open BBS Page</span>
           </button>
@@ -224,14 +244,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
-import { useRouter } from "vue-router";
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
-import { Browser } from "@capacitor/browser";
-import { useLibraryStore } from "../stores/library";
-import { useToast } from "../composables/useToast";
-import { libraryManager } from "../services/LibraryManager";
-import { Capacitor } from "@capacitor/core";
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { onMounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { useToast } from '../composables/useToast';
+import { libraryManager } from '../services/LibraryManager';
+import { useLibraryStore } from '../stores/library';
 
 const router = useRouter();
 const libraryStore = useLibraryStore();
@@ -239,8 +259,8 @@ const toast = useToast();
 
 const games = ref([]);
 const loading = ref(false);
-const searchQuery = ref("");
-const activeTab = ref("Featured");
+const searchQuery = ref('');
+const activeTab = ref('Featured');
 const downloadingId = ref(null);
 const currentPage = ref(1);
 const pageInput = ref(1);
@@ -253,7 +273,7 @@ onMounted(() => {
   loadGames();
 });
 
-watch(gridSize, (newSize) => {
+watch(gridSize, newSize => {
   localStorage.setItem('pico_bbs_grid_size', newSize);
 });
 
@@ -261,7 +281,7 @@ async function goToPage() {
   const page = parseInt(pageInput.value);
   if (page && page > 0 && page !== currentPage.value) {
     currentPage.value = page;
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     await loadGames();
   } else {
     // Reset to current page if invalid
@@ -279,7 +299,7 @@ function cycleGridSize() {
 async function nextPage() {
   currentPage.value++;
   pageInput.value = currentPage.value;
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   await loadGames();
 }
 
@@ -287,7 +307,7 @@ async function previousPage() {
   if (currentPage.value > 1) {
     currentPage.value--;
     pageInput.value = currentPage.value;
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     await loadGames();
   }
 }
@@ -297,20 +317,20 @@ async function loadGames() {
   games.value = [];
 
   try {
-    if (searchQuery.value.trim() !== "") {
+    if (searchQuery.value.trim() !== '') {
       games.value = await searchGames({ query: searchQuery.value, page: currentPage.value });
-    } else if (activeTab.value === "Featured") {
+    } else if (activeTab.value === 'Featured') {
       games.value = await fetchFeaturedGames(currentPage.value);
-    } else if (activeTab.value === "New") {
+    } else if (activeTab.value === 'New') {
       games.value = await fetchNewGames(currentPage.value, false);
-    } else if (activeTab.value === "Popular") {
+    } else if (activeTab.value === 'Popular') {
       games.value = await fetchNewGames(currentPage.value, true);
-    } else if (activeTab.value === "Lucky") {
+    } else if (activeTab.value === 'Lucky') {
       games.value = await fetchLuckyGames(currentPage.value);
     }
     console.log(`[bbs_explorer] Loaded ${games.value.length} games for page ${currentPage.value}`);
   } catch (e) {
-    toast.showToast(`Failed to load games: ${e.message}`, "error");
+    toast.showToast(`Failed to load games: ${e.message}`, 'error');
   } finally {
     loading.value = false;
   }
@@ -320,7 +340,7 @@ async function performSearch() {
   // force search mode basically overrides tabs
   if (!searchQuery.value) return;
   Haptics.impact({ style: ImpactStyle.Light });
-  activeTab.value = "Search"; // Just visual
+  activeTab.value = 'Search'; // Just visual
   currentPage.value = 1; // Reset to page 1 on new search
   pageInput.value = currentPage.value;
   loadGames();
@@ -331,7 +351,7 @@ async function switchTab(tab) {
   Haptics.impact({ style: ImpactStyle.Light });
 
   activeTab.value = tab;
-  searchQuery.value = ""; // Clear search when switching tabs
+  searchQuery.value = ''; // Clear search when switching tabs
   currentPage.value = 1; // Reset to page 1 when switching tabs
   pageInput.value = currentPage.value;
   loadGames();
@@ -342,7 +362,7 @@ function showContextMenu(game, event) {
     visible: true,
     x: event.clientX || 0,
     y: event.clientY || 0,
-    game: game
+    game: game,
   };
   Haptics.impact({ style: ImpactStyle.Medium });
 }
@@ -374,9 +394,9 @@ function handleContextAction(action, event) {
   closeContextMenu();
 
   if (action === 'download') {
-    performDownload(game, false)
+    performDownload(game, false);
   } else if (action === 'play') {
-    performDownload(game, true)
+    performDownload(game, true);
   } else if (action === 'open-bbs') {
     Browser.open({ url: game.source_page_url });
     Haptics.impact({ style: ImpactStyle.Light });
@@ -385,7 +405,7 @@ function handleContextAction(action, event) {
 
 async function performDownload(game, andPlay = true) {
   if (!game || !game.id) {
-    console.error("Invalid game data");
+    console.error('Invalid game data');
     return;
   }
   if (downloadingId.value) return;
@@ -395,19 +415,19 @@ async function performDownload(game, andPlay = true) {
 
   try {
     const result = await libraryStore.downloadCart(game);
-    toast.showToast(`Downloaded ${game.title}`, "success");
+    toast.showToast(`Downloaded ${game.title}`, 'success');
     if (andPlay) {
       await libraryManager.updateLastPlayed(result.fileName);
-      router.push({ name: "player", query: { cart: result.fileName } });
+      router.push({ name: 'player', query: { cart: result.fileName } });
     }
   } catch (e) {
-    console.error("Download failed:", e);
-    Haptics.notification({ type: "error" });
+    console.error('Download failed:', e);
+    Haptics.notification({ type: 'error' });
 
-    if (e.message.includes("404") || e.message.includes("Could not find")) {
-      toast.showToast("Cartridge link not found on BBS page.", "error");
+    if (e.message.includes('404') || e.message.includes('Could not find')) {
+      toast.showToast('Cartridge link not found on BBS page.', 'error');
     } else {
-      toast.showToast(`Download failed: ${e.message}`, "error");
+      toast.showToast(`Download failed: ${e.message}`, 'error');
     }
   } finally {
     downloadingId.value = null;
@@ -421,7 +441,7 @@ async function fetchFeaturedGames(page = 1) {
 }
 
 async function fetchNewGames(page = 1, popular = false) {
-  const url = `https://www.lexaloffle.com/bbs/lister.php?use_hurl=1&cat=7&sub=2&mode=carts&orderby=ts${popular ? "&popular=1" : ""}&page=${page}`;
+  const url = `https://www.lexaloffle.com/bbs/lister.php?use_hurl=1&cat=7&sub=2&mode=carts&orderby=ts${popular ? '&popular=1' : ''}&page=${page}`;
   return scrapeGames(url);
 }
 
@@ -431,7 +451,7 @@ async function fetchLuckyGames(page = 1) {
 }
 
 async function searchGames(options) {
-  const query = encodeURIComponent(options.query || "");
+  const query = encodeURIComponent(options.query || '');
   const page = options.page || 1;
   const url = `https://www.lexaloffle.com/bbs/?mode=carts&cat=7&sub=0&orderby=ts&search=${query}&page=${page}`;
   return scrapeGames(url);
@@ -439,7 +459,7 @@ async function searchGames(options) {
 
 async function scrapeGames(targetUrl) {
   console.log(`[bbs_explorer] 🔎 [WebScraper] SEARCHING URL: ${targetUrl}`);
-  const response = await fetch(Capacitor.getPlatform() === "web" ? "https://nomorecors.hao.sach.chat/" + targetUrl : targetUrl);
+  const response = await fetch(Capacitor.getPlatform() === 'web' ? 'https://nomorecors.hao.sach.chat/' + targetUrl : targetUrl);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const html = await response.text();
   return parseHTML(html);
@@ -456,7 +476,7 @@ function parseHTML(html) {
   const scriptElement = doc.getElementById('cart_data_script');
 
   if (!scriptElement) {
-    throw new Error("⚠️ [WebScraper] No cart_data_script found in HTML");
+    throw new Error('⚠️ [WebScraper] No cart_data_script found in HTML');
   }
 
   const scriptContent = scriptElement.textContent;
@@ -465,7 +485,7 @@ function parseHTML(html) {
   const pdatMatch = scriptContent.match(/pdat\s*=\s*\[([\s\S]*?)\];/);
 
   if (!pdatMatch) {
-    throw new Error("⚠️ [WebScraper] No pdat array found in script");
+    throw new Error('⚠️ [WebScraper] No pdat array found in script');
   }
 
   // Parse the pdat array safely by wrapping in valid JSON context
@@ -479,7 +499,7 @@ function parseHTML(html) {
 
   for (const entry of pdat) {
     if (!Array.isArray(entry) || entry.length < 9) {
-      console.warn("⚠️ [WebScraper] Invalid pdat entry:", entry);
+      console.warn('⚠️ [WebScraper] Invalid pdat entry:', entry);
       continue;
     }
 
@@ -494,7 +514,7 @@ function parseHTML(html) {
     const id = String(entry[1]); // Convert to string for consistency
     const title = entry[2] || `Cart ${id}`;
     const srcPath = entry[3];
-    const author = entry[8] || "Unknown";
+    const author = entry[8] || 'Unknown';
 
     addGame(games, id, title, srcPath, author);
   }
@@ -504,14 +524,12 @@ function parseHTML(html) {
 }
 
 function addGame(games, id, title, srcPath, author) {
-  const thumb_url = srcPath.startsWith("http")
-    ? srcPath
-    : `https://www.lexaloffle.com${srcPath}`;
+  const thumb_url = srcPath.startsWith('http') ? srcPath : `https://www.lexaloffle.com${srcPath}`;
   const source_page_url = `https://www.lexaloffle.com/bbs/?tid=${id}`;
 
-  let cart_url = "";
-  if (srcPath.includes("/bbs/thumbs/pico8_")) {
-    const cartName = srcPath.replace("/bbs/thumbs/pico8_", "").replace(".p8.png", "").replace(".png", "");
+  let cart_url = '';
+  if (srcPath.includes('/bbs/thumbs/pico8_')) {
+    const cartName = srcPath.replace('/bbs/thumbs/pico8_', '').replace('.p8.png', '').replace('.png', '');
     const subFolder = cartName.substring(0, 2);
     cart_url = `https://www.lexaloffle.com/bbs/cposts/${subFolder}/${cartName}.p8.png`;
   }
