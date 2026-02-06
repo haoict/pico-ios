@@ -14,10 +14,7 @@
       <div class="flex gap-3">
         <!-- import button -->
         <button @click="$emit('import')"
-          class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105 !relative !z-[9999] !pointer-events-auto"
-          :class="{
-            'ring-2 ring-purple-500 bg-white/20': headerFocusIndex === 2,
-          }">
+          class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105 !relative !z-[9999] !pointer-events-auto">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white/80" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -26,10 +23,7 @@
 
         <!-- bbs button -->
         <button @click="$emit('open-bbs')"
-          class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105"
-          :class="{
-            'ring-2 ring-purple-500 bg-white/20': headerFocusIndex === 3,
-          }">
+          class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white/80" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -39,10 +33,7 @@
 
         <!-- bbs explorer button -->
         <button @click="$emit('open-bbs-explorer')"
-          class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105"
-          :class="{
-            'ring-2 ring-purple-500 bg-white/20': headerFocusIndex === 5,
-          }">
+          class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white/80" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -52,10 +43,7 @@
 
         <!-- settings button -->
         <button @click="$emit('open-settings')"
-          class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105"
-          :class="{
-            'ring-2 ring-purple-500 bg-white/20': headerFocusIndex === 4,
-          }">
+          class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white/80" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -80,10 +68,7 @@
         </div>
         <input :value="searchQuery" @input="$emit('update:searchQuery', $event.target.value)" type="text"
           class="block w-full pl-10 pr-3 py-2.5 border border-white/10 rounded-xl leading-5 bg-white/5 text-white placeholder-white/30 focus:outline-none focus:bg-white/10 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 sm:text-sm transition-all"
-          :class="{
-            'ring-2 ring-purple-500 bg-white/20': headerFocusIndex === 0,
-          }" placeholder="Search cartridges..." @keydown="$emit('keydown', $event)"
-          @keydown.escape.stop.prevent="$emit('keydown', $event)" />
+          placeholder="Search cartridges..." />
       </div>
 
       <div class="relative min-w-[140px] z-[200]">
@@ -91,7 +76,6 @@
           @keydown.escape.stop.prevent="handleSortEscape"
           class="w-full h-full flex items-center justify-between appearance-none bg-white/5 border border-white/10 text-white py-2.5 pl-4 pr-3 rounded-xl focus:outline-none focus:bg-white/10 text-sm transition-all"
           :class="{
-            'ring-2 ring-purple-500 bg-white/20': headerFocusIndex === 1,
             '!bg-black z-[201] ring-2 ring-purple-500': sortDropdownOpen,
           }">
           <span class="truncate">{{
@@ -154,10 +138,6 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
-  headerFocusIndex: {
-    type: Number,
-    required: true,
-  },
   gridSize: {
     type: String,
     required: true,
@@ -168,13 +148,11 @@ const emit = defineEmits([
   'update:searchQuery',
   'update:sortBy',
   'update:sortDropdownOpen',
-  'update:headerFocusIndex',
   'update:gridSize',
   'import',
   'open-bbs',
   'open-bbs-explorer',
   'open-settings',
-  'keydown',
   'scroll-to-top',
 ]);
 
@@ -194,7 +172,6 @@ const handleSortSelect = (value) => {
 
 const handleSortEscape = (event) => {
   emit('update:sortDropdownOpen', false);
-  emit('update:headerFocusIndex', -1);
   event.target.blur();
 };
 

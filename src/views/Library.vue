@@ -32,9 +32,9 @@
 
       <!-- header -->
       <LibraryHeader v-model:searchQuery="searchQuery" v-model:sortBy="sortBy"
-        v-model:sortDropdownOpen="sortDropdownOpen" v-model:headerFocusIndex="headerFocusIndex"
+        v-model:sortDropdownOpen="sortDropdownOpen"
         v-model:gridSize="gridSize" :gamesCount="games.length" @import="triggerImport" @open-bbs="openOfficialBBS"
-        @open-bbs-explorer="openBBSExplorer" @open-settings="$router.push('/settings')" @keydown="handleHeaderNav"
+        @open-bbs-explorer="openBBSExplorer" @open-settings="$router.push('/settings')"
         @scroll-to-top="scrollToTop" />
 
       <!-- loading state -->
@@ -101,8 +101,8 @@
           'grid-cols-2': gridSize === 'M',
           'grid-cols-1': gridSize === 'L'
         }">
-          <GameCard v-for="(game, index) in favorites" :key="game.filename" :ref="(el) => setItemRef(el, index)"
-            :game="game" :index="index" :is-focused="focusedIndex === index" :delete-mode="deleteMode"
+          <GameCard v-for="(game, index) in favorites" :key="game.filename"
+            :game="game" :index="index" :delete-mode="deleteMode"
             :card-menu-open="game.filename === cardMenuGameId" :card-menu-btn-index="cardMenuBtnIndex"
             :is-favorite="true" @click="openGame" @long-press-start="startLongPress"
             @long-press-cancel="cancelLongPress" @mousedown="handleMouseDown" @favorite="handleFavorite"
@@ -125,8 +125,7 @@
         'grid-cols-1': gridSize === 'L'
       }">
         <GameCard v-for="(game, index) in nonFavorites" :key="game.filename"
-          :ref="(el) => setItemRef(el, favorites.length + index)" :game="game" :index="favorites.length + index"
-          :is-focused="focusedIndex === favorites.length + index" :delete-mode="deleteMode"
+          :game="game" :index="favorites.length + index" :delete-mode="deleteMode"
           :card-menu-open="game.filename === cardMenuGameId" :card-menu-btn-index="cardMenuBtnIndex"
           :is-favorite="false" @click="openGame" @long-press-start="startLongPress" @long-press-cancel="cancelLongPress"
           @mousedown="handleMouseDown" @favorite="handleFavorite" @rename="openRenameModal" @delete="handleDelete" />
@@ -190,10 +189,7 @@ import { haptics } from "../utils/haptics";
 import { ImpactStyle } from "@capacitor/haptics";
 import { libraryManager } from "../services/LibraryManager";
 import { Capacitor } from "@capacitor/core";
-import { useFocusable } from "../composables/useFocusable";
-import { useLibraryNavigation } from "../composables/useLibraryNavigation";
 import { FilePicker } from "@capawesome/capacitor-file-picker";
-import { inputManager } from "../services/InputManager";
 import { ScopedStorage } from "@daniele-rolli/capacitor-scoped-storage";
 import { Browser } from "@capacitor/browser";
 import packageJson from "../../package.json";
@@ -300,111 +296,20 @@ const {
 const favorites = computed(() => games.value.filter((g) => g.isFavorite));
 const nonFavorites = computed(() => games.value.filter((g) => !g.isFavorite));
 
-const displayGames = computed(() => [
-  ...favorites.value,
-  ...nonFavorites.value,
-]);
-
 // UI state refs
 const cardMenuGameId = ref(null); // filename of the game with open menu
+const cardMenuBtnIndex = ref(0); // which button is focused in card menu
 const sortDropdownOpen = ref(false);
 const showRenameModal = ref(false);
 const deleteMode = ref(false);
 
-// Sort options for LibraryHeader
-const sortOptions = [
-  { label: "Recently Played", value: "lastPlayed" },
-  { label: "Name (A-Z)", value: "name" },
-  { label: "Newest", value: "newest" },
-  { label: "Oldest", value: "oldest" },
-  { label: "Play Count", value: "playCount" },
-];
-
-// Initialize navigation composable
-const {
-  headerFocusIndex,
-  cardMenuBtnIndex,
-  isTransitioning,
-  headerEntryTime,
-  menuCloseTimestamp,
-  navigateHeader,
-  enterHeader,
-  exitHeader,
-  openCardMenu,
-  closeCardMenu,
-  navigateCardMenu,
-  handleSortNav,
-  handleInputKeyboard,
-  handleCardMenuKeyboard,
-  routeGamepadInput,
-} = useLibraryNavigation({
-  sortOptions,
-  sortBy,
-  sortDropdownOpen,
-  searchQuery,
-  games,
-  displayGames,
-  cardMenuGameId,
-  showRenameModal,
-  deleteMode,
-});
-
-const gridInputEnabled = computed(
-  () =>
-    !cardMenuGameId.value &&
-    !sortDropdownOpen.value &&
-    !showRenameModal.value &&
-    !deleteMode.value,
-);
-
-// Use the new composable
-const { focusedIndex, setItemRef } = useFocusable({
-  items: displayGames,
-  columns: gridColumns,
-  enabled: gridInputEnabled,
-  onSelect: (game) => {
-    // prevent double activation if menu just closed
-    if (Date.now() - menuCloseTimestamp.value < 400) return;
-    openGame(game);
-  },
-  onMenu: () => {
-    router.push("/settings");
-  },
-
-  onUpOut: () => {
-    // enter header (focus search by default)
-    enterHeader(0);
-  },
-  enabled: computed(
-    () =>
-      headerFocusIndex.value === -1 &&
-      !cardMenuGameId.value &&
-      !sortDropdownOpen.value &&
-      !isTransitioning.value,
-  ),
-});
-
-// Header keyboard navigation - use composable
-const handleHeaderNav = (e) => {
-  handleInputKeyboard(e);
-};
-
-// Trigger header action based on index
-const triggerHeaderAction = (idx) => {
-  if (idx === 0) {
-    // search: focus input
-    const input = document.querySelector('input[type="text"]');
-    input?.focus();
-  } else if (idx === 1) {
-    // sort: handled by dropdown
-  } else if (idx === 2) triggerImport();
-  else if (idx === 3) openOfficialBBS();
-  else if (idx === 4) router.push("/settings");
-  else if (idx === 5) openBBSExplorer();
+// Card menu functions
+const closeCardMenu = () => {
+  cardMenuGameId.value = null;
+  cardMenuBtnIndex.value = 0;
 };
 
 const isAndroid = computed(() => Capacitor.getPlatform() === "android");
-const needsDirectorySetup = computed(() => isAndroid.value && games.value.length === 0);
 
 async function pickExternalFolder() {
   haptics.impact(ImpactStyle.Light).catch(() => { });
@@ -554,14 +459,9 @@ async function handleFavorite(game, event) {
   haptics.impact(ImpactStyle.Light).catch(() => { });
   await toggleFavorite(game);
 
-  // if card menu was open, close it and follow the game if it moved
+  // if card menu was open, close it
   if (cardMenuGameId.value === game.filename) {
     closeCardMenu();
-    // find new index
-    const idx = displayGames.value.findIndex(
-      (g) => g.filename === game.filename,
-    );
-    if (idx !== -1) focusedIndex.value = idx;
   }
 }
 
@@ -603,14 +503,6 @@ async function confirmRename() {
   if (success) {
     haptics.success().catch(() => { });
     console.log(`[library] renamed via modal -> ${newName}`);
-    // find new index
-    const reFound = displayGames.value.find(
-      (g) => g.name === newName || g.filename === game.filename,
-    );
-    if (reFound) {
-      const idx = displayGames.value.indexOf(reFound);
-      if (idx !== -1) focusedIndex.value = idx;
-    }
   }
 }
 
@@ -636,84 +528,20 @@ async function openGame(game) {
   router.push({ name: "player", query: { cart: game.filename } });
 }
 
-const listenerCleanup = ref(null);
-
-// Define handlers for card menu keyboard navigation
-const _handleCardMenuKeyboard = (e) => {
-  if (!cardMenuGameId.value || showRenameModal.value) return;
-
-  // Use composable for navigation
-  handleCardMenuKeyboard(e);
-
-  // Handle confirm actions locally
-  if (["Enter", " ", "z", "Z", "x", "X"].includes(e.key)) {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    const game = games.value.find((g) => g.filename === cardMenuGameId.value);
-    if (!game) return;
-
-    if (cardMenuBtnIndex.value === 0) {
-      handleFavorite(game);
-    } else if (cardMenuBtnIndex.value === 1) {
-      openRenameModal(game);
-    } else if (cardMenuBtnIndex.value === 2) {
-      handleDelete(game);
-    }
-  }
-};
-
-onMounted(() => {
-  window.addEventListener("keydown", handleHeaderNav);
-  window.addEventListener("keydown", _handleCardMenuKeyboard);
-  listenerCleanup.value = inputManager.addListener(handleGamepadInput);
-});
-
-onUnmounted(() => {
-  if (listenerCleanup.value) listenerCleanup.value();
-});
-
 // watch for sort dropdown to lock body scroll
 watch(sortDropdownOpen, (isOpen) => {
   document.body.style.overflow = isOpen ? "hidden" : "";
 });
 
 // watch for route changes to reset state when returning to library
-
 watch(
   () => route.path,
   (newPath) => {
     if (newPath === "/") {
-      headerFocusIndex.value = -1;
       sortDropdownOpen.value = false;
     }
   },
 );
-
-// Use composable for gamepad input routing
-const handleGamepadInput = (action) => {
-  routeGamepadInput(action, {
-    onHeaderAction: (idx) => triggerHeaderAction(idx),
-    onCardMenuConfirm: (game, btnIndex) => {
-      if (btnIndex === 0) {
-        handleFavorite(game);
-      } else if (btnIndex === 1) {
-        openRenameModal(game);
-        closeCardMenu();
-      } else if (btnIndex === 2) {
-        handleDelete(game);
-      }
-    },
-    onEmptyStateConfirm: () => {
-      if (needsDirectorySetup.value) {
-        pickAndroidDirectory();
-      }
-    },
-    onWiggleInGrid: () => {
-      const game = displayGames.value[focusedIndex.value];
-      if (game) openCardMenu(game);
-    },
-  });
-};
 
 const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: "smooth" });

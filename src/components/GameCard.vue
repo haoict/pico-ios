@@ -9,11 +9,6 @@
         : isFavorite
           ? 'hover:shadow-2xl hover:shadow-pink-500/20'
           : 'hover:shadow-2xl hover:shadow-purple-500/20',
-      isFocused
-        ? isFavorite
-          ? 'ring-4 ring-pink-500 shadow-2xl z-20'
-          : 'ring-4 ring-purple-500 shadow-2xl z-20'
-        : '',
     ]">
     <!-- heart icon (always visible for favorites or if card menu open or delete mode) -->
     <div class="absolute -top-2 -right-2 z-20 transition-transform duration-300" :class="{
@@ -106,10 +101,6 @@ const props = defineProps({
   index: {
     type: Number,
     required: true,
-  },
-  isFocused: {
-    type: Boolean,
-    default: false,
   },
   deleteMode: {
     type: Boolean,

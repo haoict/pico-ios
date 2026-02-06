@@ -3,8 +3,7 @@
     <!-- header -->
     <div class="flex items-center gap-4 mb-8">
       <button @click="$router.back()"
-        class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center active:bg-white/20 transition-all"
-        :class="{ 'ring-2 ring-purple-500 bg-white/20': headerFocused }">
+        class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center active:bg-white/20 transition-all">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white/80" fill="none" viewBox="0 0 24 24"
           stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -39,13 +38,8 @@
           <!-- group items -->
           <div class="space-y-2">
             <div v-for="(save, fileIndex) in group.files" :key="save.name"
-              :ref="(el) => setItemRef(el, getGlobalIndex(index, fileIndex))"
               @click="activeSaveIndex = getGlobalIndex(index, fileIndex)"
-              class="group flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-colors cursor-pointer"
-              :class="{
-                '!bg-white/20 !border-white/40 ring-2 ring-white/50 scale-[1.01]':
-                  focusedIndex === getGlobalIndex(index, fileIndex),
-              }">
+              class="group flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-colors cursor-pointer">
               <div class="flex items-center gap-3 overflow-hidden">
                 <div
                   class="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0 border border-white/5">
@@ -247,8 +241,6 @@ async function deleteState(save) {
 }
 
 // gamepad nav
-import { useFocusable } from "../composables/useFocusable";
-import { inputManager } from "../services/InputManager";
 
 const flatSaves = computed(() => groupedSaves.value.flatMap((g) => g.files));
 
@@ -268,63 +260,4 @@ const getGlobalIndex = (groupIndex, fileIndex) => {
 
 const activeSaveIndex = ref(null);
 const activeBtnIndex = ref(0);
-
-const headerFocused = ref(false);
-
-const { focusedIndex, setItemRef } = useFocusable({
-  items: flatSaves,
-  columns: ref(1),
-  onSelect: () => {
-    // activate card mode
-    if (activeSaveIndex.value === null) {
-      activeSaveIndex.value = focusedIndex.value;
-      activeBtnIndex.value = 0;
-    }
-  },
-  onBack: () => router.back(),
-  onUpOut: () => {
-    focusedIndex.value = -1;
-    headerFocused.value = true;
-  },
-  enabled: computed(
-    () => !headerFocused.value && activeSaveIndex.value === null
-  ),
-});
-
-const handleInput = (action) => {
-  if (headerFocused.value) {
-    if (action === "nav-down") {
-      headerFocused.value = false;
-      focusedIndex.value = 0;
-    } else if (action === "confirm" || action === "back") {
-      router.back();
-    }
-  } else if (activeSaveIndex.value !== null) {
-    // card nav
-    const save = flatSaves.value[activeSaveIndex.value];
-    if (!save) return;
-
-    if (action === "nav-left") {
-      activeBtnIndex.value = Math.max(0, activeBtnIndex.value - 1);
-    } else if (action === "nav-right") {
-      activeBtnIndex.value = Math.min(2, activeBtnIndex.value + 1);
-    } else if (action === "confirm") {
-      if (activeBtnIndex.value === 0) loadState(save);
-      else if (activeBtnIndex.value === 1) shareState(save);
-      else if (activeBtnIndex.value === 2) deleteState(save);
-    } else if (action === "back") {
-      activeSaveIndex.value = null; // exit card mode
-    }
-  }
-};
-
-const listenerCleanup = ref(null);
-
-onMounted(() => {
-  listenerCleanup.value = inputManager.addListener(handleInput);
-});
-
-onUnmounted(() => {
-  if (listenerCleanup.value) listenerCleanup.value();
-});
 </script>

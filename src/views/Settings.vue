@@ -18,13 +18,9 @@
     <div class="space-y-8 max-w-2xl mx-auto">
       <section>
         <div class="space-y-3">
-          <div v-for="(item, index) in settingsItems" :key="item.id" :ref="(el) => setItemRef(el, index)"
+          <div v-for="(item, index) in settingsItems" :key="item.id"
             @click="item.action"
-            class="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 active:bg-white/10 transition-all cursor-pointer select-none"
-            :class="{
-              '!bg-white/20 !border-white/40 ring-2 ring-white/50 scale-[1.02]':
-                focusedIndex === index,
-            }">
+            class="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 active:bg-white/10 transition-all cursor-pointer select-none">
             <div class="flex flex-col">
               <span class="text-white font-medium">{{ item.label }}</span>
               <span v-if="item.subtext" class="text-xs text-white/40 mt-1">{{
@@ -94,8 +90,6 @@ import { ImpactStyle } from "@capacitor/haptics";
 // import { FilePicker } from "@capawesome/capacitor-file-picker";
 import { ScopedStorage } from "@daniele-rolli/capacitor-scoped-storage";
 import { Capacitor, registerPlugin } from "@capacitor/core";
-import { useFocusable } from "../composables/useFocusable";
-import { inputManager } from "../services/InputManager";
 
 import { useToast } from "../composables/useToast";
 import packageJson from "../../package.json";
@@ -298,29 +292,4 @@ async function pickAndroidDirectory() {
   }
 }
 
-// focusable
-const { focusedIndex, setItemRef } = useFocusable({
-  items: settingsItems,
-  onSelect: (item) => item.action(),
-  onBack: () => router.back(),
-});
-
-// header focus
-const headerFocused = ref(false);
-
-const listenerCleanup = ref(null);
-
-onMounted(() => {
-  listenerCleanup.value = inputManager.addListener((action) => {
-    if (action === "back") {
-      router.back();
-    } else if (action === "menu") {
-      router.back();
-    }
-  });
-});
-
-onUnmounted(() => {
-  if (listenerCleanup.value) listenerCleanup.value();
-});
 </script>
