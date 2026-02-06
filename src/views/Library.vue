@@ -497,8 +497,6 @@ async function handleDelete(game, event) {
   }
 }
 
-const formatDate = ms => new Date(ms).toLocaleDateString();
-
 async function openGame(game) {
   if (deleteMode.value) return;
   haptics.impact(ImpactStyle.Light).catch(() => {});

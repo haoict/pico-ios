@@ -42,9 +42,6 @@
               ]">
               {{ btn.label }}
             </button>
-
-            <!-- hidden file picker -->
-            <input type="file" ref="filePicker" class="hidden" accept=".p8d,.txt,.p8" @change="handleFileImport" />
           </div>
         </div>
       </div>
@@ -209,13 +206,10 @@ onMounted(async () => {
     alert('Failed to load cartridge: ' + e.message);
     router.push('/');
   }
-
-  startAutoSaveTimer();
 });
 
 onUnmounted(async () => {
   window.removeEventListener('keydown', handleGlobalKeydown);
-  stopAutoSaveTimer();
   picoBridge.shutdown();
 
   if (inputCleanup.value) inputCleanup.value();
@@ -260,36 +254,6 @@ const triggerMenuAction = action => {
   if (action === 'exit') exitGame();
 };
 
-let autoSaveInterval = null;
-
-const startAutoSaveTimer = () => {
-  autoSaveInterval = setInterval(() => {
-    if (!isMenuOpen.value) {
-      triggerAutoSave();
-    }
-  }, 600000);
-  console.log('[player] auto-save timer started (10m)');
-};
-
-const stopAutoSaveTimer = () => {
-  if (autoSaveInterval) {
-    clearInterval(autoSaveInterval);
-    autoSaveInterval = null;
-  }
-};
-
-const triggerAutoSave = async (silent = false) => {
-  if (!window.picoBridge || !window.pico8_engine_ready) return;
-
-  const autoName = `Saves/${activeCartName.value}_auto.state`;
-  console.log(`[player] triggering auto-save to: ${autoName}`);
-
-  const success = await window.picoBridge.captureFullRAMState(autoName);
-  if (success && !silent) {
-    showToast('Auto-Saved');
-  }
-};
-
 const handleStateLoad = async filename => {
   if (filename) {
     console.log('[player] loading state:', filename);
@@ -306,6 +270,7 @@ const triggerManualSave = async () => {
   // close menu immediately for better ux
   isMenuOpen.value = false;
   picoBridge.resume();
+  inputManager.setMode('GAME');
 
   try {
     const base = activeCartName.value;
@@ -335,59 +300,16 @@ const triggerManualSave = async () => {
   }
 };
 
-// # keyboard navigation
-const handleFileImport = async event => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  // feedback
-  showToast('Importing...');
-
-  const reader = new FileReader();
-  reader.onload = async e => {
-    const arrayBuffer = e.target.result;
-    const uint8Array = new Uint8Array(arrayBuffer);
-    const fileName = file.name;
-
-    if (fileName.endsWith('.state')) {
-      // # ram injection path
-      console.log('[player] detect .state file, triggering ram injection');
-      window.picoBridge.injectFullRAMState(uint8Array);
-      showToast('State Loaded');
-      // close menu to return to game
-      isMenuOpen.value = false;
-      picoBridge.resume();
-      inputManager.setMode('GAME');
-    } else {
-      // # standard cart import
-      await window.picoBridge.importSaveFile(fileName, uint8Array);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-};
-
 function resetGame() {
   console.log('[player] hard resetting...');
-  window.location.reload();
+  picoBridge.shutdown();
+  setTimeout(() => {
+    window.location.reload();
+  }, 200);
 }
 
 async function exitGame() {
-  // auto-save ram state
-  if (window.picoBridge && window.pico8_engine_ready) {
-    await triggerAutoSave(true); // silent
-  }
-
-  // save data (async wait)
-  if (window.picoSave) {
-    console.log('[player] auto-saving before exit...');
-    const savePromise = window.picoSave();
-    const timeout = new Promise(resolve => setTimeout(resolve, 1000));
-    await Promise.race([savePromise, timeout]);
-  }
-  await picoBridge.syncToNative();
-
   // kill switch
-  window.Pico8Kill = true;
   isExiting.value = true;
   picoBridge.shutdown();
 

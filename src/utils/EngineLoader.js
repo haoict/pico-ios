@@ -34,6 +34,18 @@ if (url.startsWith("/bbs/")) {
 }
 var xhr=new XMLHttpRequest;`,
   },
+  {
+    name: 'Silent shutdown patch (onaudioprocess)',
+    mandatory: false,
+    old: `node.onaudioprocess=function(e){`,
+    new: `node.onaudioprocess=function(e){if (window.Pico8Kill) return;if (!Module || !Module.ccall) return;`,
+  },
+  {
+    name: 'Browser_mainLoop_runner kill switch patch',
+    mandatory: false,
+    old: `Browser_mainLoop_runner(){if(ABORT)return;`,
+    new: `Browser_mainLoop_runner(){if(ABORT)return;if(window.Pico8Kill)return;`,
+  },
 ];
 
 export const EngineLoader = {

@@ -11,15 +11,6 @@ import { haptics } from '../utils/haptics';
  * 4. forces offline mode
  * 5. boots engine via callmain
  */
-// initialize global bridge namespace, prevents race conditions
-window.picoBridge = {
-  syncFromNative: async () => {
-    console.log('[pico_bridge] bridge warming up... (sync_from_native called early)');
-  },
-  syncToNative: async () => {
-    console.warn('[pico_bridge] bridge warming up... (sync_to_native called early)');
-  },
-};
 
 class Pico8Bridge {
   constructor() {
@@ -33,14 +24,6 @@ class Pico8Bridge {
     // required by game.js schema
     window.pico8_gpio = new Array(128);
     window.p8_is_running = false;
-
-    // persistence placeholders
-    window.picoSave = () => {
-      /* system not ready yet */
-    };
-    window.picoLoad = () => {
-      /* system not ready yet */
-    };
   }
 
   /**
@@ -177,12 +160,6 @@ class Pico8Bridge {
               haptics.error();
               return;
             }
-
-            // expose sync methods globally
-            window.picoSave = () => {
-              // block saves during boot
-              return Promise.resolve(true);
-            };
 
             // inject cartridge
             if (window._cartdat) {
@@ -350,154 +327,6 @@ class Pico8Bridge {
 
     // nuke module
     window.Module = null;
-  }
-
-  async resumeAudio() {
-    // ios safari audio unlock
-    const ctx = window.pico8_audio_context || (window.Module && window.Module.sdl_audio_context);
-
-    if (ctx && ctx.state === 'suspended') {
-      // silent buffer kickstart (force thread priority)
-      const buffer = ctx.createBuffer(1, 1, 22050);
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(ctx.destination);
-      source.start(0);
-
-      await ctx.resume().catch(() => {});
-      console.log('[pico_bridge] audiocontext resumed (w/ kickstart)');
-    }
-  }
-
-  // native sync methods
-  async syncFromNative() {
-    console.log('[pico_bridge] sync_from_native (class method)');
-    return Promise.resolve();
-  }
-
-  async syncToNative() {
-    // run via idlecallback to prevent game thread blocking
-    const runSync = async () => {
-      try {
-        const fs = window.Module && window.Module.FS;
-        const savesDir = '/appdata';
-
-        // critical filesystem check
-        if (!fs || !fs.analyzePath || !window.pico8_engine_ready) {
-          console.warn('[warning] sync_to_native skipped (fs not ready)');
-          return;
-        }
-
-        try {
-          fs.stat(savesDir);
-        } catch (e) {
-          return;
-        }
-
-        const files = fs.readdir(savesDir);
-        // optimization: process non-blocking
-        const processFile = async file => {
-          if (file === '.' || file === '..') return;
-
-          return new Promise(resolve => {
-            // nested schedule to breathe
-            setTimeout(async () => {
-              try {
-                const path = `${savesDir}/${file}`;
-                const data = fs.readFile(path);
-                const base64 = typeof data === 'string' ? btoa(data) : btoa(String.fromCharCode.apply(null, data));
-
-                // resolve platform path for sync
-                const platform = Capacitor.getPlatform();
-                const dir = Directory.Documents;
-                let targetPath = `Saves/${file}`;
-                if (platform === 'android') targetPath = `Pocket8/Saves/${file}`;
-
-                await Filesystem.writeFile({
-                  path: targetPath,
-                  data: base64,
-                  directory: dir,
-                  encoding: 'base64',
-                  recursive: true,
-                });
-                resolve();
-              } catch (e) {
-                console.warn(`failed to sync ${file}`, e);
-                resolve();
-              }
-            }, 0);
-          });
-        };
-
-        // serial execution to prevent memory spiking
-        for (const file of files) {
-          await processFile(file);
-        }
-      } catch (e) {
-        console.warn('syncToNative failed', e);
-      }
-    };
-
-    if (window.requestIdleCallback) {
-      window.requestIdleCallback(runSync);
-    } else {
-      setTimeout(runSync, 100);
-    }
-  }
-
-  /**
-   * helper: find pico-8 ram base pointer
-   * heuristic: scan heap for pico-8 header or use symbol
-   */
-  _findRAMPointer() {
-    const m = window.Module;
-    if (!m || !m.HEAPU8) throw new Error('Emscripten not ready');
-
-    // try standard export functions
-    if (typeof m._pico8_ram_ptr === 'function') return m._pico8_ram_ptr();
-    if (typeof m._pico8_ram === 'number') return m._pico8_ram;
-
-    // check for gpio function export
-    if (typeof m._pico8_gpio === 'function') {
-      const gpioPtr = m._pico8_gpio();
-      if (gpioPtr > 0x5f80) return gpioPtr - 0x5f80;
-    }
-
-    // the memory hunter
-    try {
-      const heap = m.HEAPU8;
-      // heuristic: look for default palette at 0x5f00
-      const sigLen = 16;
-      const heapLen = heap.length;
-
-      for (let i = 0; i < heapLen - 0x8000; i += 8) {
-        if (heap[i] === 0 && heap[i + 1] === 1 && heap[i + 2] === 2 && heap[i + 3] === 3) {
-          let match = true;
-          for (let j = 4; j < sigLen; j++) {
-            if (heap[i + j] !== j) {
-              match = false;
-              break;
-            }
-          }
-          if (match) {
-            const base = i - 0x5f00;
-            if (base >= 0) {
-              console.log(`[memory_hunter] found ram base at 0x${base.toString(16)}`);
-              return base;
-            }
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('[pico_bridge] ram scan warning:', e);
-    }
-
-    // last ditch: if pico8_gpio global is typedarray
-    if (window.pico8_gpio && window.pico8_gpio.byteOffset) {
-      return window.pico8_gpio.byteOffset - 0x5f80;
-    }
-
-    throw new Error('Could not locate PICO-8 RAM pointer');
   }
 
   /*
@@ -676,28 +505,6 @@ class Pico8Bridge {
     }
   }
 
-  // legacy injection (compat)
-  async injectFullRAMState(ramData) {
-    try {
-      if (!window.Module || !window.Module.HEAPU8) throw new Error('Emscripten not ready');
-
-      const ramBase = this._findRAMPointer();
-      console.log(`[memory_hunter] injecting ram at 0x${ramBase.toString(16)}`);
-
-      if (ramData.length !== 0x8000) {
-        console.warn(`[pico_bridge] ram size mismatch! got ${ramData.length}, expected 32768`);
-      }
-      this.pause();
-      window.Module.HEAPU8.set(ramData, ramBase);
-      this.resume();
-      console.log('[pico_bridge] ram injection complete');
-      haptics.success();
-    } catch (e) {
-      console.error('[error] ram injection failed:', e);
-      haptics.error();
-    }
-  }
-
   pause() {
     try {
       if (window.Module && window.Module.pauseMainLoop) {
@@ -719,6 +526,23 @@ class Pico8Bridge {
       this.resumeAudio();
     } catch (e) {
       console.warn('wm: resume failed', e);
+    }
+  }
+
+  async resumeAudio() {
+    // ios safari audio unlock
+    const ctx = window.pico8_audio_context || (window.Module && window.Module.sdl_audio_context);
+
+    if (ctx && ctx.state === 'suspended') {
+      // silent buffer kickstart (force thread priority)
+      const buffer = ctx.createBuffer(1, 1, 22050);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+
+      await ctx.resume().catch(() => {});
+      console.log('[pico_bridge] audiocontext resumed (w/ kickstart)');
     }
   }
 }
