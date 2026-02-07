@@ -15,12 +15,12 @@
           <div class="flex items-center gap-4">
             <button
               @click="router.back()"
-              class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105">
+              class="fixed z-20 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md active:bg-white/20 transition-all hover:scale-105">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <div class="flex flex-col">
+            <div class="pl-16 flex flex-col">
               <h1 class="font-pico-crisp text-white drop-shadow-md text-[clamp(1.5rem,5vw,3rem)]">BBS Explorer</h1>
               <span class="font-pico-crisp text-xs font-medium text-white/40 tracking-wider uppercase mt-1"> Lexaloffle PICO-8 </span>
             </div>
@@ -140,7 +140,7 @@
             <img
               :src="game.thumb_url"
               alt="Cover"
-              class="w-full h-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-110"
+              class="w-full h-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-110 pixelated"
               loading="lazy" />
 
             <!-- title band -->

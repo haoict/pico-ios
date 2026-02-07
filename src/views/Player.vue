@@ -139,8 +139,8 @@ onMounted(async () => {
   }
 
   try {
-    // ensure library service is ready
-    await libraryManager.init();
+    // scroll to top
+    window.scrollTo(0, 0);
 
     // fetch data (player responsibility)
     let cartData = null;
@@ -210,12 +210,14 @@ onMounted(async () => {
 
 onUnmounted(async () => {
   window.removeEventListener('keydown', handleGlobalKeydown);
-  picoBridge.shutdown();
 
   if (inputCleanup.value) inputCleanup.value();
   inputManager.setMode('UI');
 
   App.removeAllListeners('backButton');
+
+  console.log('[player] unmounted, cleaned up.');
+  await exitGame();
 });
 
 const menuButtons = computed(() => [

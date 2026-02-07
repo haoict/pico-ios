@@ -51,15 +51,9 @@
     </template>
 
     <!-- card content -->
-    <div class="absolute inset-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-lg z-0">
-      <img
-        v-if="game.cover"
-        :src="game.cover"
-        :alt="game.name"
-        class="w-full h-full object-cover opacity-90 transition-transform duration-500"
-        :class="isFavorite ? 'pixelated' : ''" />
+    <div class="inset-0">
+      <img v-if="game.cover" :src="game.cover" :alt="game.name" class="w-full h-full object-cover opacity-90 transition-transform duration-500 pixelated" />
       <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-transparent">
-        <!-- placeholder svg -->
         <svg class="w-12 h-12 opacity-20 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             stroke-linecap="round"
@@ -71,11 +65,11 @@
       </div>
 
       <!-- title band -->
-      <div class="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-6">
+      <!-- <div class="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-6">
         <h3 class="text-white font-medium text-xs truncate drop-shadow-md">
           {{ formatName(game.name) }}
         </h3>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>

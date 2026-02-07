@@ -5,7 +5,7 @@
 
     <!-- content -->
     <div
-      class="relative z-10 p-6 pt-16 pb-32 max-w-7xl mx-auto w-full min-h-[calc(100vh+1px)]"
+      class="relative z-10 p-6 pt-16 pb-32 max-w-5xl mx-auto w-full min-h-[calc(100vh+1px)]"
       @click="handleBackgroundClick"
       @touchstart="handleTouchStart"
       @touchmove="handleTouchMove"
@@ -206,7 +206,7 @@ import { Capacitor } from '@capacitor/core';
 import { ImpactStyle } from '@capacitor/haptics';
 import { ScopedStorage } from '@daniele-rolli/capacitor-scoped-storage';
 import { storeToRefs } from 'pinia';
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import packageJson from '../../package.json';
 import GameCard from '../components/GameCard.vue';
@@ -219,25 +219,7 @@ const router = useRouter();
 const route = useRoute();
 const appVersion = packageJson.version;
 
-const width = ref(window.innerWidth);
 const gridSize = ref(localStorage.getItem('pico_library_grid_size') || 'M');
-
-// grid cols
-const gridColumns = computed(() => {
-  if (gridSize.value === 'S') return 3;
-  if (gridSize.value === 'M') return 2;
-  if (gridSize.value === 'L') return 1;
-  // fallback to responsive
-  if (width.value >= 1024) return 5;
-  if (width.value >= 768) return 4;
-  return 3;
-});
-
-const updateWidth = () => {
-  width.value = window.innerWidth;
-};
-onMounted(() => window.addEventListener('resize', updateWidth));
-onUnmounted(() => window.removeEventListener('resize', updateWidth));
 
 watch(gridSize, newSize => {
   localStorage.setItem('pico_library_grid_size', newSize);
@@ -245,7 +227,7 @@ watch(gridSize, newSize => {
 
 const libraryStore = useLibraryStore();
 // init games as safe computed/ref to prevent crash if store is empty
-const { games, loading, searchQuery, sortBy, swapButtons, hapticsEnabled, rootDir, scanProgress } = storeToRefs(libraryStore);
+const { games, loading, searchQuery, sortBy, scanProgress } = storeToRefs(libraryStore);
 
 // pull to refresh
 const startY = ref(0);
@@ -291,8 +273,7 @@ const handleTouchEnd = async () => {
   }
 };
 
-const { loadLibrary, addCartridge, addBundle, removeCartridge, toggleFavorite, renameCartridge, toggleSwapButtons, toggleJoystick, updateRootDirectory } =
-  libraryStore;
+const { loadLibrary, addBundle, removeCartridge, toggleFavorite, renameCartridge } = libraryStore;
 
 const favorites = computed(() => games.value.filter(g => g.isFavorite));
 const nonFavorites = computed(() => games.value.filter(g => !g.isFavorite));
@@ -331,8 +312,6 @@ async function pickExternalFolder() {
     }
   }
 }
-// split lists
-const hasFavorites = computed(() => favorites.value.length > 0);
 
 const fileInput = ref(null);
 const renameInput = ref('');
@@ -433,11 +412,6 @@ function handleBackgroundClick(e) {
   if (deleteMode.value) {
     deleteMode.value = false;
   }
-}
-
-async function startDeleteMode() {
-  haptics.impact(ImpactStyle.Medium).catch(() => {});
-  deleteMode.value = !deleteMode.value;
 }
 
 async function handleFavorite(game, event) {

@@ -1,76 +1,78 @@
 <template>
   <div class="min-h-screen w-full bg-oled-dark text-white p-6 pt-16 overflow-y-auto no-scrollbar">
     <!-- header -->
-    <div class="flex items-center gap-4 mb-8">
-      <button
-        @click="$router.back()"
-        class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center active:bg-white/20 transition-all"
-        :class="{ 'ring-2 ring-purple-500 bg-white/20': headerFocused }">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h1 class="font-pico-crisp text-white drop-shadow-md text-[clamp(1.5rem,5vw,3rem)]">Settings</h1>
-    </div>
+    <div class="relative z-10 max-w-3xl mx-auto w-full">
+      <div class="flex items-center gap-4 mb-8">
+        <button
+          @click="$router.back()"
+          class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center active:bg-white/20 transition-all"
+          :class="{ 'ring-2 ring-purple-500 bg-white/20': headerFocused }">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <h1 class="font-pico-crisp text-white drop-shadow-md text-[clamp(1.5rem,5vw,3rem)]">Settings</h1>
+      </div>
 
-    <div class="space-y-8 max-w-2xl mx-auto">
-      <section>
-        <div class="space-y-3">
-          <div
-            v-for="(item, index) in settingsItems"
-            :key="item.id"
-            @click="item.action"
-            class="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 active:bg-white/10 transition-all cursor-pointer select-none">
-            <div class="flex flex-col">
-              <span class="text-white font-medium">{{ item.label }}</span>
-              <span v-if="item.subtext" class="text-xs text-white/40 mt-1">{{ item.subtext }}</span>
-            </div>
+      <div class="space-y-8 max-w-2xl mx-auto">
+        <section>
+          <div class="space-y-3">
+            <div
+              v-for="(item, index) in settingsItems"
+              :key="item.id"
+              @click="item.action"
+              class="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 active:bg-white/10 transition-all cursor-pointer select-none">
+              <div class="flex flex-col">
+                <span class="text-white font-medium">{{ item.label }}</span>
+                <span v-if="item.subtext" class="text-xs text-white/40 mt-1">{{ item.subtext }}</span>
+              </div>
 
-            <!-- virtual joystick -->
-            <div v-if="item.type === 'toggle'" class="w-12 h-7 rounded-full transition-colors relative" :class="item.value ? 'bg-purple-500' : 'bg-white/10'">
-              <div
-                class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm"
-                :class="item.value ? 'translate-x-5' : 'translate-x-0'"></div>
-            </div>
+              <!-- virtual joystick -->
+              <div v-if="item.type === 'toggle'" class="w-12 h-7 rounded-full transition-colors relative" :class="item.value ? 'bg-purple-500' : 'bg-white/10'">
+                <div
+                  class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm"
+                  :class="item.value ? 'translate-x-5' : 'translate-x-0'"></div>
+              </div>
 
-            <div v-else-if="item.type === 'link'" class="flex items-center text-white/30">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Danger Zone -->
-      <section>
-        <h2 class="text-xs font-bold text-red-500 uppercase tracking-widest mb-3 ml-1">Danger Zone</h2>
-        <div class="space-y-3">
-          <div
-            v-for="(item, index) in dangerItems"
-            :key="item.id"
-            @click="item.action"
-            class="flex items-center justify-between p-4 bg-red-500/10 rounded-xl border border-red-500/20 active:bg-red-500/20 transition-all cursor-pointer select-none">
-            <div class="flex flex-col">
-              <span class="text-red-400 font-medium">{{ item.label }}</span>
-              <span v-if="item.subtext" class="text-xs text-red-300/50 mt-1">{{ item.subtext }}</span>
-            </div>
-            <div class="flex items-center text-red-500/50">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fill-rule="evenodd"
-                  d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                  clip-rule="evenodd" />
-              </svg>
+              <div v-else-if="item.type === 'link'" class="flex items-center text-white/30">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- app info -->
-      <section class="pt-8 flex flex-col items-center opacity-30">
-        <p class="text-[10px] font-mono uppercase tracking-widest">Pocket8 v{{ appVersion }}</p>
-      </section>
+        <!-- Danger Zone -->
+        <section>
+          <h2 class="text-xs font-bold text-red-500 uppercase tracking-widest mb-3 ml-1">Danger Zone</h2>
+          <div class="space-y-3">
+            <div
+              v-for="(item, index) in dangerItems"
+              :key="item.id"
+              @click="item.action"
+              class="flex items-center justify-between p-4 bg-red-500/10 rounded-xl border border-red-500/20 active:bg-red-500/20 transition-all cursor-pointer select-none">
+              <div class="flex flex-col">
+                <span class="text-red-400 font-medium">{{ item.label }}</span>
+                <span v-if="item.subtext" class="text-xs text-red-300/50 mt-1">{{ item.subtext }}</span>
+              </div>
+              <div class="flex items-center text-red-500/50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path
+                    fill-rule="evenodd"
+                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                    clip-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- app info -->
+        <section class="pt-8 flex flex-col items-center opacity-30">
+          <p class="text-[10px] font-mono uppercase tracking-widest">Pocket8 v{{ appVersion }}</p>
+        </section>
+      </div>
     </div>
   </div>
 </template>
@@ -93,8 +95,8 @@ const router = useRouter();
 const appVersion = packageJson.version;
 const { showToast } = useToast();
 const libraryStore = useLibraryStore();
-const { swapButtons, useJoystick, hapticsEnabled, fullscreen, rootDir } = storeToRefs(libraryStore);
-const { toggleSwapButtons, toggleJoystick, toggleHaptics, toggleFullscreen, updateRootDirectory } = libraryStore;
+const { swapButtons, useJoystick, hapticsEnabled, fullscreen } = storeToRefs(libraryStore);
+const { toggleSwapButtons, toggleJoystick, toggleHaptics, toggleFullscreen } = libraryStore;
 
 const isAndroid = computed(() => Capacitor.getPlatform() === 'android');
 
@@ -187,17 +189,25 @@ const dangerItems = computed(() => {
 
   items.push({
     id: 'bios-reset',
-    label: 'BIOS Reset',
-    subtext: 'Delete BIOS file',
+    label: 'Settings Reset',
+    subtext: 'Delete BIOS file, caches, and reset settings to default but keep games',
     action: async () => {
-      if (confirm('DANGER: This will delete the BIOS file. Are you sure?')) {
+      if (confirm('Are you sure?')) {
         await EngineLoader.delete();
-        showToast('BIOS Reset Complete');
+        localStorage.clear();
+        if ('serviceWorker' in navigator) {
+          caches.keys().then(function (cacheNames) {
+            cacheNames.forEach(function (cacheName) {
+              caches.delete(cacheName);
+            });
+          });
+        }
+        showToast('Settings Reset Complete');
         haptics.success();
         router.push('/');
         setTimeout(() => {
           window.location.reload();
-        }, 1000);
+        }, 500);
       }
     },
   });
@@ -205,10 +215,11 @@ const dangerItems = computed(() => {
   items.push({
     id: 'factory-reset',
     label: 'Factory Reset',
-    subtext: 'Delete ALL internal games, metadata, and clears external links',
+    subtext: 'Delete ALL internal games, metadata, clears external links and reset everything',
     action: async () => {
-      if (confirm('DANGER: This will delete ALL internal cartridges and reset everything. Are you sure?')) {
+      if (confirm('Are you sure?')) {
         await libraryStore.resetLibrary(true);
+        await EngineLoader.delete();
         localStorage.clear();
         if ('serviceWorker' in navigator) {
           caches.keys().then(function (cacheNames) {
