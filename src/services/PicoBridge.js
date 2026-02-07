@@ -6,7 +6,7 @@ import { haptics } from '../utils/haptics';
 /*
  * architecture:
  * 1. prepares window.module with poison protocol
- * 2. injects cartridge into vfs via poller
+ * 2. injects cartridge into vfs
  * 3. clears _cartdat to bypass embedded loader
  * 4. forces offline mode
  * 5. boots engine via callmain
@@ -15,15 +15,6 @@ import { haptics } from '../utils/haptics';
 class Pico8Bridge {
   constructor() {
     this.isActive = false;
-    this.isInitialSyncDone = false;
-    this.isSyncingInProgress = false;
-    this.initGlobalState();
-  }
-
-  initGlobalState() {
-    // required by game.js schema
-    window.pico8_gpio = new Array(128);
-    window.p8_is_running = false;
   }
 
   /**
@@ -35,7 +26,6 @@ class Pico8Bridge {
     if (this.isActive) {
       this.shutdown();
     }
-
     this.isActive = true;
     this.currentCartName = cartName;
     console.log(`[pico_bridge] booting: ${cartName}`);
@@ -43,13 +33,7 @@ class Pico8Bridge {
     // silence internal engine
     localStorage.setItem('pico8_debug', '0');
 
-    // prepare global state for injection
-    window._cartdat = cartData;
-    // force name: fixes boot timeout by ensuring engine finds the expected file
-    // regardless of what the user called it (e.g. "My Game.p8.png")
-    const safeCartName = 'cart.png';
-    window._cartname = [safeCartName];
-
+    // for BIOS_PATCHES
     window.pico8_is_web = Capacitor.getPlatform() === 'web';
 
     // configure emscripten module
@@ -59,232 +43,62 @@ class Pico8Bridge {
         return document.getElementById('canvas');
       },
 
-      // force pico-8 to use /appdata for saves/config
-      // and force load the specific file we inject (cart.png)
-      arguments: ['-p', '/cart.png'],
-
       // race condition fix
       noInitialRun: true,
 
       preRun: [
         function () {
           console.log('[pico_bridge] prerun: starting...');
+          // the one true fs check
+          if (typeof FS === 'undefined') {
+            console.error('[pico_bridge] FS not found, aborting boot.');
+            return;
+          }
 
-          // determine directory based on platform
-          const platform = Capacitor.getPlatform();
+          // force offline mode
+          // window.lexaloffle_bbs_player = 0;
 
           try {
-            // ensure saves dir exists
-            const dir = Directory.Documents;
-            let path = 'Saves';
-            if (platform === 'android') path = 'Pocket8/Saves';
-
-            Filesystem.mkdir({
-              path: path,
-              directory: dir,
-              recursive: true,
-            }).catch(() => {});
-          } catch (e) {}
-
-          console.log('[pico_bridge] pulse-starting engine...');
-          window.pico8_buttons = [0];
-          window.pico8_gpio = new Array(128);
-
-          // force fs release logic
-          if (!Module.FS && typeof FS !== 'undefined') {
-            Module.FS = FS;
-            console.log('[pico_bridge] module.fs = fs (global) forced.');
-          }
-          // fallback to window.fs
-          if (!Module.FS && window.FS) {
-            Module.FS = window.FS;
-            console.log('[pico_bridge] module.fs = window.fs forced.');
-          }
-
-          console.log('[pico_bridge] prerun: starting vfs poller...');
-          let pollCount = 0;
-          const MAX_POLLS = 1500;
-
-          // clear previous if exists to prevent zombies
-          if (window.pico8_poller) clearInterval(window.pico8_poller);
-
-          window.pico8_poller = setInterval(async () => {
-            pollCount++;
-
-            // if engine is already running stop polling
-            if (window.p8_is_running && window.pico8_engine_ready) {
-              console.log('[pico_boot] engine running stable, killing poller.');
-              clearInterval(window.pico8_poller);
-              window.pico8_poller = null;
-              return;
+            console.log('[pico_bridge] launching engine, writing cart files to vfs...');
+            let bootTarget;
+            // write all files with original names
+            for (const [fname, content] of Object.entries(cartData)) {
+              // write file as-is
+              const path = fname.startsWith('/') ? fname : '/' + fname;
+              const writeData = typeof content === 'string' ? content : new Uint8Array(content);
+              FS.writeFile(path, writeData);
+              bootTarget = bootTarget ?? path;
             }
 
-            // the one true fs check
-            const mod = window.Module;
-            const engineReady = mod && mod.FS && typeof mod.callMain === 'function';
+            /*try {
+              console.log('[vfs debug] final file list in root:');
+              const files = window.Module.FS.readdir('/');
+              console.table(files);
+            } catch (e) {
+              console.log('vfs read failed', e);
+            }*/
 
-            let fs = null;
-            if (engineReady) {
-              fs = mod.FS;
-              if (!window.pico8_engine_ready) {
-                window.FS = fs;
-                window.pico8_engine_ready = true;
-                console.log('[pico_boot] engine ready (module.fs checks out)');
-              }
-            }
-
-            const canvasEl = document.getElementById('canvas');
-            const hasCallMain = engineReady;
-
-            // poller to 'true'
-            let cartExists = false;
+            // handle potential strict mode error safely
             try {
-              if (fs && fs.analyzePath('/cart.png').exists) {
-                cartExists = true;
-                if (pollCount % 100 === 0) console.log('[pico_boot] poller confirmed /cart.png exists on vfs.');
-              }
-            } catch (e) {}
-
-            const hasCart = !!window._cartdat || cartExists;
-
-            // debug heartbeat every 1s
-            if (pollCount % 100 === 0) {
-              console.log(`[pico_boot] poll #${pollCount}: fs=${!!fs}, canvas=${!!canvasEl}, callmain=${hasCallMain}, cart=${hasCart}`);
+              delete window._cartdat;
+            } catch (e) {
+              window._cartdat = null;
             }
 
-            // timeout failsafe
-            if (pollCount > MAX_POLLS) {
-              console.error('[error] timeout: engine failed to initialize.');
-              clearInterval(window.pico8_poller);
-              window.pico8_poller = null;
-              haptics.error();
-              return;
-            }
-
-            // inject cartridge
-            if (window._cartdat) {
-              try {
-                // ensure clean slate
-                try {
-                  fs.unlink('/cart.png');
-                } catch (e) {}
-
-                // the offline patch
-                window.lexaloffle_bbs_player = 0;
-
-                // launch logic
-                // ensure canvas in dom and engine ready
-                if (canvasEl && hasCallMain) {
-                  console.log('[pico_bridge] poller: launching engine...');
-
-                  // determine boot target & write file
-                  let bootTarget = '';
-                  const data = window._cartdat;
-
-                  // check for single file (binary/string) vs bundle (object)
-                  const isSingle = typeof data === 'string' || data.byteLength !== undefined || Array.isArray(data);
-
-                  if (isSingle) {
-                    console.log('[pico_boot] single cart. writing to /cart.png (fixes timeout)');
-                    bootTarget = '/cart.png'; // <--- critical fix
-                    const writeData = typeof data === 'string' ? data : new Uint8Array(data);
-                    fs.writeFile(bootTarget, writeData);
-                  } else {
-                    console.log('[pico_boot] bundle detected. writing files...');
-                    // write all files with original names
-                    for (const [fname, content] of Object.entries(data)) {
-                      // write file as-is
-                      const path = fname.startsWith('/') ? fname : '/' + fname;
-                      const writeData = typeof content === 'string' ? content : new Uint8Array(content);
-                      fs.writeFile(path, writeData);
-
-                      // shotgun aliasing safety net
-                      if (path.endsWith('.p8.png')) {
-                        const p8Path = path.replace('.p8.png', '.p8');
-                        const noExtPath = path.replace('.p8.png', '');
-
-                        try {
-                          fs.writeFile(p8Path, writeData);
-                        } catch (e) {}
-                        try {
-                          fs.writeFile(noExtPath, writeData);
-                        } catch (e) {}
-                      }
-
-                      // update boot target (heuristic: title > shortest)
-                      const nameLower = path.toLowerCase();
-                      const currentTargetLower = bootTarget ? bootTarget.toLowerCase() : '';
-                      const currentHasTitle = currentTargetLower.includes('title');
-
-                      if (!bootTarget) {
-                        bootTarget = path;
-                        console.log(`[pico_boot] initial candidate: ${bootTarget}`);
-                      }
-                      // if we find a 'title' cart, it automatically wins
-                      else if (nameLower.includes('title') && !currentHasTitle) {
-                        bootTarget = path;
-                        console.log(`[pico_boot] title priority! updating candidate to: ${bootTarget}`);
-                      }
-                      // if neither has 'title', picking the shorter name is safest bet
-                      else if (!currentHasTitle && !nameLower.includes('title') && path.length < bootTarget.length) {
-                        bootTarget = path;
-                        console.log(`[pico_boot] shorter name found. updating candidate to: ${bootTarget}`);
-                      }
-                    }
-                  }
-
-                  // launch
-                  if (!bootTarget.startsWith('/')) bootTarget = '/' + bootTarget;
-
-                  try {
-                    console.log('[vfs debug] final file list in root:');
-                    const files = window.Module.FS.readdir('/');
-                    console.table(files);
-                  } catch (e) {
-                    console.log('vfs read failed', e);
-                  }
-
-                  console.log(`[pico_boot] manually calling main with: ${bootTarget}`);
-
-                  // kill poller
-                  clearInterval(window.pico8_poller);
-                  window.pico8_poller = null;
-                  // handle potential strict mode error safely
-                  try {
-                    delete window._cartdat;
-                  } catch (e) {
-                    window._cartdat = null;
-                  }
-
-                  // execute
-                  window.Module.arguments = ['-p', bootTarget, '-run', bootTarget];
-                  window.Module.callMain(window.Module.arguments);
-                }
-              } catch (e) {
-                console.error('[error] vfs/boot error:', e);
-              }
-            }
-          }, 10); // poll every 10ms
+            // execute
+            window.Module.arguments = ['-run', bootTarget];
+            console.log(`[pico_bridge] calling main with argv: ${window.Module.arguments.join(' ')}`);
+            window.Module.callMain(window.Module.arguments);
+          } catch (e) {
+            console.error('[error] vfs/boot error:', e);
+          }
         },
       ],
 
       print: text => {},
       printErr: text => {},
       onRuntimeInitialized: () => {
-        // # force fs exposure
-        if (window.Module && window.Module.FS) {
-          window.FS = window.Module.FS;
-          console.log('[pico_bridge] window.fs exposed');
-        }
-
-        // # expose ram pointer if available
-        try {
-          if (typeof window._pico8_ram_ptr === 'function') {
-            window.pico_ram_ptr = window._pico8_ram_ptr();
-            window.pico8_ram_ptr = window.pico_ram_ptr;
-          }
-        } catch (e) {}
-
+        console.log('[pico_bridge] runtime initialized.');
         window.p8_is_running = true;
       },
     };
@@ -299,12 +113,6 @@ class Pico8Bridge {
 
     // kill switch for pico8.js loop
     window.Pico8Kill = true;
-
-    // stop boot poller if active
-    if (window.pico8_poller) {
-      clearInterval(window.pico8_poller);
-      window.pico8_poller = null;
-    }
 
     // attempt clean engine pause
     try {
@@ -547,9 +355,7 @@ class Pico8Bridge {
   }
 }
 
-// singleton export
 export const picoBridge = new Pico8Bridge();
 
 // global access (for debugging)
-window.Pico8Bridge = picoBridge;
 window.picoBridge = picoBridge;
