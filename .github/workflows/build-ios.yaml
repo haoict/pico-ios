@@ -43,6 +43,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
       - name: Create Unsigned IPA
+        id: create_ipa
         run: |
           VERSION=$(node -p "require('./package.json').version")
           mkdir -p $PWD/build/Payload
@@ -50,15 +51,21 @@ jobs:
           cd $PWD/build
           zip -r Pico8-${VERSION}.ipa Payload
           rm -rf Payload
-          echo "ARTIFACT_NAME=Pocket8-iOS-${VERSION}" >> $GITHUB_ENV
-          echo "IPA_PATH=build/Pico8-${VERSION}.ipa" >> $GITHUB_ENV
+          echo "artifact_name=Pocket8-iOS-${VERSION}" >> $GITHUB_OUTPUT
+          echo "ipa_path=build/Pico8-${VERSION}.ipa" >> $GITHUB_OUTPUT
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.IPA_PATH }}
+          name: ${{ steps.create_ipa.outputs.artifact_name }}
+          path: ${{ steps.create_ipa.outputs.ipa_path }}
           retention-days: 10
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.create_ipa.outputs.ipa_path }}
+          generate_release_notes: true
 
       # - name: Upload to TestFlight (Optional)
       #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
