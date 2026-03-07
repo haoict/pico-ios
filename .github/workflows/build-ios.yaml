@@ -59,6 +59,12 @@ jobs:
           name: ${{ env.ARTIFACT_NAME }}
           path: ${{ env.IPA_PATH }}
           retention-days: 10
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.IPA_PATH }}
+          generate_release_notes: true
 
       # - name: Upload to TestFlight (Optional)
       #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
